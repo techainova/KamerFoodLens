@@ -1,61 +1,72 @@
 // src/components/ui/WFAppBar.tsx
-// Barre de navigation supérieure KFL
-
 import React from 'react';
 import {
+  Pressable,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, fontFamily, fontSize, shadows, spacing } from '@/constants/theme';
+import { colors, fontFamily, fontSize, shadows, spacing2 } from '@/constants/theme';
 
-interface Props {
-  title:           string;
-  back?:           boolean;
-  onBack?:         () => void;
-  trailing?:       React.ReactNode;
+interface WFAppBarProps {
+  title:            string;
+  sub?:             string;
+  back?:            boolean;
+  onBack?:          () => void;
+  trailing?:        React.ReactNode;
   backgroundColor?: string;
+  transparent?:     boolean;
 }
 
 export function WFAppBar({
   title,
-  back           = false,
+  sub,
+  back            = false,
   onBack,
   trailing,
   backgroundColor = colors.surface,
-}: Props) {
+  transparent     = false,
+}: WFAppBarProps) {
   const insets = useSafeAreaInsets();
 
   return (
     <View
       style={[
         styles.container,
-        shadows.sm,
-        { backgroundColor, paddingTop: insets.top + spacing.sm },
+        !transparent && shadows.elev1,
+        { backgroundColor: transparent ? colors.transparent : backgroundColor, paddingTop: insets.top + 8 },
       ]}
     >
-      {/* Bouton retour */}
       <View style={styles.left}>
         {back && (
-          <TouchableOpacity
+          <Pressable
             onPress={onBack}
-            style={styles.backButton}
+            style={styles.iconBtn}
             accessibilityRole="button"
             accessibilityLabel="Retour"
+            accessible
           >
-            <Text style={styles.backIcon}>‹</Text>
-          </TouchableOpacity>
+            <Text style={[styles.backIcon, transparent && styles.iconOnDark]}>‹</Text>
+          </Pressable>
         )}
       </View>
 
-      {/* Titre centré */}
-      <Text style={styles.title} numberOfLines={1}>
-        {title}
-      </Text>
+      <View style={styles.center}>
+        <Text
+          style={[styles.title, transparent && styles.titleOnDark]}
+          numberOfLines={1}
+          accessibilityRole="header"
+        >
+          {title}
+        </Text>
+        {sub ? (
+          <Text style={[styles.sub, transparent && styles.titleOnDark]} numberOfLines={1}>
+            {sub}
+          </Text>
+        ) : null}
+      </View>
 
-      {/* Zone droite */}
       <View style={styles.right}>
         {trailing ?? null}
       </View>
@@ -65,27 +76,39 @@ export function WFAppBar({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    paddingBottom:  spacing.sm,
-    paddingHorizontal: spacing.md,
-    minHeight:      56,
+    flexDirection:     'row',
+    alignItems:        'center',
+    paddingBottom:     spacing2.sm,
+    paddingHorizontal: spacing2.md,
+    minHeight:         56,
   },
-  left:  { width: 44, alignItems: 'flex-start' },
-  right: { width: 44, alignItems: 'flex-end' },
+  left:   { width: 44, alignItems: 'flex-start' },
+  right:  { width: 44, alignItems: 'flex-end' },
+  center: { flex: 1, alignItems: 'center' },
   title: {
-    flex:        1,
     textAlign:   'center',
-    fontFamily:  fontFamily.bold,
-    fontSize:    fontSize.lg,
-    color:       colors.ink,
+    fontFamily:  fontFamily.displaySemi,
+    fontSize:    fontSize.h3,
+    color:       colors.fg,
   },
-  backButton: {
-    padding: spacing.xs,
+  sub: {
+    textAlign:  'center',
+    fontFamily: fontFamily.regular,
+    fontSize:   fontSize.caption,
+    color:      colors.fgMuted,
+    marginTop:  2,
+  },
+  titleOnDark: { color: colors.fgOnDark },
+  iconBtn: {
+    width:           44,
+    height:          44,
+    alignItems:      'center',
+    justifyContent:  'center',
   },
   backIcon: {
     fontSize:   28,
-    color:      colors.ink,
+    color:      colors.fg,
     lineHeight: 32,
   },
+  iconOnDark: { color: colors.fgOnDark },
 });

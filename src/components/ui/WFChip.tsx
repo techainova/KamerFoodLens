@@ -1,87 +1,60 @@
 // src/components/ui/WFChip.tsx
-// Chip / Tag KFL — sélectionnable ou statique
-
 import React from 'react';
 import {
+  Pressable,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
-import { colors, fontFamily, fontSize, radius, spacing } from '@/constants/theme';
+import { colors, fontFamily, fontSize, radius } from '@/constants/theme';
 
-interface Props {
-  label:       string;
-  active?:     boolean;
-  onPress?:    () => void;
-  onRemove?:   () => void;
-  color?:      string;
+interface WFChipProps {
+  label:    string;
+  active?:  boolean;
+  onPress?: () => void;
 }
 
-export function WFChip({
-  label,
-  active   = false,
-  onPress,
-  onRemove,
-  color    = colors.primary,
-}: Props) {
-  const Container = onPress ? TouchableOpacity : View;
+export function WFChip({ label, active = false, onPress }: WFChipProps) {
+  const Container = onPress ? Pressable : View;
 
   return (
     <Container
       onPress={onPress}
       accessibilityRole={onPress ? 'button' : undefined}
       accessibilityLabel={label}
+      accessible
       style={[
         styles.chip,
-        active
-          ? { backgroundColor: color, borderColor: color }
-          : { backgroundColor: colors.surface, borderColor: colors.border },
+        active ? styles.chipActive : styles.chipInactive,
       ]}
     >
-      <Text
-        style={[
-          styles.label,
-          { color: active ? colors.white : colors.inkSoft },
-        ]}
-      >
+      <Text style={[styles.label, active ? styles.labelActive : styles.labelInactive]}>
         {label}
       </Text>
-
-      {onRemove && (
-        <TouchableOpacity
-          onPress={onRemove}
-          style={styles.removeBtn}
-          accessibilityLabel={`Supprimer ${label}`}
-        >
-          <Text style={[styles.removeIcon, { color: active ? colors.white : colors.inkMute }]}>
-            ×
-          </Text>
-        </TouchableOpacity>
-      )}
     </Container>
   );
 }
 
 const styles = StyleSheet.create({
   chip: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    borderWidth:    1,
-    borderRadius:   radius.full,
-    paddingVertical:   spacing.xs,
-    paddingHorizontal: spacing.sm + 2,
-    marginRight:    spacing.xs,
-    marginBottom:   spacing.xs,
+    height:            34,
+    paddingHorizontal: 14,
+    borderRadius:      radius.full,
+    alignItems:        'center',
+    justifyContent:    'center',
+  },
+  chipInactive: {
+    backgroundColor: colors.surface,
+    borderWidth:     1,
+    borderColor:     colors.border,
+  },
+  chipActive: {
+    backgroundColor: colors.primary,
   },
   label: {
     fontFamily: fontFamily.medium,
-    fontSize:   fontSize.sm,
+    fontSize:   13,
   },
-  removeBtn:  { marginLeft: spacing.xs },
-  removeIcon: {
-    fontSize:   16,
-    lineHeight: 18,
-    fontFamily: fontFamily.bold,
-  },
+  labelInactive: { color: colors.fg },
+  labelActive:   { color: colors.fgOnDark },
 });

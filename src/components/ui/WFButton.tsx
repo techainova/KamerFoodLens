@@ -1,65 +1,127 @@
 // src/components/ui/WFButton.tsx
-// Bouton KFL — variantes primary / secondary / ghost
-
-import React from 'react';
+import React, { useRef } from 'react';
 import {
+  Animated,
   ActivityIndicator,
   Pressable,
+  StyleProp,
   StyleSheet,
   Text,
   View,
+  ViewStyle,
 } from 'react-native';
-import { colors, spacing, radius, fontFamily, fontSize } from '@/constants/theme';
+import { colors, radius, spacing2, fontFamily, fontSize, letterSpacing } from '@/constants/theme';
 
-type Variant = 'primary' | 'secondary' | 'ghost';
+type Variant = 'primary' | 'secondary' | 'accent' | 'ghost' | 'danger';
 type Size    = 'sm' | 'md' | 'lg';
 
-interface Props {
-  label:     string;
-  onPress:   () => void;
-  variant?:  Variant;
-  size?:     Size;
-  loading?:  boolean;
-  disabled?: boolean;
-  fullWidth?: boolean;
+interface WFButtonProps {
+  label?:             string;
+  children?:          React.ReactNode;
+  onPress?:           () => void;
+  variant?:           Variant;
+  size?:              Size;
+  loading?:           boolean;
+  disabled?:          boolean;
+  fullWidth?:         boolean;
+  icon?:              React.ReactNode;
+  style?:             StyleProp<ViewStyle>;
+  accessibilityLabel?: string;
 }
+
+const BG: Record<Variant, string> = {
+  primary:   colors.primary,
+  secondary: colors.transparent,
+  accent:    colors.accent,
+  ghost:     colors.transparent,
+  danger:    colors.error,
+};
+
+const BORDER: Record<Variant, string> = {
+  primary:   colors.primary,
+  secondary: colors.primary,
+  accent:    colors.accent,
+  ghost:     colors.transparent,
+  danger:    colors.error,
+};
+
+const TEXT_COLOR: Record<Variant, string> = {
+  primary:   colors.fgOnDark,
+  secondary: colors.primary,
+  accent:    colors.fgOnDark,
+  ghost:     colors.primary,
+  danger:    colors.fgOnDark,
+};
+
+const HEIGHT: Record<Size, number> = { sm: 36, md: 44, lg: 52 };
+const PX:     Record<Size, number> = { sm: 14, md: 18, lg: 24 };
 
 export function WFButton({
   label,
+  children,
   onPress,
-  variant  = 'primary',
-  size     = 'md',
-  loading  = false,
-  disabled = false,
+  variant   = 'primary',
+  size      = 'md',
+  loading   = false,
+  disabled  = false,
   fullWidth = false,
-}: Props) {
+  icon,
+  style,
+  accessibilityLabel,
+}: WFButtonProps) {
+  const scale = useRef(new Animated.Value(1)).current;
   const isDisabled = disabled || loading;
+  const displayLabel = label ?? (typeof children === 'string' ? children : undefined);
+
+  function handlePressIn() {
+    Animated.timing(scale, { toValue: 0.97, duration: 120, useNativeDriver: true }).start();
+  }
+  function handlePressOut() {
+    Animated.timing(scale, { toValue: 1, duration: 120, useNativeDriver: true }).start();
+  }
 
   return (
     <Pressable
       onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
       disabled={isDisabled}
       accessibilityRole="button"
-      accessibilityLabel={label}
-      style={({ pressed }) => [
-        styles.base,
-        styles[variant],
-        styles[size],
-        fullWidth && styles.fullWidth,
-        pressed && styles.pressed,
-        isDisabled && styles.disabled,
-      ]}
+      accessibilityLabel={accessibilityLabel ?? displayLabel ?? ''}
+      accessible
     >
-      {loading ? (
-        <ActivityIndicator
-          color={variant === 'primary' ? colors.white : colors.primary}
-          size="small"
-        />
-      ) : (
-        <Text style={[styles.label, styles[`label_${variant}`], styles[`label_${size}`]]}>
-          {label}
-        </Text>
-      )}
+      <Animated.View
+        style={[
+          styles.base,
+          {
+            backgroundColor: BG[variant],
+            borderColor:     BORDER[variant],
+            height:          HEIGHT[size],
+            paddingHorizontal: PX[size],
+            borderRadius:    radius.xl,
+          },
+          fullWidth && styles.fullWidth,
+          isDisabled && styles.disabled,
+          { transform: [{ scale }] },
+          style,
+        ]}
+      >
+        {loading ? (
+          <ActivityIndicator
+            color={variant === 'secondary' || variant === 'ghost' ? colors.primary : colors.fgOnDark}
+            size="small"
+          />
+        ) : (
+          <View style={styles.inner}>
+            {icon ? <View style={styles.iconWrap}>{icon}</View> : null}
+            {displayLabel ? (
+              <Text style={[styles.label, { color: TEXT_COLOR[variant] }]}>{displayLabel}</Text>
+            ) : children ? (
+              children
+            ) : null}
+          </View>
+        )}
+      </Animated.View>
     </Pressable>
   );
 }
@@ -69,43 +131,20 @@ const styles = StyleSheet.create({
     flexDirection:  'row',
     alignItems:     'center',
     justifyContent: 'center',
-    borderRadius:   radius.full,
     borderWidth:    1.5,
-    borderColor:    'transparent',
   },
   fullWidth: { width: '100%' },
-  pressed:  { opacity: 0.82 },
-  disabled: { opacity: 0.45 },
-
-  // Variantes
-  primary: {
-    backgroundColor: colors.primary,
-    borderColor:     colors.primary,
+  disabled:  { opacity: 0.4 },
+  inner: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           spacing2.xs,
   },
-  secondary: {
-    backgroundColor: colors.transparent,
-    borderColor:     colors.primary,
-  },
-  ghost: {
-    backgroundColor: colors.transparent,
-    borderColor:     colors.transparent,
-  },
-
-  // Tailles
-  sm: { paddingVertical: spacing.xs,  paddingHorizontal: spacing.md },
-  md: { paddingVertical: spacing.sm + 2, paddingHorizontal: spacing.lg },
-  lg: { paddingVertical: spacing.md,  paddingHorizontal: spacing.xl },
-
-  // Labels
+  iconWrap: { marginRight: 4 },
   label: {
-    fontFamily: fontFamily.bold,
-    textAlign:  'center',
+    fontFamily:    fontFamily.semiBold,
+    fontSize:      fontSize.label,
+    letterSpacing: letterSpacing.label,
+    textAlign:     'center',
   },
-  label_primary:   { color: colors.white },
-  label_secondary: { color: colors.primary },
-  label_ghost:     { color: colors.primary },
-
-  label_sm: { fontSize: fontSize.sm },
-  label_md: { fontSize: fontSize.base },
-  label_lg: { fontSize: fontSize.lg },
 });

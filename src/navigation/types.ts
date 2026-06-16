@@ -2,26 +2,70 @@
 // Tous les types TypeScript de navigation KFL
 
 export type AuthStackParams = {
-  Splash:     undefined;
-  Onboarding: undefined;
-  Login:      undefined;
-  Signup:     undefined;
-  OTP:        { email: string };
+  Splash:          undefined;
+  Onboarding:      undefined;
+  Login:           undefined;
+  Signup:          undefined;
+  SignupProAware:  undefined;
+  OTP:             { email: string };
 };
 
 export type AppTabParams = {
-  Home:      undefined;
-  Search:    undefined;
-  Scanner:   undefined;
-  Favorites: undefined;
-  Profile:   undefined;
+  HomeTab:      undefined;
+  SearchTab:    undefined;
+  ScannerTab:   undefined;
+  FavoritesTab: undefined;
+  ProfileTab:   undefined;
 };
 
 export type HomeStackParams = {
-  HomeScreen:    undefined;
-  Notifications: undefined;
-  DishDetail:    { dishId: string };
+  HomeScreen:         undefined;
+  HomeV2:             undefined;
+  HomeV3:             undefined;
+  Notifications:      undefined;
+  DishDetail:         { dishId: string };
+  Search:             undefined;
+  Camera:             undefined;
+  AudioText:          undefined;
+  Result:             undefined;
+  RecipeV1:           undefined;
+  Recipe:             undefined;
+  Feed:               undefined;
+  Forum:              undefined;
+  ForumDetail:        undefined;
+  CreatePost:         undefined;
+  Restaurant:         undefined;
+  Events:             undefined;
+  EventDetail:        undefined;
+  Live:               undefined;
+  Courses:            undefined;
+  CourseDetail:       undefined;
+  CoursePlayer:       undefined;
+  Games:              undefined;
+  Quiz:               undefined;
+  Tombola:            undefined;
+  Badges:             undefined;
+  MapScreen:          undefined;
+  ProfileScreen:      undefined;
+  EditProfile:        undefined;
+  Settings:           undefined;
+  History:            undefined;
+  FavoritesScreen:    undefined;
+  Payment:            undefined;
+  PaymentSuccess:     undefined;
+  OrderMenu:          undefined;
+  OrderSummary:       undefined;
+  OrderPayment:       undefined;
+  OrderInvoice:       undefined;
+  OrderHistory:       undefined;
+  UpgradePro:         undefined;
+  ProDashboard:       undefined;
+  AdminLogin:         undefined;
+  FoodJournal:        undefined;
+  SearchByIngredients: undefined;
 };
+
+export type HomeStackParamList = HomeStackParams;
 
 export type ScannerStackParams = {
   Camera:    undefined;
@@ -64,15 +108,43 @@ export type ProStackParams = {
 export type AdminStackParams = {
   AdminLogin:         undefined;
   AdminDashboard:     undefined;
+  AdminDashUnified:   undefined;
   AdminUsers:         undefined;
   AdminUserDetail:    { userId: string };
+  AdminModeration:    undefined;
+  AdminEvents:        undefined;
+  AdminTombola:       undefined;
+  AdminFinance:       undefined;
+  AdminSettings:      undefined;
+  AdminLogs:          undefined;
   AdminProList:       undefined;
   AdminProDetail:     { restaurantId: string };
   AdminPayouts:       undefined;
   AdminPush:          undefined;
 };
 
+export type UserV3StackParams = {
+  FoodJournal:            undefined;
+  JournalStats:           undefined;
+  SearchByIngredients:    undefined;
+  AccessibilitySettings:  undefined;
+  SettingsProEntry:       undefined;
+  SettingsProActive:      undefined;
+  ProfilePro:             undefined;
+  HomeProAware:           undefined;
+};
+
 export type RootStackParams = {
   Auth: undefined;
   App:  undefined;
+};
+
+export type RootStackParamList = {
+  Splash:          undefined;
+  Onboarding:      undefined;
+  Login:           undefined;
+  Signup:          undefined;
+  SignupProAware:  undefined;
+  OTP:             { email: string };
+  App:             undefined;
 };

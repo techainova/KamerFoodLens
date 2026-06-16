@@ -1,177 +1,117 @@
-// src/screens/order/OrderMenu.tsx
-// Menu restaurant + panier — C1
-
-import React from 'react';
-import {
-  FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useOrder } from '@/hooks/useOrder';
-import { WFButton } from '@/components/ui';
-import { colors, fontFamily, fontSize, radius, spacing } from '@/constants/theme';
+import Icon from '@/components/ui/Icon';
 
-const CATEGORIES = ['Tout', 'Plats princ.', 'Soupes', 'Grillades', 'Boissons'];
+const CATEGORIES = ['Tout', 'Entrées', 'Plats', 'Desserts', 'Boissons'];
+const ITEMS = [
+  { name: 'Ndolé traditionnel', desc: 'Poisson fumé, crevettes',   price: 4500, popular: true  },
+  { name: 'Poulet DG',          desc: 'Plantains frits, légumes',   price: 5500, popular: false },
+  { name: 'Koki haricots',      desc: 'Préparation traditionnelle', price: 2500, popular: false },
+  { name: 'Miondo (x3)',        desc: 'Bâton de manioc cuit',       price: 1500, popular: false },
+  { name: 'Jus de gingembre',   desc: 'Frais & naturel',            price: 1000, popular: false },
+];
 
 export default function OrderMenu() {
-  const navigation = useNavigation();
-  const { menu, cart, total, addItem, removeItem, getQty } = useOrder();
-  const [activeCategory, setActiveCategory] = React.useState('Tout');
-  const totalItems = cart.reduce((s, i) => s + i.qty, 0);
+  const navigation = useNavigation<any>();
+  const [activeCat, setActiveCat] = useState(0);
+  const [cart, setCart] = useState<Record<string, number>>({});
+  const [search, setSearch] = useState('');
+
+  const addToCart = (name: string) => setCart(prev => ({ ...prev, [name]: (prev[name] || 0) + 1 }));
+  const removeFromCart = (name: string) => setCart(prev => {
+    const n = { ...prev };
+    if (n[name] > 1) n[name]--; else delete n[name];
+    return n;
+  });
+  const cartCount = Object.values(cart).reduce((s, v) => s + v, 0);
+  const cartTotal = ITEMS.reduce((s, item) => s + (cart[item.name] || 0) * item.price, 0);
+  const filtered = ITEMS.filter(item => !search || item.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>‹</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+      <StatusBar barStyle="dark-content" />
+
+      {/* AppBar */}
+      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
+          <Icon name="ArrowLeft" size={22} color="#2C1810" />
         </TouchableOpacity>
-        <View>
-          <Text style={styles.restaurantName}>Menu · Chez Maman Pauline</Text>
-          <Text style={styles.restaurantSub}>Restaurant menu</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 18, color: '#2C1810', lineHeight: 22 }}>Chez Mama Pauline</Text>
+          <Text style={{ fontSize: 12, color: '#8C8278' }}>Commander</Text>
         </View>
-        {totalItems > 0 && (
-          <View style={styles.cartBadge}>
-            <Text style={styles.cartBadgeText}>{totalItems}</Text>
-          </View>
-        )}
       </View>
 
-      {/* Info restaurant */}
-      <View style={styles.restaurantInfo}>
-        <View style={styles.verifiedBadge}><Text style={styles.verifiedText}>✓ Vérifié</Text></View>
-        <Text style={styles.restaurantMeta}>· Akwa · Douala</Text>
-        <Text style={styles.openText}>🟢 Ouvert jusqu'à 22h</Text>
+      {/* Search */}
+      <View style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', height: 40, backgroundColor: '#F5F0EB', borderRadius: 12, paddingHorizontal: 12, gap: 8 }}>
+          <Icon name="Search" size={14} color="#8C8278" />
+          <TextInput value={search} onChangeText={setSearch} placeholder="Rechercher un plat..." placeholderTextColor="#8C8278" style={{ flex: 1, fontSize: 14, color: '#2C1810' }} />
+        </View>
       </View>
 
-      {/* Catégories */}
-      <FlatList
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        data={CATEGORIES}
-        keyExtractor={(c) => c}
-        contentContainerStyle={styles.catsRow}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => setActiveCategory(item)}
-            style={[styles.catBtn, activeCategory === item && styles.catBtnActive]}
-          >
-            <Text style={[styles.catText, activeCategory === item && styles.catTextActive]}>
-              {item}
-            </Text>
-          </TouchableOpacity>
-        )}
-      />
-
-      {/* Date menu */}
-      <Text style={styles.menuDate}>MENU DU JOUR · LUNDI 24 NOV / Today's menu</Text>
-
-      {/* Items */}
-      <ScrollView showsVerticalScrollIndicator={false} style={styles.itemsList}>
-        {menu.map((item) => {
-          const qty = getQty(item.id);
-          return (
-            <View key={item.id} style={styles.menuItem}>
-              <View style={styles.menuItemImage}>
-                <Text style={styles.menuItemEmoji}>{item.emoji}</Text>
-              </View>
-              <View style={styles.menuItemInfo}>
-                <Text style={styles.menuItemName}>{item.name}</Text>
-                <Text style={styles.menuItemCategory}>{item.category}</Text>
-                <Text style={styles.menuItemDesc} numberOfLines={1}>{item.desc}</Text>
-                <Text style={styles.menuItemPrice}>{item.priceXAF.toLocaleString()} XAF</Text>
-              </View>
-              <View style={styles.menuItemQty}>
-                {qty > 0 ? (
-                  <View style={styles.qtyControl}>
-                    <TouchableOpacity onPress={() => removeItem(item.id)} style={styles.qtyBtn}>
-                      <Text style={styles.qtyBtnText}>−</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.qtyValue}>{qty}</Text>
-                    <TouchableOpacity onPress={() => addItem(item)} style={styles.qtyBtn}>
-                      <Text style={styles.qtyBtnText}>+</Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : (
-                  <TouchableOpacity onPress={() => addItem(item)} style={styles.addBtn}>
-                    <Text style={styles.addBtnText}>+</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
-          );
-        })}
-        <View style={{ height: 120 }} />
+      {/* Categories */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, borderBottomWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}>
+        <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: 16, paddingVertical: 8 }}>
+          {CATEGORIES.map((cat, i) => (
+            <TouchableOpacity key={i} onPress={() => setActiveCat(i)}
+              style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, borderWidth: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: i === activeCat ? '#E8591A' : '#F5F0EB', borderColor: i === activeCat ? '#E8591A' : '#E5E0D8' }}>
+              <Text style={{ fontSize: 12, fontWeight: '500', color: i === activeCat ? '#fff' : '#6D4C41' }}>{cat}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </ScrollView>
 
-      {/* Panier sticky */}
-      {totalItems > 0 && (
-        <View style={styles.cartBar}>
-          <View style={styles.cartInfo}>
-            <Text style={styles.cartItems}>🛒 {totalItems} articles dans votre panier</Text>
-            <Text style={styles.cartRestaurant}>Chez Maman Pauline</Text>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+        {filtered.map((item, i) => (
+          <View key={i} style={{ flexDirection: 'row', gap: 12, paddingVertical: 14, borderBottomWidth: i < filtered.length - 1 ? 1 : 0, borderColor: '#F5F0EB' }}>
+            {/* Dish placeholder */}
+            <View style={{ width: 64, height: 64, borderRadius: 12, backgroundColor: '#F5F0EB', borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Icon name="ChefHat" size={24} color="rgba(140,130,120,0.35)" />
+              {item.popular && (
+                <View style={{ position: 'absolute', top: -4, right: -4, width: 16, height: 16, borderRadius: 8, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name="Star" size={9} color="#fff" fill="#fff" />
+                </View>
+              )}
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: '#2C1810' }}>{item.name}</Text>
+              <Text style={{ fontSize: 12, color: '#8C8278', marginTop: 2 }}>{item.desc}</Text>
+              <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810', marginTop: 4 }}>{item.price.toLocaleString()} XAF</Text>
+            </View>
+            {/* Cart controls */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'center' }}>
+              {cart[item.name] ? (
+                <>
+                  <TouchableOpacity onPress={() => removeFromCart(item.name)}
+                    style={{ width: 28, height: 28, borderRadius: 14, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name="Minus" size={14} color="#E8591A" />
+                  </TouchableOpacity>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810', minWidth: 18, textAlign: 'center' }}>{cart[item.name]}</Text>
+                </>
+              ) : null}
+              <TouchableOpacity onPress={() => addToCart(item.name)}
+                style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name="Plus" size={14} color="#fff" />
+              </TouchableOpacity>
+            </View>
           </View>
-          <TouchableOpacity
-            style={styles.cartBtn}
-            onPress={() => navigation.navigate('OrderSummary' as never)}
-            accessibilityLabel="Voir le récapitulatif"
-          >
-            <Text style={styles.cartBtnTotal}>{total.toLocaleString()} XAF</Text>
-            <Text style={styles.cartBtnText}>Voir le récapitulatif →</Text>
+        ))}
+      </ScrollView>
+
+      {/* Cart CTA */}
+      {cartCount > 0 && (
+        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#E5E0D8' }}>
+          <TouchableOpacity style={{ height: 48, backgroundColor: '#E8591A', borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 }} activeOpacity={0.85}>
+            <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ color: '#E8591A', fontSize: 11, fontWeight: '700' }}>{cartCount}</Text>
+            </View>
+            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>Voir le panier</Text>
+            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>{cartTotal.toLocaleString()} XAF</Text>
           </TouchableOpacity>
         </View>
       )}
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe:    { flex: 1, backgroundColor: colors.cream },
-  header:  { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.sm, gap: spacing.sm },
-  backBtn: { padding: spacing.xs },
-  backIcon:{ fontSize: 28, color: colors.ink },
-  restaurantName:{ fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink },
-  restaurantSub: { fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.inkMute },
-  cartBadge: { marginLeft: 'auto', backgroundColor: colors.primary, borderRadius: radius.full, width: 22, height: 22, alignItems: 'center', justifyContent: 'center' },
-  cartBadgeText:{ fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: colors.white },
-
-  restaurantInfo:{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, gap: spacing.sm, marginBottom: spacing.sm },
-  verifiedBadge: { backgroundColor: colors.successSoft, borderRadius: radius.sm, paddingHorizontal: spacing.xs, paddingVertical: 2 },
-  verifiedText:  { fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: colors.success },
-  restaurantMeta:{ fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.inkMute },
-  openText:      { fontFamily: fontFamily.medium, fontSize: fontSize.xs, color: colors.success, marginLeft: 'auto' },
-
-  catsRow:    { paddingHorizontal: spacing.md, paddingBottom: spacing.sm, gap: spacing.sm },
-  catBtn:     { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: radius.full, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  catBtnActive:{ backgroundColor: colors.primary, borderColor: colors.primary },
-  catText:    { fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: colors.inkMute },
-  catTextActive:{ color: colors.white },
-
-  menuDate:   { fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: colors.inkMute, paddingHorizontal: spacing.md, marginBottom: spacing.sm, letterSpacing: 0.5 },
-
-  itemsList:  { flex: 1 },
-  menuItem:   { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border, gap: spacing.sm },
-  menuItemImage: { width: 56, height: 56, borderRadius: radius.md, backgroundColor: colors.surface2, alignItems: 'center', justifyContent: 'center' },
-  menuItemEmoji: { fontSize: 28 },
-  menuItemInfo:  { flex: 1 },
-  menuItemName:  { fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink },
-  menuItemCategory:{ fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.inkMute },
-  menuItemDesc:  { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.inkSoft },
-  menuItemPrice: { fontFamily: fontFamily.serifBold, fontSize: fontSize.md, color: colors.primary, marginTop: 2 },
-
-  menuItemQty: { alignItems: 'center' },
-  qtyControl:  { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  qtyBtn:      { width: 28, height: 28, borderRadius: 14, borderWidth: 1.5, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  qtyBtnText:  { fontSize: 18, color: colors.primary, lineHeight: 22 },
-  qtyValue:    { fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink, minWidth: 20, textAlign: 'center' },
-  addBtn:      { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  addBtnText:  { fontSize: 20, color: colors.white, lineHeight: 24 },
-
-  cartBar:    { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: colors.ink, padding: spacing.md },
-  cartInfo:   { marginBottom: spacing.xs },
-  cartItems:  { fontFamily: fontFamily.bold, fontSize: fontSize.sm, color: colors.white },
-  cartRestaurant:{ fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.inkMute },
-  cartBtn:    { backgroundColor: colors.primary, borderRadius: radius.full, paddingVertical: spacing.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg },
-  cartBtnTotal:{ fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.white },
-  cartBtnText: { fontFamily: fontFamily.medium, fontSize: fontSize.md, color: colors.white },
-});

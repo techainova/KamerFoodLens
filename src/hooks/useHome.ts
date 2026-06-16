@@ -1,7 +1,6 @@
 // src/hooks/useHome.ts
 // Logique écran Home — données tendances + recettes populaires + navigation
 
-import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -52,7 +51,7 @@ export function useHome() {
     staleTime: 5 * 60 * 1000,
   });
 
-  function goScanner()                    { navigation.navigate('Scanner' as any); }
+  function goScanner()                    { navigation.navigate('Camera' as any); }
   function goSearch()                     { navigation.navigate('Search'  as any); }
   function goNotifications()              { navigation.navigate('Notifications'); }
   function goDishDetail(dishId: string)   { navigation.navigate('DishDetail', { dishId }); }

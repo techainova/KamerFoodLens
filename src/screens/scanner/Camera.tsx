@@ -1,222 +1,235 @@
-// src/screens/scanner/Camera.tsx
-// Écran caméra scanner IA — capture + modes Photo/Audio/Texte
-
-import React, { useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+  View, Text, TouchableOpacity, StatusBar, Animated,
+  SafeAreaView, Easing,
 } from 'react-native';
-import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { useScanner } from '@/hooks/useScanner';
-import { colors, fontFamily, fontSize, radius, spacing } from '@/constants/theme';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { ScannerStackParams } from '@/navigation/types';
+import Icon from '@/components/ui/Icon';
 
-export default function Camera() {
-  const { t }          = useTranslation();
-  const navigation     = useNavigation();
-  const [permission, requestPermission] = useCameraPermissions();
-  const [facing, setFacing] = useState<'back' | 'front'>('back');
-  const cameraRef      = React.useRef<any>(null);
+type CameraNav = NativeStackNavigationProp<ScannerStackParams, 'Camera'>;
+type Mode = 'photo' | 'audio' | 'text';
 
-  const { mode, status, error, setMode, scanImage } = useScanner();
+const FRAME_HEIGHT = 300;
+const CORNER_SIZE  = 28;
+const CORNER_W     = 4;
+const SUCCESS_GREEN = '#2E7D32';
+const ORANGE        = '#E8591A';
 
-  // Permission non accordée
-  if (!permission) {
-    return <View style={styles.center}><ActivityIndicator color={colors.primary} /></View>;
-  }
-
-  if (!permission.granted) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.permText}>Accès à la caméra requis</Text>
-        <TouchableOpacity style={styles.permBtn} onPress={requestPermission}>
-          <Text style={styles.permBtnText}>Autoriser</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  async function takePhoto() {
-    if (!cameraRef.current || status === 'analyzing') return;
-    try {
-      const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.8,
-        base64:  true,
-      });
-      if (photo.base64) await scanImage(photo.base64);
-    } catch {
-      // Erreur gérée dans useScanner
-    }
-  }
+function CornerBrackets() {
+  const positions = [
+    { top: -2, left: -2,  borderTopWidth: CORNER_W, borderLeftWidth: CORNER_W },
+    { top: -2, right: -2, borderTopWidth: CORNER_W, borderRightWidth: CORNER_W },
+    { bottom: -2, left: -2,  borderBottomWidth: CORNER_W, borderLeftWidth: CORNER_W },
+    { bottom: -2, right: -2, borderBottomWidth: CORNER_W, borderRightWidth: CORNER_W },
+  ] as const;
 
   return (
-    <View style={styles.container}>
-      {/* Caméra */}
-      <CameraView
-        ref={cameraRef}
-        style={styles.camera}
-        facing={facing}
-      >
-        {/* Header */}
-        <View style={styles.header}>
+    <>
+      {positions.map((pos, i) => (
+        <View
+          key={i}
+          style={{
+            position: 'absolute',
+            width: CORNER_SIZE,
+            height: CORNER_SIZE,
+            borderColor: SUCCESS_GREEN,
+            borderRadius: 6,
+            ...pos,
+          }}
+        />
+      ))}
+    </>
+  );
+}
+
+export default function Camera() {
+  const navigation = useNavigation<CameraNav>();
+  const { t } = useTranslation();
+
+  const [mode, setMode]         = useState<Mode>('photo');
+  const [analyzing, setAnalyzing] = useState(false);
+  const [flashOn, setFlashOn]   = useState(false);
+
+  // Scan line animation
+  const scanAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(scanAnim, {
+          toValue: FRAME_HEIGHT - 2,
+          duration: 2200,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.delay(200),
+        Animated.timing(scanAnim, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [scanAnim]);
+
+  // Analyzing pulse animation
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    if (!analyzing) return;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.08, duration: 600, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => { loop.stop(); pulseAnim.setValue(1); };
+  }, [analyzing, pulseAnim]);
+
+  const handleCapture = async () => {
+    if (analyzing) return;
+    setAnalyzing(true);
+    await new Promise(r => setTimeout(r, 1600));
+    setAnalyzing(false);
+    navigation.navigate('Result', { scanId: 'demo-scan-001' });
+  };
+
+  const handleModeChange = (m: Mode) => {
+    if (m === 'audio' || m === 'text') {
+      navigation.navigate('AudioText');
+      return;
+    }
+    setMode(m);
+  };
+
+  const MODES: { key: Mode; label: string }[] = [
+    { key: 'photo', label: t('scanner.photo') },
+    { key: 'audio', label: t('scanner.audio') },
+    { key: 'text',  label: t('scanner.text') },
+  ];
+
+  return (
+    <View style={{ flex: 1, backgroundColor: '#0B0B0B' }}>
+      <StatusBar barStyle="light-content" />
+
+      {/* Camera viewfinder simulation */}
+      <View style={{ position: 'absolute', inset: 0, backgroundColor: '#1A1410' }} />
+
+      {/* Top bar */}
+      <SafeAreaView style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
+        <View style={{ paddingHorizontal: 20, paddingTop: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          {/* Close */}
           <TouchableOpacity
+            style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(0,0,0,0.45)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' }}
             onPress={() => navigation.goBack()}
-            style={styles.closeBtn}
-            accessibilityLabel="Fermer"
           >
-            <Text style={styles.closeBtnText}>✕</Text>
+            <Icon name="X" size={18} color="#fff" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{t('scanner.title')}</Text>
+
+          {/* KFL brand */}
+          <Text style={{ fontFamily: 'PlayfairDisplay-Bold', color: '#fff', fontSize: 18, letterSpacing: 1 }}>KFL</Text>
+
+          {/* Flash */}
           <TouchableOpacity
-            onPress={() => setFacing(facing === 'back' ? 'front' : 'back')}
-            style={styles.flipBtn}
-            accessibilityLabel="Retourner la caméra"
+            style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: flashOn ? ORANGE : 'rgba(0,0,0,0.45)', borderWidth: 1, borderColor: flashOn ? ORANGE : 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' }}
+            onPress={() => setFlashOn(!flashOn)}
           >
-            <Text style={styles.flipIcon}>🔄</Text>
+            <Icon name="Zap" size={18} color="#fff" />
           </TouchableOpacity>
         </View>
+      </SafeAreaView>
 
-        {/* Overlay laser */}
-        <View style={styles.laserOverlay}>
-          <View style={styles.laserBox}>
-            <View style={[styles.corner, styles.cornerTL]} />
-            <View style={[styles.corner, styles.cornerTR]} />
-            <View style={[styles.corner, styles.cornerBL]} />
-            <View style={[styles.corner, styles.cornerBR]} />
-          </View>
+      {/* Scanner frame */}
+      <View style={{ position: 'absolute', top: 170, left: 36, right: 36, height: FRAME_HEIGHT }}>
+        <View style={{ flex: 1, borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(46,125,50,0.3)' }}>
+          <CornerBrackets />
+
+          {/* Animated scan line */}
+          <Animated.View style={{
+            position: 'absolute', left: 8, right: 8, height: 2,
+            backgroundColor: SUCCESS_GREEN,
+            opacity: 0.85,
+            transform: [{ translateY: scanAnim }],
+          }}>
+            {/* Glow */}
+            <View style={{ position: 'absolute', top: -4, left: 0, right: 0, height: 10, backgroundColor: SUCCESS_GREEN, opacity: 0.25, borderRadius: 5 }} />
+          </Animated.View>
         </View>
+      </View>
 
-        {/* Indicateur analyse */}
-        {status === 'analyzing' && (
-          <View style={styles.analyzingBadge}>
-            <ActivityIndicator color={colors.white} size="small" />
-            <Text style={styles.analyzingText}>{t('scanner.analyzing')}</Text>
+      {/* Instruction text */}
+      <View style={{ position: 'absolute', top: 488, left: 0, right: 0, alignItems: 'center', paddingHorizontal: 40 }}>
+        {analyzing ? (
+          <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+            <View style={{ backgroundColor: 'rgba(0,0,0,0.65)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: SUCCESS_GREEN }} />
+              <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>{t('scanner.analyzing')}</Text>
+            </View>
+          </Animated.View>
+        ) : (
+          <View style={{ backgroundColor: 'rgba(0,0,0,0.55)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 }}>
+            <Text style={{ color: '#fff', fontSize: 13, textAlign: 'center', lineHeight: 18 }}>{t('scanner.frame')}</Text>
           </View>
         )}
+      </View>
 
-        {/* Erreur */}
-        {error ? (
-          <View style={styles.errorBadge}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        ) : null}
-      </CameraView>
-
-      {/* Contrôles bas */}
-      <View style={styles.controls}>
-        {/* Modes */}
-        <View style={styles.modesRow}>
-          {(['photo', 'audio', 'text'] as const).map((m) => (
-            <TouchableOpacity
-              key={m}
-              onPress={() => setMode(m)}
-              style={[styles.modeBtn, mode === m && styles.modeBtnActive]}
-              accessibilityLabel={t(`scanner.${m}`)}
-            >
-              <Text style={[styles.modeBtnText, mode === m && styles.modeBtnTextActive]}>
-                {m === 'photo' ? t('scanner.photo') : m === 'audio' ? t('scanner.audio') : t('scanner.text')}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Bouton capture */}
-        {mode === 'photo' && (
+      {/* Mode selector */}
+      <View style={{ position: 'absolute', bottom: 138, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 6 }}>
+        {MODES.map((m) => (
           <TouchableOpacity
-            style={[styles.captureBtn, status === 'analyzing' && styles.captureBtnDisabled]}
-            onPress={takePhoto}
-            disabled={status === 'analyzing'}
-            accessibilityRole="button"
-            accessibilityLabel="Prendre une photo"
+            key={m.key}
+            onPress={() => handleModeChange(m.key)}
+            style={{
+              paddingHorizontal: 18, paddingVertical: 7, borderRadius: 20,
+              backgroundColor: mode === m.key ? ORANGE : 'rgba(255,255,255,0.12)',
+              borderWidth: 1, borderColor: mode === m.key ? ORANGE : 'rgba(255,255,255,0.25)',
+            }}
           >
-            <View style={styles.captureInner} />
-          </TouchableOpacity>
-        )}
-
-        {/* Audio / Texte */}
-        {mode !== 'photo' && (
-          <TouchableOpacity
-            style={styles.altModeBtn}
-            onPress={() => navigation.navigate('AudioText' as any)}
-            accessibilityRole="button"
-          >
-            <Text style={styles.altModeBtnText}>
-              {mode === 'audio' ? '🎙 ' + t('scanner.describeVoice') : '✏️ ' + t('scanner.describeText')}
+            <Text style={{ color: '#fff', fontSize: 13, fontWeight: mode === m.key ? '700' : '500' }}>
+              {m.label}
             </Text>
           </TouchableOpacity>
-        )}
+        ))}
+      </View>
+
+      {/* Bottom controls */}
+      <View style={{ position: 'absolute', bottom: 40, left: 0, right: 0, paddingHorizontal: 32, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+
+        {/* Gallery */}
+        <TouchableOpacity style={{ alignItems: 'center', gap: 6 }}>
+          <View style={{ width: 50, height: 50, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="Bookmark" size={22} color="rgba(255,255,255,0.7)" />
+          </View>
+          <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11 }}>{t('scanner.gallery')}</Text>
+        </TouchableOpacity>
+
+        {/* Capture button */}
+        <TouchableOpacity
+          onPress={handleCapture}
+          disabled={analyzing}
+          style={{ alignItems: 'center', justifyContent: 'center' }}
+          activeOpacity={0.85}
+        >
+          <View style={{ width: 80, height: 80, borderRadius: 40, borderWidth: 3, borderColor: SUCCESS_GREEN, padding: 5, alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ flex: 1, width: '100%', borderRadius: 35, backgroundColor: analyzing ? 'rgba(255,255,255,0.4)' : '#fff' }} />
+          </View>
+        </TouchableOpacity>
+
+        {/* Audio/Text toggle */}
+        <TouchableOpacity
+          style={{ alignItems: 'center', gap: 6 }}
+          onPress={() => navigation.navigate('AudioText')}
+        >
+          <View style={{ width: 50, height: 50, borderRadius: 25, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="Mic" size={22} color="rgba(255,255,255,0.7)" />
+          </View>
+          <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11 }}>{t('scanner.audio')}</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 }
-
-const CORNER_SIZE = 24;
-
-const styles = StyleSheet.create({
-  container:  { flex: 1, backgroundColor: colors.black },
-  center:     { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.cream },
-  permText:   { fontFamily: fontFamily.regular, fontSize: fontSize.md, color: colors.ink, marginBottom: spacing.md },
-  permBtn:    { backgroundColor: colors.primary, borderRadius: radius.full, paddingHorizontal: spacing.xl, paddingVertical: spacing.sm },
-  permBtnText:{ fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.white },
-
-  camera: { flex: 1 },
-
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingTop: 56, paddingHorizontal: spacing.md,
-  },
-  closeBtn:     { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
-  closeBtnText: { fontSize: 16, color: colors.white },
-  headerTitle:  { fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.white },
-  flipBtn:      { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  flipIcon:     { fontSize: 20 },
-
-  laserOverlay: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  laserBox:     { width: 240, height: 240, position: 'relative' },
-  corner:       { position: 'absolute', width: CORNER_SIZE, height: CORNER_SIZE, borderColor: colors.white, borderWidth: 3 },
-  cornerTL:     { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0 },
-  cornerTR:     { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0 },
-  cornerBL:     { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0 },
-  cornerBR:     { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0 },
-
-  analyzingBadge:{
-    position: 'absolute', bottom: 20, alignSelf: 'center',
-    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-    backgroundColor: 'rgba(0,0,0,0.7)', borderRadius: radius.full,
-    paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
-  },
-  analyzingText:{ fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: colors.white },
-  errorBadge:   {
-    position: 'absolute', bottom: 20, alignSelf: 'center',
-    backgroundColor: colors.error, borderRadius: radius.sm,
-    paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
-  },
-  errorText:    { fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: colors.white },
-
-  controls: { backgroundColor: colors.ink, paddingBottom: 40, paddingTop: spacing.md },
-  modesRow: { flexDirection: 'row', justifyContent: 'center', gap: spacing.sm, marginBottom: spacing.md },
-  modeBtn:  { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: radius.full, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
-  modeBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  modeBtnText:   { fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: colors.inkMute },
-  modeBtnTextActive: { color: colors.white },
-
-  captureBtn: {
-    width: 72, height: 72, borderRadius: 36,
-    backgroundColor: colors.white, alignSelf: 'center',
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 4, borderColor: 'rgba(255,255,255,0.3)',
-  },
-  captureBtnDisabled: { opacity: 0.5 },
-  captureInner: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.white },
-
-  altModeBtn: {
-    marginHorizontal: spacing.xl, paddingVertical: spacing.md,
-    backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: radius.md,
-    alignItems: 'center',
-  },
-  altModeBtnText: { fontFamily: fontFamily.medium, fontSize: fontSize.md, color: colors.white },
-});

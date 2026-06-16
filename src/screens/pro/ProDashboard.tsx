@@ -1,204 +1,117 @@
-// src/screens/pro/ProDashboard.tsx
-// Dashboard Pro — stats + commandes + actions rapides
-
 import React from 'react';
-import {
-  ScrollView, StyleSheet, Text, TouchableOpacity, View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useProDashboard } from '@/hooks/useProDashboard';
-import { WFAvatar } from '@/components/ui';
-import { colors, fontFamily, fontSize, radius, spacing, shadows } from '@/constants/theme';
+import Icon from '@/components/ui/Icon';
+
+const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
 
 const QUICK_ACTIONS = [
-  { emoji: '📅', label: 'Événement' },
-  { emoji: '🎓', label: 'Formation' },
-  { emoji: '👥', label: 'Communauté' },
-  { emoji: '📣', label: 'Annonce' },
-  { emoji: '💸', label: 'Virement' },
-  { emoji: '🍽', label: 'Mon Menu' },
+  { icon: 'ShoppingBag' as const, label: 'Commandes',  badge: '3',  route: 'ProOrders'       },
+  { icon: 'DollarSign'  as const, label: 'Revenus',    badge: null, route: 'ProRevenues'      },
+  { icon: 'ChefHat'     as const, label: 'Menu',       badge: null, route: 'RestaurantMenu'   },
+  { icon: 'Tag'         as const, label: 'Promos',     badge: null, route: 'ProPromos'        },
+  { icon: 'Users'       as const, label: 'Communauté', badge: null, route: 'ManageCommunity'  },
+  { icon: 'BarChart2'   as const, label: 'Analytics',  badge: null, route: 'ProAnalytics'     },
+];
+
+const RECENT_ORDERS = [
+  { id: '#KFL-4825', client: 'Sami N.',   total: 13000, status: 'new',       time: '14:38' },
+  { id: '#KFL-4822', client: 'Adèle B.',  total: 6500,  status: 'preparing', time: '14:21' },
 ];
 
 export default function ProDashboard() {
-  const navigation = useNavigation();
-  const { tab, setTab, stats, orders, confirmOrder, cancelOrder } = useProDashboard();
+  const navigation = useNavigation<any>();
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      {/* AppBar */}
-      <View style={styles.appBar}>
-        <View style={styles.restaurantRow}>
-          <WFAvatar initials="MP" size="sm" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+      <StatusBar barStyle="light-content" />
+
+      {/* Pro header */}
+      <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 14, backgroundColor: '#1A237E' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View>
-            <Text style={styles.restaurantName}>Chez Maman Pauline</Text>
-            <View style={styles.verifiedRow}>
-              <Text style={styles.proBadge}>★ PRO</Text>
-              <Text style={styles.verifiedText}>✓ Vérifié · Restaurant</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+              <Text style={{ color: '#fff', fontSize: 16, fontFamily: 'PlayfairDisplay-Bold' }}>Chez Mama Pauline</Text>
+              <View style={{ backgroundColor: '#F9A825', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 }}>
+                <Text style={{ color: '#fff', fontSize: 9, fontWeight: '700' }}>PRO</Text>
+              </View>
+            </View>
+            <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>Lundi 15 Juin 2026</Text>
+          </View>
+          <TouchableOpacity style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="Bell" size={16} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+
+        {/* Revenue card */}
+        <View style={{ padding: 16, borderRadius: 20, backgroundColor: '#1A237E', marginBottom: 20 }}>
+          <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Revenus ce mois</Text>
+          <Text style={{ color: '#fff', fontSize: 28, fontFamily: 'PlayfairDisplay-Bold', marginBottom: 8 }}>195 400 XAF</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#2E7D32', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
+              <Icon name="TrendingUp" size={11} color="#fff" />
+              <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>+12% vs mois dernier</Text>
             </View>
           </View>
-        </View>
-        <TouchableOpacity accessibilityLabel="Notifications">
-          <Text style={styles.bellIcon}>🔔</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Onglets */}
-      <View style={styles.tabs}>
-        {(['dashboard','revenues','activity','settings'] as const).map((t) => (
-          <TouchableOpacity
-            key={t}
-            onPress={() => setTab(t)}
-            style={[styles.tab, tab === t && styles.tabActive]}
-          >
-            <Text style={[styles.tabText, tab === t && styles.tabTextActive]}>
-              {t === 'dashboard' ? 'Tableau' : t === 'revenues' ? 'Revenus' : t === 'activity' ? 'Activité' : 'Paramètres'}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <ScrollView showsVerticalScrollIndicator={false}>
-
-        {/* Stats */}
-        <View style={styles.statsGrid}>
-          {[
-            { label: 'Vues profil', value: stats.views.toLocaleString(), sub: stats.viewsGrowth, emoji: '👁' },
-            { label: 'Abonnés',     value: String(stats.followers),      sub: `+${stats.newFollowers} nouveaux`, emoji: '👥' },
-            { label: 'Rev. mois',   value: `${stats.revenueXAF.toLocaleString()} XAF`, sub: stats.revenueGrowth, emoji: '💰' },
-            { label: 'Tickets',     value: `${stats.ticketsSold}/${stats.ticketsTotal}`, sub: 'vendus', emoji: '🎟' },
-          ].map((s) => (
-            <View key={s.label} style={[styles.statCard, shadows.sm]}>
-              <Text style={styles.statEmoji}>{s.emoji}</Text>
-              <Text style={styles.statValue}>{s.value}</Text>
-              <Text style={styles.statLabel}>{s.label}</Text>
-              <Text style={styles.statSub}>{s.sub}</Text>
-            </View>
-          ))}
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
+            {[{ v: '47', l: 'Commandes' }, { v: '4.8', l: 'Note' }, { v: '98%', l: 'Acceptation' }].map((s, i) => (
+              <View key={i} style={{ flex: 1, alignItems: 'center' }}>
+                <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700' }}>{s.v}</Text>
+                <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10 }}>{s.l}</Text>
+              </View>
+            ))}
+          </View>
         </View>
 
-        {/* Actions rapides */}
-        <Text style={styles.sectionTitle}>Actions rapides / Quick actions</Text>
-        <View style={styles.actionsGrid}>
-          {QUICK_ACTIONS.map((a) => (
+        {/* Quick actions */}
+        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', marginBottom: 12 }}>Actions rapides</Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
+          {QUICK_ACTIONS.map((action, i) => (
             <TouchableOpacity
-              key={a.label}
-              style={[styles.actionBtn, shadows.sm]}
-              accessibilityLabel={a.label}
+              key={i}
+              onPress={() => navigation.navigate(action.route)}
+              style={{ alignItems: 'center', justifyContent: 'center', padding: 14, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', width: '30%', ...SHADOW_SM }}
+              activeOpacity={0.85}
             >
-              <Text style={styles.actionEmoji}>{a.emoji}</Text>
-              <Text style={styles.actionLabel}>{a.label}</Text>
+              <View style={{ position: 'relative', marginBottom: 6 }}>
+                <Icon name={action.icon} size={26} color="#E8591A" />
+                {action.badge && (
+                  <View style={{ position: 'absolute', top: -4, right: -8, width: 18, height: 18, backgroundColor: '#C62828', borderRadius: 9, alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ color: '#fff', fontSize: 9, fontWeight: '700' }}>{action.badge}</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: '#2C1810' }}>{action.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* Commandes reçues */}
-        <View style={styles.ordersHeader}>
-          <Text style={styles.sectionTitle}>Commandes reçues</Text>
-          <View style={styles.ordersBadge}>
-            <Text style={styles.ordersBadgeText}>{orders.length}</Text>
-          </View>
-        </View>
-
-        {orders.length === 0 ? (
-          <Text style={styles.noOrders}>Aucune commande en attente</Text>
-        ) : (
-          orders.map((order, idx) => (
-            <View
-              key={order.id}
-              style={[styles.orderCard, idx === 0 && styles.orderCardNew]}
+        {/* Recent orders */}
+        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', marginBottom: 12 }}>Commandes récentes</Text>
+        <View style={{ borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', overflow: 'hidden', ...SHADOW_SM }}>
+          {RECENT_ORDERS.map((order, i) => (
+            <TouchableOpacity
+              key={i}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 13, borderBottomWidth: i < RECENT_ORDERS.length - 1 ? 1 : 0, borderColor: '#F5F0EB' }}
+              activeOpacity={0.85}
             >
-              <View style={styles.orderTop}>
-                <View style={[styles.orderNum, { backgroundColor: colors.primary }]}>
-                  <Text style={styles.orderNumText}>N{idx + 1}</Text>
-                </View>
-                <View style={styles.orderInfo}>
-                  <Text style={styles.orderCustomer}>{order.customer} · {order.username}</Text>
-                  <Text style={styles.orderRef}>{order.ref}</Text>
-                  <Text style={styles.orderMeta}>{order.minutesAgo} min · {order.method} ✓</Text>
-                </View>
-                <Text style={styles.orderAmount}>{order.totalXAF.toLocaleString()} XAF</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: '#2C1810' }}>{order.id} · {order.client}</Text>
+                <Text style={{ fontSize: 12, color: '#8C8278', marginTop: 2 }}>{order.time}</Text>
               </View>
-              <View style={styles.orderActions}>
-                <TouchableOpacity
-                  style={styles.confirmBtn}
-                  onPress={() => confirmOrder(order.id)}
-                  accessibilityLabel="Confirmer la commande"
-                >
-                  <Text style={styles.confirmText}>✓ Confirmer</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.detailBtn} accessibilityLabel="Voir les détails">
-                  <Text style={styles.detailText}>Détail →</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.cancelBtn}
-                  onPress={() => cancelOrder(order.id)}
-                  accessibilityLabel="Annuler la commande"
-                >
-                  <Text style={styles.cancelText}>✕ Annuler</Text>
-                </TouchableOpacity>
+              <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810', marginRight: 8 }}>{order.total.toLocaleString()} XAF</Text>
+              <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, backgroundColor: order.status === 'new' ? '#FEF3EC' : '#FBF3DC' }}>
+                <Text style={{ fontSize: 11, fontWeight: '600', color: order.status === 'new' ? '#E8591A' : '#F9A825' }}>
+                  {order.status === 'new' ? 'Nouvelle' : 'En prépa.'}
+                </Text>
               </View>
-            </View>
-          ))
-        )}
-
-        <View style={{ height: 100 }} />
+            </TouchableOpacity>
+          ))}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe:    { flex: 1, backgroundColor: colors.cream },
-  appBar:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  restaurantRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  restaurantName:{ fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink },
-  verifiedRow:   { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  proBadge:      { backgroundColor: colors.gold, borderRadius: radius.sm, paddingHorizontal: spacing.xs, fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: colors.white },
-  verifiedText:  { fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.success },
-  bellIcon:      { fontSize: 22 },
-
-  tabs:          { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: colors.border },
-  tab:           { flex: 1, paddingVertical: spacing.sm, alignItems: 'center' },
-  tabActive:     { borderBottomWidth: 2, borderBottomColor: colors.primary },
-  tabText:       { fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: colors.inkMute },
-  tabTextActive: { color: colors.primary, fontFamily: fontFamily.bold },
-
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', padding: spacing.md, gap: spacing.sm },
-  statCard:  { width: '47%', backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.md, borderWidth: 1, borderColor: colors.border },
-  statEmoji: { fontSize: 18, marginBottom: 4 },
-  statValue: { fontFamily: fontFamily.serifBold, fontSize: fontSize.xxl, color: colors.ink },
-  statLabel: { fontFamily: fontFamily.medium, fontSize: fontSize.xs, color: colors.inkMute, marginTop: 2 },
-  statSub:   { fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.success },
-
-  sectionTitle: { fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink, paddingHorizontal: spacing.md, marginBottom: spacing.sm },
-
-  actionsGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: spacing.md, gap: spacing.sm, marginBottom: spacing.lg },
-  actionBtn:   { width: '30%', backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.sm, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
-  actionEmoji: { fontSize: 22, marginBottom: 4 },
-  actionLabel: { fontFamily: fontFamily.medium, fontSize: fontSize.xs, color: colors.inkSoft, textAlign: 'center' },
-
-  ordersHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, marginBottom: spacing.sm, gap: spacing.sm },
-  ordersBadge:  { backgroundColor: colors.error, borderRadius: radius.full, width: 22, height: 22, alignItems: 'center', justifyContent: 'center' },
-  ordersBadgeText:{ fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: colors.white },
-
-  noOrders: { fontFamily: fontFamily.regular, fontSize: fontSize.md, color: colors.inkMute, textAlign: 'center', paddingVertical: spacing.xl },
-
-  orderCard:    { marginHorizontal: spacing.md, marginBottom: spacing.sm, backgroundColor: colors.surface, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
-  orderCardNew: { borderColor: colors.primary },
-  orderTop:     { flexDirection: 'row', alignItems: 'flex-start', padding: spacing.md, gap: spacing.sm },
-  orderNum:     { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  orderNumText: { fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: colors.white },
-  orderInfo:    { flex: 1 },
-  orderCustomer:{ fontFamily: fontFamily.bold, fontSize: fontSize.sm, color: colors.ink },
-  orderRef:     { fontFamily: fontFamily.mono ?? fontFamily.regular, fontSize: fontSize.xs, color: colors.inkMute },
-  orderMeta:    { fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.inkMute, marginTop: 2 },
-  orderAmount:  { fontFamily: fontFamily.serifBold, fontSize: fontSize.lg, color: colors.primary },
-  orderActions: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: colors.border },
-  confirmBtn:   { flex: 1, paddingVertical: spacing.sm, alignItems: 'center', backgroundColor: colors.successSoft },
-  confirmText:  { fontFamily: fontFamily.bold, fontSize: fontSize.sm, color: colors.success },
-  detailBtn:    { flex: 1, paddingVertical: spacing.sm, alignItems: 'center', borderLeftWidth: 1, borderRightWidth: 1, borderColor: colors.border },
-  detailText:   { fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: colors.inkSoft },
-  cancelBtn:    { flex: 1, paddingVertical: spacing.sm, alignItems: 'center', backgroundColor: colors.errorSoft },
-  cancelText:   { fontFamily: fontFamily.bold, fontSize: fontSize.sm, color: colors.error },
-});

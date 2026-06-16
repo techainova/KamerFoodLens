@@ -4,7 +4,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { TextInput } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import type { NativeStackNavigationProp, RouteProp } from '@react-navigation/native-stack';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RouteProp } from '@react-navigation/native';
 import type { AuthStackParams } from '@/navigation/types';
 import { useAuthStore } from '@/store/auth.store';
 import apiClient from '@/services/api.client';
@@ -95,7 +96,7 @@ export function useOTP() {
 
   function changeEmail() { navigation.goBack(); }
 
-  const maskedEmail = email.replace(/(.{2})(.*)(@.*)/, (_, a, b, c) =>
+  const maskedEmail = email.replace(/(.{2})(.*)(@.*)/, (_: string, a: string, b: string, c: string) =>
     a + '*'.repeat(Math.min(b.length, 6)) + c,
   );
 

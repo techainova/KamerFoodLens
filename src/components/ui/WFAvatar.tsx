@@ -1,52 +1,58 @@
 // src/components/ui/WFAvatar.tsx
-// Avatar utilisateur — image ou initiales
-
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
-import { colors, fontFamily, fontSize } from '@/constants/theme';
+import { colors, fontFamily } from '@/constants/theme';
 
 type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
 const SIZE_MAP: Record<AvatarSize, number> = {
-  xs: 24,
-  sm: 32,
-  md: 40,
-  lg: 56,
-  xl: 80,
+  xs: 24, sm: 32, md: 40, lg: 56, xl: 80,
 };
 
-interface Props {
-  uri?:     string;
-  initials?: string;
-  size?:    AvatarSize;
-  online?:  boolean;
+function resolveSize(size: AvatarSize | number): number {
+  if (typeof size === 'number') return size;
+  return SIZE_MAP[size];
 }
 
-export function WFAvatar({
-  uri,
-  initials = '?',
-  size     = 'md',
-  online   = false,
-}: Props) {
-  const dim = SIZE_MAP[size];
+function nameToInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0] ?? '')
+    .join('')
+    .toUpperCase() || '?';
+}
+
+interface WFAvatarProps {
+  uri?:      string;
+  name?:     string;
+  initials?: string;
+  size?:     AvatarSize | number;
+  online?:   boolean;
+}
+
+export function WFAvatar({ uri, name, initials, size = 'md', online = false }: WFAvatarProps) {
+  const dim      = resolveSize(size);
+  const computed = initials ?? (name ? nameToInitials(name) : '?');
 
   return (
     <View style={{ width: dim, height: dim }}>
       {uri ? (
         <Image
           source={{ uri }}
-          style={[styles.image, { width: dim, height: dim, borderRadius: dim / 2 }]}
+          style={{ width: dim, height: dim, borderRadius: dim / 2 }}
           accessibilityLabel="Avatar utilisateur"
+          accessibilityRole="image"
         />
       ) : (
         <View
-          style={[
-            styles.placeholder,
-            { width: dim, height: dim, borderRadius: dim / 2 },
-          ]}
+          style={[styles.placeholder, { width: dim, height: dim, borderRadius: dim / 2 }]}
+          accessible
+          accessibilityLabel={`Avatar ${computed}`}
+          accessibilityRole="image"
         >
           <Text style={[styles.initials, { fontSize: dim * 0.35 }]}>
-            {initials.slice(0, 2).toUpperCase()}
+            {computed.slice(0, 2)}
           </Text>
         </View>
       )}
@@ -64,9 +70,6 @@ export function WFAvatar({
 }
 
 const styles = StyleSheet.create({
-  image: {
-    resizeMode: 'cover',
-  },
   placeholder: {
     backgroundColor: colors.primarySoft,
     alignItems:      'center',

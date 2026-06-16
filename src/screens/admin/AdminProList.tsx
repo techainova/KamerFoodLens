@@ -1,109 +1,88 @@
-// src/screens/admin/AdminProList.tsx
-// Validation comptes Pro — liste + approuver/rejeter
-
-import React from 'react';
-import {
-  FlatList, StyleSheet, Text, TouchableOpacity, View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useAdmin } from '@/hooks/useAdmin';
-import { colors, fontFamily, fontSize, radius, spacing } from '@/constants/theme';
+import Icon from '@/components/ui/Icon';
 
-const TYPE_EMOJI: Record<string, string> = {
-  Restaurant: '🍽',
-  Chef:       '👨‍🍳',
-  Ecole:      '🎓',
-};
+const TABS = ['En attente', 'Approuvés', 'Rejetés'];
+
+const PENDING = [
+  { name: 'Kmer Saveurs',    owner: 'Kevin Bah',   type: 'Restaurant', submitted: '14 Jun', docs: true  },
+  { name: 'Douala Food Lab', owner: 'Thierry M.',  type: 'Formation',  submitted: '13 Jun', docs: false },
+];
 
 export default function AdminProList() {
-  const navigation = useNavigation();
-  const { proRequests, approvePro, rejectPro } = useAdmin();
+  const navigation = useNavigation<any>();
+  const [activeTab, setActiveTab] = useState(0);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>x</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+      <StatusBar barStyle="light-content" />
+
+      {/* Header */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#1A237E' }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12, padding: 4 }}>
+          <Icon name="ArrowLeft" size={20} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.title}>Demandes Pro</Text>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{proRequests.filter((r) => r.status === 'pending').length}</Text>
+        <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700', flex: 1 }}>Comptes Pro</Text>
+        <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#C62828', alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>{PENDING.length}</Text>
         </View>
       </View>
 
-      <FlatList
-        data={proRequests}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
-          <View style={styles.requestCard}>
-            <View style={styles.requestHeader}>
-              <Text style={styles.typeEmoji}>{TYPE_EMOJI[item.type] ?? '🏢'}</Text>
-              <View style={styles.requestInfo}>
-                <Text style={styles.businessName}>{item.businessName}</Text>
-                <Text style={styles.owner}>{item.owner} · {item.type}</Text>
-                <Text style={styles.submitted}>{item.submitted}</Text>
-              </View>
-              <View style={[
-                styles.statusBadge,
-                { backgroundColor: item.status === 'pending' ? colors.goldSoft : item.status === 'approved' ? colors.successSoft : colors.errorSoft },
-              ]}>
-                <Text style={[
-                  styles.statusText,
-                  { color: item.status === 'pending' ? colors.gold : item.status === 'approved' ? colors.success : colors.error },
-                ]}>
-                  {item.status === 'pending' ? 'En attente' : item.status === 'approved' ? 'Approuve' : 'Rejete'}
-                </Text>
-              </View>
-            </View>
+      {/* Tabs */}
+      <View style={{ flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+        {TABS.map((tab, i) => (
+          <TouchableOpacity
+            key={i} onPress={() => setActiveTab(i)}
+            style={{ flex: 1, paddingVertical: 12, alignItems: 'center', borderBottomWidth: 2, borderColor: i === activeTab ? '#1A237E' : 'transparent' }}
+          >
+            <Text style={{ fontSize: 13, fontWeight: i === activeTab ? '600' : '500', color: i === activeTab ? '#1A237E' : '#8C8278' }}>{tab}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
-            {item.status === 'pending' && (
-              <View style={styles.actions}>
-                <TouchableOpacity
-                  style={styles.approveBtn}
-                  onPress={() => approvePro(item.id)}
-                  accessibilityLabel="Approuver"
-                >
-                  <Text style={styles.approveBtnText}>Approuver (48h)</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.rejectBtn}
-                  onPress={() => rejectPro(item.id)}
-                  accessibilityLabel="Rejeter"
-                >
-                  <Text style={styles.rejectBtnText}>Rejeter</Text>
-                </TouchableOpacity>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+        {activeTab === 0 ? (
+          <View style={{ gap: 12 }}>
+            {PENDING.map((pro, i) => (
+              <View key={i} style={{ padding: 16, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810' }}>{pro.name}</Text>
+                    <Text style={{ fontSize: 12, color: '#8C8278', marginTop: 2 }}>{pro.owner} · {pro.type}</Text>
+                    <Text style={{ fontSize: 11, color: '#8C8278', marginTop: 1 }}>Soumis le {pro.submitted}</Text>
+                  </View>
+                  <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, backgroundColor: pro.docs ? '#E3F0E4' : '#FBDCDC', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Icon name={pro.docs ? 'Check' : 'AlertTriangle'} size={10} color={pro.docs ? '#2E7D32' : '#C62828'} />
+                    <Text style={{ fontSize: 11, fontWeight: '600', color: pro.docs ? '#2E7D32' : '#C62828' }}>
+                      {pro.docs ? 'Docs OK' : 'Docs manquants'}
+                    </Text>
+                  </View>
+                </View>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <TouchableOpacity style={{ flex: 1, height: 36, backgroundColor: '#E3F0E4', borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ color: '#2E7D32', fontSize: 12, fontWeight: '600' }}>Approuver</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={{ flex: 1, height: 36, backgroundColor: '#FBDCDC', borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ color: '#C62828', fontSize: 12, fontWeight: '600' }}>Rejeter</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('AdminProDetail', { restaurantId: pro.name })}
+                    style={{ height: 36, paddingHorizontal: 12, borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <Text style={{ color: '#6D4C41', fontSize: 12 }}>Détails</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            )}
+            ))}
+          </View>
+        ) : (
+          <View style={{ alignItems: 'center', justifyContent: 'center', paddingTop: 64 }}>
+            <Icon name="Check" size={32} color="rgba(140,130,120,0.3)" />
+            <Text style={{ color: '#8C8278', fontSize: 14, marginTop: 12 }}>Aucun élément dans cet onglet.</Text>
           </View>
         )}
-      />
+      </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe:    { flex: 1, backgroundColor: colors.cream },
-  header:  { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: colors.navy, gap: spacing.sm },
-  backBtn: { padding: spacing.xs },
-  backIcon:{ fontSize: 18, color: colors.white, fontWeight: 'bold' },
-  title:   { fontFamily: fontFamily.bold, fontSize: fontSize.lg, color: colors.white, flex: 1 },
-  badge:   { backgroundColor: colors.error, borderRadius: radius.full, paddingHorizontal: spacing.sm, paddingVertical: 2 },
-  badgeText:{ fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: colors.white },
-  list:    { padding: spacing.md },
-  requestCard: { backgroundColor: colors.surface, borderRadius: radius.md, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
-  requestHeader:{ flexDirection: 'row', alignItems: 'flex-start', padding: spacing.md, gap: spacing.md },
-  typeEmoji:    { fontSize: 28 },
-  requestInfo:  { flex: 1 },
-  businessName: { fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink },
-  owner:        { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.inkMute },
-  submitted:    { fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.inkMute, marginTop: 2 },
-  statusBadge:  { borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: 2, alignSelf: 'flex-start' },
-  statusText:   { fontFamily: fontFamily.bold, fontSize: fontSize.xs },
-  actions:      { flexDirection: 'row', borderTopWidth: 1, borderTopColor: colors.border },
-  approveBtn:   { flex: 1, paddingVertical: spacing.sm, alignItems: 'center', backgroundColor: colors.successSoft },
-  approveBtnText:{ fontFamily: fontFamily.bold, fontSize: fontSize.sm, color: colors.success },
-  rejectBtn:    { flex: 1, paddingVertical: spacing.sm, alignItems: 'center', backgroundColor: colors.errorSoft, borderLeftWidth: 1, borderLeftColor: colors.border },
-  rejectBtnText:{ fontFamily: fontFamily.bold, fontSize: fontSize.sm, color: colors.error },
-});

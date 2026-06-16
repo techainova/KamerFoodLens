@@ -1,212 +1,100 @@
-// src/screens/order/OrderInvoice.tsx
-// Facture numérique — N° unique + QR code + partage — C4
-
 import React from 'react';
-import {
-  ScrollView, StyleSheet, Text, TouchableOpacity, View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { colors, fontFamily, fontSize, radius, spacing, shadows } from '@/constants/theme';
+import Icon from '@/components/ui/Icon';
 
-// QR Code placeholder (react-native-qrcode-svg requis en production)
-function QRPlaceholder() {
-  return (
-    <View style={styles.qrPlaceholder}>
-      <Text style={styles.qrEmoji}>▣</Text>
-      <Text style={styles.qrHint}>QR Code</Text>
-    </View>
-  );
-}
+const SHADOW_MD = { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.10, shadowRadius: 6, elevation: 4 };
+
+const ORDER_ITEMS = [
+  { name: 'Ndolé traditionnel × 2', price: 9000 },
+  { name: 'Miondo (x3) × 1',        price: 1500 },
+  { name: 'Jus de gingembre × 2',   price: 2000 },
+];
 
 export default function OrderInvoice() {
-  const navigation = useNavigation();
-  const INVOICE_REF = 'KFL-2026-MP-00847';
-  const DATE        = '24 Nov 2026 · 14:32';
-
-  const ITEMS = [
-    { name: 'Ndolé aux crevettes', qty: 2, priceXAF: 7000 },
-    { name: 'Plantains frits',     qty: 1, priceXAF: 1500 },
-    { name: 'Eau minérale Tangui', qty: 2, priceXAF: 2000 },
-  ];
-  const total = ITEMS.reduce((s, i) => s + i.priceXAF, 0);
+  const navigation = useNavigation<any>();
+  const subtotal = ORDER_ITEMS.reduce((s, i) => s + i.price, 0);
+  const delivery = 1000;
+  const total = subtotal + delivery;
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+      <StatusBar barStyle="dark-content" />
 
-        {/* Facture card */}
-        <View style={[styles.invoiceCard, shadows.lg]}>
-          {/* Header facture */}
-          <View style={styles.invoiceHeader}>
-            <View style={styles.invoiceLogoRow}>
-              <View style={styles.invoiceLogo}><Text style={styles.invoiceLogoText}>KFL</Text></View>
-              <View>
-                <Text style={styles.invoiceRestaurant}>Chez Maman Pauline</Text>
-                <Text style={styles.invoiceVerified}>✓ Établissement vérifié KFL</Text>
-                <Text style={styles.invoiceAddress}>Akwa · Douala · +237 6XX XX XX XX</Text>
-              </View>
+      {/* AppBar */}
+      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
+          <Icon name="ArrowLeft" size={22} color="#2C1810" />
+        </TouchableOpacity>
+        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: '#2C1810' }}>Facture</Text>
+        <TouchableOpacity style={{ width: 36, height: 36, borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 18, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="Share2" size={16} color="#6D4C41" />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 80 }} showsVerticalScrollIndicator={false}>
+
+        {/* Invoice header */}
+        <View style={{ padding: 20, borderRadius: 20, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', marginBottom: 16, ...SHADOW_MD }}>
+          <View style={{ alignItems: 'center', marginBottom: 16 }}>
+            <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: '#E3F0E4', borderWidth: 2, borderColor: '#2E7D32', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+              <Icon name="Check" size={22} color="#2E7D32" />
             </View>
-            <View style={styles.dividerDashed} />
-            <Text style={styles.invoiceLabel}>FACTURE N°</Text>
-            <Text style={styles.invoiceRef}>{INVOICE_REF}</Text>
-            <View style={styles.invoiceMeta}>
-              <View>
-                <Text style={styles.invoiceMetaLabel}>DATE</Text>
-                <Text style={styles.invoiceMetaValue}>{DATE}</Text>
-              </View>
-              <View>
-                <Text style={styles.invoiceMetaLabel}>CLIENT</Text>
-                <Text style={styles.invoiceMetaValue}>@amah_ndongo</Text>
-              </View>
-              <View style={styles.paidBadge}>
-                <Text style={styles.paidText}>✓ PAYÉE / PAID</Text>
-              </View>
-            </View>
+            <Text style={{ fontSize: 18, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810' }}>Payé</Text>
+            <Text style={{ fontSize: 12, color: '#8C8278' }}>15 Jun 2026 · 14:35</Text>
           </View>
 
-          <View style={styles.dividerDashed} />
-
-          {/* Lignes commande */}
-          <Text style={styles.orderSection}>COMMANDE / ORDER</Text>
-          {ITEMS.map((item) => (
-            <View key={item.name} style={styles.itemRow}>
-              <Text style={styles.itemName}>{item.name} × {item.qty}</Text>
-              <Text style={styles.itemPrice}>{item.priceXAF.toLocaleString()} XAF</Text>
+          {[
+            { l: 'N° Facture',  v: '#KFL-2026-4821',    green: false },
+            { l: 'Restaurant',  v: 'Chez Mama Pauline',  green: false },
+            { l: 'Paiement',    v: 'MTN Mobile Money',   green: false },
+            { l: 'Statut',      v: 'Confirmé',            green: true  },
+          ].map((row, i) => (
+            <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: i < 3 ? 1 : 0, borderColor: '#F5F0EB' }}>
+              <Text style={{ fontSize: 14, color: '#8C8278' }}>{row.l}</Text>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: row.green ? '#2E7D32' : '#2C1810' }}>{row.v}</Text>
             </View>
           ))}
+        </View>
 
-          <View style={styles.dividerDashed} />
-
-          {/* Totaux */}
-          <View style={styles.totalsBlock}>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Sous-total</Text>
-              <Text style={styles.totalValue}>{total.toLocaleString()} XAF</Text>
+        {/* Items */}
+        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', marginBottom: 8 }}>Articles</Text>
+        <View style={{ borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', marginBottom: 16 }}>
+          {ORDER_ITEMS.map((item, i) => (
+            <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: i < ORDER_ITEMS.length - 1 ? 1 : 0, borderColor: '#F5F0EB' }}>
+              <Text style={{ fontSize: 14, color: '#2C1810' }}>{item.name}</Text>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: '#2C1810' }}>{item.price.toLocaleString()} XAF</Text>
             </View>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Frais de service</Text>
-              <Text style={styles.totalValue}>0 XAF</Text>
-            </View>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>TVA (0%)</Text>
-              <Text style={styles.totalValue}>0 XAF</Text>
-            </View>
-            <View style={[styles.totalRow, styles.totalFinalRow]}>
-              <Text style={styles.totalFinalLabel}>TOTAL PAYÉ</Text>
-              <Text style={styles.totalFinalValue}>{total.toLocaleString()} XAF</Text>
-            </View>
+          ))}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10, borderTopWidth: 1, borderColor: '#E5E0D8' }}>
+            <Text style={{ fontSize: 14, color: '#8C8278' }}>Livraison</Text>
+            <Text style={{ fontSize: 14, color: '#6D4C41' }}>{delivery.toLocaleString()} XAF</Text>
           </View>
-
-          <View style={styles.dividerDashed} />
-
-          {/* Paiement */}
-          <View style={styles.paymentBlock}>
-            <Text style={styles.paymentTitle}>PAIEMENT / PAYMENT</Text>
-            <View style={styles.paymentRow}>
-              <Text style={styles.paymentLabel}>Méthode</Text>
-              <Text style={styles.paymentValue}>🟠 Orange Money</Text>
-            </View>
-            <View style={styles.paymentRow}>
-              <Text style={styles.paymentLabel}>Référence</Text>
-              <Text style={styles.paymentValue}>OM-TXN-48291847</Text>
-            </View>
-          </View>
-
-          <View style={styles.dividerDashed} />
-
-          {/* QR Code */}
-          <View style={styles.qrBlock}>
-            <QRPlaceholder />
-            <Text style={styles.qrInstruction}>
-              Scannez ce code ou montrez cette facture à votre arrivée
-            </Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 16 }}>
+            <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810' }}>Total</Text>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: '#E8591A' }}>{total.toLocaleString()} XAF</Text>
           </View>
         </View>
 
-        {/* Actions */}
-        <View style={styles.actions}>
-          <TouchableOpacity style={styles.actionBtn} accessibilityLabel="Télécharger PDF">
-            <Text style={styles.actionBtnEmoji}>⬇️</Text>
-            <Text style={styles.actionBtnText}>Télécharger en PDF</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn} accessibilityLabel="Partager WhatsApp">
-            <Text style={styles.actionBtnEmoji}>💬</Text>
-            <Text style={styles.actionBtnText}>Partager sur WhatsApp</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn} accessibilityLabel="Imprimer">
-            <Text style={styles.actionBtnEmoji}>🖨️</Text>
-            <Text style={styles.actionBtnText}>Imprimer</Text>
-          </TouchableOpacity>
+        {/* QR placeholder */}
+        <View style={{ alignItems: 'center', paddingVertical: 20, marginBottom: 16 }}>
+          <Text style={{ fontSize: 11, color: '#8C8278', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 12 }}>QR Code · Facture</Text>
+          <View style={{ width: 128, height: 128, backgroundColor: '#F5F0EB', borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="QrCode" size={56} color="rgba(140,130,120,0.35)" />
+          </View>
+          <Text style={{ fontSize: 12, color: '#8C8278', marginTop: 8, fontFamily: 'JetBrainsMono-Regular' }}>#KFL-2026-4821</Text>
         </View>
-
-        <TouchableOpacity
-          style={styles.homeBtn}
-          onPress={() => navigation.navigate('HomeScreen' as never)}
-          accessibilityLabel="Retour à l'accueil"
-        >
-          <Text style={styles.homeBtnText}>Retour à l'accueil</Text>
-        </TouchableOpacity>
-
-        <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Actions */}
+      <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingVertical: 14, borderTopWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}>
+        <TouchableOpacity style={{ flex: 1, height: 44, borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontSize: 14, color: '#6D4C41' }}>Télécharger PDF</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={{ flex: 1, height: 44, backgroundColor: '#E8591A', borderRadius: 22, alignItems: 'center', justifyContent: 'center' }} activeOpacity={0.85}>
+          <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>Partager</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe:      { flex: 1, backgroundColor: colors.surface2 },
-  container: { padding: spacing.md },
-
-  invoiceCard:  { backgroundColor: colors.ink, borderRadius: radius.lg, overflow: 'hidden', marginBottom: spacing.md },
-  invoiceHeader:{ padding: spacing.lg },
-  invoiceLogoRow:{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, marginBottom: spacing.md },
-  invoiceLogo:  { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-  invoiceLogoText:{ fontFamily: fontFamily.serifBold, fontSize: fontSize.md, color: colors.ink },
-  invoiceRestaurant:{ fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.white },
-  invoiceVerified:  { fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: colors.success },
-  invoiceAddress:   { fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.inkMute },
-
-  dividerDashed:{ borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.1)', borderStyle: 'dashed', marginVertical: spacing.md },
-
-  invoiceLabel: { fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: 'rgba(255,255,255,0.5)', letterSpacing: 1 },
-  invoiceRef:   { fontFamily: fontFamily.bold, fontSize: fontSize.xl, color: colors.primary, marginBottom: spacing.md },
-  invoiceMeta:  { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
-  invoiceMetaLabel:{ fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: 'rgba(255,255,255,0.5)' },
-  invoiceMetaValue:{ fontFamily: fontFamily.bold, fontSize: fontSize.sm, color: colors.white },
-  paidBadge:    { marginLeft: 'auto', backgroundColor: colors.successSoft, borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: 4 },
-  paidText:     { fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: colors.success },
-
-  orderSection: { fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: 'rgba(255,255,255,0.5)', letterSpacing: 1, paddingHorizontal: spacing.lg, marginBottom: spacing.sm },
-  itemRow:      { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.xs },
-  itemName:     { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.white, flex: 1 },
-  itemPrice:    { fontFamily: fontFamily.bold, fontSize: fontSize.sm, color: colors.white },
-
-  totalsBlock:  { paddingHorizontal: spacing.lg },
-  totalRow:     { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.xs },
-  totalLabel:   { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: 'rgba(255,255,255,0.6)' },
-  totalValue:   { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.white },
-  totalFinalRow:{ borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)', paddingTop: spacing.sm, marginTop: spacing.xs },
-  totalFinalLabel:{ fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.white },
-  totalFinalValue:{ fontFamily: fontFamily.serifBold, fontSize: fontSize.lg, color: colors.primary },
-
-  paymentBlock: { paddingHorizontal: spacing.lg },
-  paymentTitle: { fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: 'rgba(255,255,255,0.5)', letterSpacing: 1, marginBottom: spacing.sm },
-  paymentRow:   { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.xs },
-  paymentLabel: { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: 'rgba(255,255,255,0.6)' },
-  paymentValue: { fontFamily: fontFamily.bold, fontSize: fontSize.sm, color: colors.white },
-
-  qrBlock:      { alignItems: 'center', padding: spacing.lg },
-  qrPlaceholder:{ width: 120, height: 120, backgroundColor: colors.surface, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md },
-  qrEmoji:      { fontSize: 60, color: colors.ink },
-  qrHint:       { fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: colors.inkMute },
-  qrInstruction:{ fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: 'rgba(255,255,255,0.6)', textAlign: 'center' },
-
-  actions:      { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
-  actionBtn:    { flex: 1, backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.md, alignItems: 'center', gap: 4, borderWidth: 1, borderColor: colors.border },
-  actionBtnEmoji:{ fontSize: 20 },
-  actionBtnText: { fontFamily: fontFamily.medium, fontSize: fontSize.xs, color: colors.inkSoft, textAlign: 'center' },
-
-  homeBtn:      { backgroundColor: colors.primary, borderRadius: radius.full, paddingVertical: spacing.md, alignItems: 'center' },
-  homeBtnText:  { fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.white },
-});

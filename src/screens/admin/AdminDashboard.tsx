@@ -1,153 +1,107 @@
-// src/screens/admin/AdminDashboard.tsx
-// Dashboard admin — metriques globales + alertes + activite live
-
 import React from 'react';
-import {
-  ScrollView, StyleSheet, Text, TouchableOpacity, View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useAdmin } from '@/hooks/useAdmin';
-import { colors, fontFamily, fontSize, radius, spacing, shadows } from '@/constants/theme';
+import Icon from '@/components/ui/Icon';
+
+const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
+
+const ALERTS = [
+  { type: 'warn',  msg: '3 contenus signalés en attente',  icon: 'AlertTriangle' as const, bg: '#FBF3DC', bc: '#F9A82540', tc: '#F9A825' },
+  { type: 'error', msg: 'Paiement MTN échoué · #TX-4820',  icon: 'X'             as const, bg: '#FBDCDC', bc: '#C6282840', tc: '#C62828' },
+  { type: 'info',  msg: '8 nouvelles inscriptions Pro',     icon: 'Info'          as const, bg: '#E8EAF6', bc: '#1A237E20', tc: '#1A237E' },
+];
+
+const METRICS = [
+  { v: '8 247', l: 'Utilisateurs',  delta: '+124', icon: 'Users'      as const, color: '#1A237E' },
+  { v: '312',   l: 'Pros actifs',   delta: '+8',   icon: 'Star'       as const, color: '#F9A825' },
+  { v: '47.9k', l: 'Scans/mois',   delta: '+12%', icon: 'ScanLine'   as const, color: '#E8591A' },
+  { v: '1.4M',  l: 'Revenus XAF',  delta: '+9%',  icon: 'DollarSign' as const, color: '#2E7D32' },
+];
+
+const NAV_ITEMS = [
+  { l: 'Utilisateurs',       icon: 'Users'         as const, route: 'AdminUsers'     },
+  { l: 'Comptes Pro',        icon: 'Star'          as const, route: 'AdminProList'   },
+  { l: 'Modération',         icon: 'Shield'        as const, route: 'AdminModeration'},
+  { l: 'Finance & Virements',icon: 'DollarSign'    as const, route: 'AdminFinance'   },
+  { l: 'Tombola',            icon: 'Ticket'        as const, route: 'AdminTombola'   },
+  { l: 'Notifications Push', icon: 'Megaphone'     as const, route: 'AdminPush'      },
+  { l: 'Logs & Alertes',     icon: 'List'          as const, route: 'AdminLogs'      },
+  { l: 'Paramètres',         icon: 'Settings'      as const, route: 'AdminSettings'  },
+];
 
 export default function AdminDashboard() {
-  const navigation = useNavigation();
-  const { stats }  = useAdmin();
-
-  const STAT_CARDS = [
-    { emoji: '👥', label: 'Utilisateurs actifs', value: stats.activeUsers.toLocaleString(), sub: '+124 aujourd\'hui', color: colors.primary },
-    { emoji: '⭐', label: 'Comptes Pro actifs',  value: String(stats.proAccounts),          sub: `${stats.pendingPro} en attente`, color: colors.gold },
-    { emoji: '💰', label: 'Revenus totaux',      value: `${(stats.totalRevenue / 1000).toFixed(0)}K XAF`, sub: '+8 200 XAF/jour', color: colors.success },
-    { emoji: '📷', label: 'Scans IA',            value: stats.aiScans.toLocaleString(),     sub: '+1 247 cette semaine', color: colors.navy },
-  ];
-
-  const ALERTS = [
-    { id: '1', level: 'urgent', emoji: '🔴', text: `${stats.pendingPro} demandes Pro en attente de validation (> 24h)` },
-    { id: '2', level: 'warn',   emoji: '🟡', text: `${stats.pendingPayouts} virements Pro en attente d'approbation` },
-    { id: '3', level: 'info',   emoji: '🟢', text: 'Serveur IA operationnel — latence moyenne 1.2s' },
-  ];
-
-  const LIVE = [
-    { label: 'Scans IA / heure',    value: '247',  trend: '+12%' },
-    { label: 'Connexions actives',   value: '1 842', trend: '+5%' },
-    { label: 'Commandes en cours',  value: '34',   trend: '' },
-    { label: 'Transactions Mobile', value: '18',   trend: '' },
-  ];
-
-  const QUICK_ACTIONS = [
-    { emoji: '👤', label: 'Utilisateurs',  screen: 'AdminUsers' },
-    { emoji: '⭐', label: 'Comptes Pro',   screen: 'AdminProList' },
-    { emoji: '💸', label: 'Virements',    screen: 'AdminPayouts' },
-    { emoji: '📣', label: 'Push notif.',  screen: 'AdminPush' },
-  ];
+  const navigation = useNavigation<any>();
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      {/* AppBar */}
-      <View style={styles.appBar}>
-        <View style={styles.appBarLeft}>
-          <View style={styles.logoCircle}><Text style={styles.logoText}>KFL</Text></View>
-          <View>
-            <Text style={styles.appBarTitle}>Administration</Text>
-            <Text style={styles.appBarSub}>TechAINova — acces restreint</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+      <StatusBar barStyle="light-content" />
+
+      {/* Header */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#1A237E', borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: '#fff', fontSize: 18, fontFamily: 'PlayfairDisplay-Bold' }}>Admin Dashboard</Text>
+          <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>Juin 2026 · KmerFoodLens</Text>
+        </View>
+        <View style={{ position: 'relative' }}>
+          <TouchableOpacity style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="Bell" size={16} color="#fff" />
+          </TouchableOpacity>
+          <View style={{ position: 'absolute', top: -2, right: -2, width: 16, height: 16, backgroundColor: '#C62828', borderRadius: 8, alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={{ color: '#fff', fontSize: 9, fontWeight: '700' }}>3</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.logoutBtn} accessibilityLabel="Deconnexion admin">
-          <Text style={styles.logoutText}>Quitter</Text>
-        </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
 
-        {/* Stats */}
-        <View style={styles.statsGrid}>
-          {STAT_CARDS.map((s) => (
-            <View key={s.label} style={[styles.statCard, shadows.sm]}>
-              <Text style={styles.statEmoji}>{s.emoji}</Text>
-              <Text style={[styles.statValue, { color: s.color }]}>{s.value}</Text>
-              <Text style={styles.statLabel}>{s.label}</Text>
-              <Text style={styles.statSub}>{s.sub}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Alertes */}
-        <Text style={styles.sectionTitle}>Alertes / Alerts</Text>
-        {ALERTS.map((a) => (
-          <View key={a.id} style={styles.alertRow}>
-            <Text style={styles.alertEmoji}>{a.emoji}</Text>
-            <Text style={styles.alertText}>{a.text}</Text>
-          </View>
-        ))}
-
-        {/* Activite live */}
-        <Text style={styles.sectionTitle}>Activite en direct</Text>
-        <View style={styles.liveGrid}>
-          {LIVE.map((l) => (
-            <View key={l.label} style={[styles.liveCard, shadows.sm]}>
-              <View style={styles.liveDot} />
-              <Text style={styles.liveValue}>{l.value}</Text>
-              <Text style={styles.liveLabel}>{l.label}</Text>
-              {l.trend ? <Text style={styles.liveTrend}>{l.trend}</Text> : null}
-            </View>
-          ))}
-        </View>
-
-        {/* Actions rapides */}
-        <Text style={styles.sectionTitle}>Actions rapides / Quick actions</Text>
-        <View style={styles.actionsRow}>
-          {QUICK_ACTIONS.map((a) => (
-            <TouchableOpacity
-              key={a.label}
-              style={[styles.actionBtn, shadows.sm]}
-              onPress={() => navigation.navigate(a.screen as never)}
-              accessibilityLabel={a.label}
-            >
-              <Text style={styles.actionEmoji}>{a.emoji}</Text>
-              <Text style={styles.actionLabel}>{a.label}</Text>
+        {/* Alerts */}
+        <View style={{ gap: 8, marginBottom: 20 }}>
+          {ALERTS.map((alert, i) => (
+            <TouchableOpacity key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 12, backgroundColor: alert.bg, borderWidth: 1, borderColor: alert.bc }}>
+              <Icon name={alert.icon} size={14} color={alert.tc} />
+              <Text style={{ flex: 1, fontSize: 13, color: alert.tc }}>{alert.msg}</Text>
+              <Icon name="ChevronRight" size={14} color={alert.tc} />
             </TouchableOpacity>
           ))}
         </View>
 
-        <View style={{ height: 60 }} />
+        {/* Metrics */}
+        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', marginBottom: 12 }}>Métriques clés</Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
+          {METRICS.map((m, i) => (
+            <View key={i} style={{ padding: 16, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', width: '47%', ...SHADOW_SM }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: m.color + '15', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name={m.icon} size={16} color={m.color} />
+                </View>
+                <View style={{ backgroundColor: '#E3F0E4', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 20 }}>
+                  <Text style={{ color: '#2E7D32', fontSize: 11, fontWeight: '600' }}>{m.delta}</Text>
+                </View>
+              </View>
+              <Text style={{ fontSize: 20, fontWeight: '700', color: m.color }}>{m.v}</Text>
+              <Text style={{ color: '#8C8278', fontSize: 11, marginTop: 2 }}>{m.l}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Navigation */}
+        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', marginBottom: 12 }}>Navigation</Text>
+        <View style={{ borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', overflow: 'hidden', ...SHADOW_SM }}>
+          {NAV_ITEMS.map((item, i) => (
+            <TouchableOpacity
+              key={i}
+              onPress={() => navigation.navigate(item.route)}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 13, borderBottomWidth: i < NAV_ITEMS.length - 1 ? 1 : 0, borderColor: '#F5F0EB' }}
+            >
+              <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: '#E8EAF6', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name={item.icon} size={15} color="#1A237E" />
+              </View>
+              <Text style={{ flex: 1, fontSize: 14, color: '#2C1810' }}>{item.l}</Text>
+              <Icon name="ChevronRight" size={16} color="#8C8278" />
+            </TouchableOpacity>
+          ))}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe:    { flex: 1, backgroundColor: colors.cream },
-  appBar:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: colors.navy },
-  appBarLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  logoCircle: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  logoText:   { fontFamily: fontFamily.serifBold, fontSize: 12, color: colors.white },
-  appBarTitle:{ fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.white },
-  appBarSub:  { fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: 'rgba(255,255,255,0.6)' },
-  logoutBtn:  { backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: radius.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
-  logoutText: { fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: colors.white },
-
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', padding: spacing.md, gap: spacing.sm },
-  statCard:  { width: '47%', backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.md, borderWidth: 1, borderColor: colors.border },
-  statEmoji: { fontSize: 18, marginBottom: 4 },
-  statValue: { fontFamily: fontFamily.serifBold, fontSize: fontSize.xl },
-  statLabel: { fontFamily: fontFamily.medium, fontSize: fontSize.xs, color: colors.inkMute, marginTop: 2 },
-  statSub:   { fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.success, marginTop: 2 },
-
-  sectionTitle: { fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink, paddingHorizontal: spacing.md, marginBottom: spacing.sm, marginTop: spacing.md },
-
-  alertRow: { flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border, gap: spacing.sm },
-  alertEmoji:{ fontSize: 16 },
-  alertText: { flex: 1, fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.ink },
-
-  liveGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: spacing.md, gap: spacing.sm },
-  liveCard: { width: '47%', backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.md, borderWidth: 1, borderColor: colors.border, position: 'relative' },
-  liveDot:  { position: 'absolute', top: spacing.sm, right: spacing.sm, width: 8, height: 8, borderRadius: 4, backgroundColor: colors.success },
-  liveValue:{ fontFamily: fontFamily.serifBold, fontSize: fontSize.xl, color: colors.ink },
-  liveLabel:{ fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.inkMute, marginTop: 2 },
-  liveTrend:{ fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: colors.success, marginTop: 2 },
-
-  actionsRow: { flexDirection: 'row', paddingHorizontal: spacing.md, gap: spacing.sm },
-  actionBtn:  { flex: 1, backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.md, alignItems: 'center', borderWidth: 1, borderColor: colors.border, gap: spacing.xs },
-  actionEmoji:{ fontSize: 22 },
-  actionLabel:{ fontFamily: fontFamily.medium, fontSize: fontSize.xs, color: colors.inkSoft, textAlign: 'center' },
-});

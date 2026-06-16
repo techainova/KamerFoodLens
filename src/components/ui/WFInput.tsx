@@ -1,18 +1,15 @@
 // src/components/ui/WFInput.tsx
-// Champ de saisie KFL — label + input + erreur + hint
-
 import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
   TextInput,
   TextInputProps,
-  TouchableOpacity,
   View,
 } from 'react-native';
-import { colors, fontFamily, fontSize, radius, spacing } from '@/constants/theme';
+import { colors, fontFamily, fontSize, radius, spacing2 } from '@/constants/theme';
 
-interface Props extends TextInputProps {
+interface WFInputProps extends TextInputProps {
   label?:    string;
   error?:    string;
   hint?:     string;
@@ -27,28 +24,41 @@ export function WFInput({
   icon,
   trailing,
   style,
+  editable = true,
   ...rest
-}: Props) {
+}: WFInputProps) {
   const [focused, setFocused] = useState(false);
 
   const borderColor = error
     ? colors.error
     : focused
-    ? colors.primary
+    ? colors.borderFocus
     : colors.border;
+
+  const borderWidth = (error || focused) ? 1.5 : 1;
 
   return (
     <View style={styles.wrapper}>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
+      {label ? (
+        <Text style={styles.label} accessibilityRole="text">{label}</Text>
+      ) : null}
 
-      <View style={[styles.inputRow, { borderColor }]}>
+      <View
+        style={[
+          styles.inputRow,
+          { borderColor, borderWidth },
+          !editable && styles.disabled,
+        ]}
+      >
         {icon ? <View style={styles.iconLeft}>{icon}</View> : null}
 
         <TextInput
           style={[styles.input, icon ? styles.inputWithIcon : null, style]}
-          placeholderTextColor={colors.inkMute}
+          placeholderTextColor={colors.fgDisabled}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
+          editable={editable}
+          accessible
           {...rest}
         />
 
@@ -56,7 +66,7 @@ export function WFInput({
       </View>
 
       {error ? (
-        <Text style={styles.error}>{error}</Text>
+        <Text style={styles.error} accessibilityRole="text">{error}</Text>
       ) : hint ? (
         <Text style={styles.hint}>{hint}</Text>
       ) : null}
@@ -65,42 +75,42 @@ export function WFInput({
 }
 
 const styles = StyleSheet.create({
-  wrapper:       { marginBottom: spacing.md },
+  wrapper: { marginBottom: spacing2.md },
   label: {
-    fontFamily:    fontFamily.semiBold,
-    fontSize:      fontSize.sm,
-    color:         colors.ink,
-    marginBottom:  spacing.xs,
+    fontFamily:   fontFamily.medium,
+    fontSize:     fontSize.body,
+    color:        colors.fg,
+    marginBottom: spacing2.xs,
   },
   inputRow: {
     flexDirection:   'row',
     alignItems:      'center',
-    borderWidth:     1.5,
-    borderRadius:    radius.md,
+    borderRadius:    radius.sm,
     backgroundColor: colors.surface,
     minHeight:       48,
   },
-  iconLeft:  { paddingLeft: spacing.md },
+  disabled: { opacity: 0.4 },
+  iconLeft:  { paddingLeft: spacing2.md },
   input: {
-    flex:       1,
-    fontFamily: fontFamily.regular,
-    fontSize:   fontSize.base,
-    color:      colors.ink,
-    paddingHorizontal: spacing.md,
-    paddingVertical:   spacing.sm,
+    flex:             1,
+    fontFamily:       fontFamily.regular,
+    fontSize:         fontSize.body,
+    color:            colors.fg,
+    paddingHorizontal: spacing2.md,
+    paddingVertical:   spacing2.sm,
   },
-  inputWithIcon: { paddingLeft: spacing.sm },
-  trailing:  { paddingRight: spacing.md },
+  inputWithIcon: { paddingLeft: spacing2.sm },
+  trailing:  { paddingRight: spacing2.md },
   error: {
     fontFamily: fontFamily.regular,
-    fontSize:   fontSize.xs,
+    fontSize:   fontSize.caption,
     color:      colors.error,
-    marginTop:  spacing.xs,
+    marginTop:  spacing2.xs,
   },
   hint: {
     fontFamily: fontFamily.regular,
-    fontSize:   fontSize.xs,
-    color:      colors.inkMute,
-    marginTop:  spacing.xs,
+    fontSize:   fontSize.caption,
+    color:      colors.fgMuted,
+    marginTop:  spacing2.xs,
   },
 });

@@ -1,279 +1,227 @@
-// src/screens/home/HomeV1.tsx
-// Accueil classique — Scanner CTA + Stories + Recettes populaires + Tendances
-
 import React from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useAuthStore } from '@/store/auth.store';
-import { useHome } from '@/hooks/useHome';
-import { WFAvatar } from '@/components/ui';
-import { colors, fontFamily, fontSize, radius, shadows, spacing } from '@/constants/theme';
+import { useNavigation } from '@react-navigation/native';
+import { StackActions } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { HomeStackParamList } from '@/navigation/types';
+import KFLLogo from '@/components/ui/KFLLogo';
+import Icon from '@/components/ui/Icon';
+
+const DISHES = [
+  { name: 'Ndolé', region: 'Littoral', new: true },
+  { name: 'Poulet DG', region: 'Centre', new: false },
+  { name: 'Mbongo', region: 'Sud', new: false },
+  { name: 'Eru', region: 'Sud-Ouest', new: false },
+  { name: 'Koki', region: 'Ouest', new: false },
+];
+
+const POPULAR = [
+  { name: 'Ndolé', region: 'Littoral', time: '45 min', diff: 'easy' },
+  { name: 'Poulet DG', region: 'Centre', time: '60 min', diff: 'medium' },
+  { name: 'Mbongo Tchobi', region: 'Sud', time: '90 min', diff: 'hard' },
+];
 
 export default function HomeV1() {
-  const { t }    = useTranslation();
-  const user     = useAuthStore((s) => s.user);
-  const { trending, recipes, goScanner, goNotifications } = useHome();
+  const { t } = useTranslation();
+  const nav = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-
-        {/* AppBar */}
-        <View style={styles.appBar}>
-          <View style={styles.logo}>
-            <View style={styles.logoCircle}><Text style={styles.logoText}>KFL</Text></View>
-            <Text style={styles.logoName}>KmerFoodLens</Text>
-          </View>
-          <View style={styles.appBarRight}>
-            <TouchableOpacity
-              onPress={goNotifications}
-              style={styles.iconBtn}
-              accessibilityLabel={t('profile.notifications')}
-            >
-              <Text style={styles.iconText}>🔔</Text>
-            </TouchableOpacity>
-            <WFAvatar
-              initials={`${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`}
-              size="sm"
-            />
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+      {/* Top bar */}
+      <View style={{ paddingHorizontal: 16, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+        <KFLLogo size={34} />
+        <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+          {/* Layout switcher 6a → 6b */}
+          <TouchableOpacity
+            style={{ width: 38, height: 38, borderRadius: 10, borderWidth: 1, borderColor: '#E8591A', backgroundColor: '#FEF0E8', alignItems: 'center', justifyContent: 'center' }}
+            onPress={() => nav.dispatch(StackActions.replace('HomeV2'))}
+          >
+            <Icon name="Grid" size={16} color="#E8591A" />
+          </TouchableOpacity>
+          {/* Bell with red dot */}
+          <TouchableOpacity
+            style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}
+            onPress={() => nav.navigate('Notifications')}
+          >
+            <Icon name="Bell" size={18} color="#6D4C41" />
+            <View style={{ position: 'absolute', top: 7, right: 8, width: 8, height: 8, borderRadius: 4, backgroundColor: '#C62828', borderWidth: 1.5, borderColor: '#fff' }} />
+          </TouchableOpacity>
+          {/* Avatar initials */}
+          <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700', fontFamily: 'Inter-Bold' }}>AN</Text>
           </View>
         </View>
+      </View>
 
-        {/* Scanner CTA */}
-        <TouchableOpacity
-          style={[styles.scannerCTA, shadows.md]}
-          onPress={goScanner}
-          accessibilityRole="button"
-          accessibilityLabel={t('home.scanCTA')}
-        >
-          <View style={styles.scannerCTALeft}>
-            <Text style={styles.scannerCTATitle}>{t('home.scanCTA')}</Text>
-            <Text style={styles.scannerCTASub}>{t('home.scanSubtitle')}</Text>
-          </View>
-          <View style={styles.scannerFAB}>
-            <Text style={styles.scannerFABIcon}>📷</Text>
-          </View>
-        </TouchableOpacity>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
 
-        {/* Barre recherche */}
-        <TouchableOpacity
-          style={styles.searchBar}
-          accessibilityRole="search"
-          accessibilityLabel={t('home.search')}
-        >
-          <Text style={styles.searchIcon}>🔍</Text>
-          <Text style={styles.searchPlaceholder}>{t('home.search')}</Text>
-          <Text style={styles.micIcon}>🎤</Text>
-        </TouchableOpacity>
-
-        {/* Stories plats */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t('home.dishStories')}</Text>
-          <TouchableOpacity accessibilityLabel={t('common.seeAll')}>
-            <Text style={styles.seeAll}>{t('common.seeAll')}</Text>
+        {/* Hero scanner CTA */}
+        <View style={{ padding: 16 }}>
+          <TouchableOpacity
+            style={{ backgroundColor: '#2C1810', borderRadius: 20, padding: 20, flexDirection: 'row', alignItems: 'center', gap: 16 }}
+            onPress={() => nav.navigate('Camera')}
+            activeOpacity={0.85}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 19, color: '#fff', lineHeight: 24 }}>
+                {t('home.scanCTA')}
+              </Text>
+              <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 6, lineHeight: 17 }}>
+                {t('home.scanSubtitle')}
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+                {[t('scanner.photo'), t('scanner.audio'), t('scanner.text')].map((m, i) => (
+                  <View key={i} style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.12)' }}>
+                    <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 11, fontWeight: '500' }}>{m}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+            <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name="Camera" size={26} color="#fff" />
+            </View>
           </TouchableOpacity>
         </View>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={['Ndolé','Poulet DG','Mbongo Tchobi','Eru','Koki']}
-          keyExtractor={(item) => item}
-          contentContainerStyle={styles.storiesRow}
-          renderItem={({ item }) => (
-            <View style={styles.storyItem}>
-              <View style={styles.storyCircle}>
-                <Text style={styles.storyEmoji}>🍽</Text>
-              </View>
-              <Text style={styles.storyLabel} numberOfLines={1}>{item}</Text>
-            </View>
-          )}
-        />
 
-        {/* Recettes populaires */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t('home.popularRecipes')}</Text>
-          <TouchableOpacity><Text style={styles.seeAll}>{t('common.seeAll')}</Text></TouchableOpacity>
+        {/* Search bar */}
+        <View style={{ paddingHorizontal: 16, marginBottom: 4 }}>
+          <TouchableOpacity
+            style={{ height: 46, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 14, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}
+            onPress={() => nav.navigate('Search')}
+            activeOpacity={0.7}
+          >
+            <Icon name="Search" size={16} color="#8C8278" />
+            <Text style={{ flex: 1, color: '#8C8278', fontSize: 13 }}>{t('home.search')}</Text>
+            <View style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name="Mic" size={14} color="#fff" />
+            </View>
+          </TouchableOpacity>
         </View>
 
-        {recipes.isLoading ? (
-          <ActivityIndicator color={colors.primary} style={styles.loader} />
-        ) : (
-          <FlatList
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            data={recipes.data ?? MOCK_RECIPES}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.recipesRow}
-            renderItem={({ item }) => (
-              <View style={[styles.recipeCard, shadows.sm]}>
-                <View style={styles.recipeImage}>
-                  <Text style={styles.recipePlaceholder}>🍲</Text>
+        {/* Stories */}
+        <View style={{ marginTop: 18, paddingLeft: 16 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12, paddingRight: 16 }}>
+            <Text style={{ color: '#2C1810', fontSize: 15, fontWeight: '700', fontFamily: 'Inter-Bold' }}>{t('home.dishStories')}</Text>
+            <TouchableOpacity>
+              <Text style={{ fontSize: 11, color: '#E8591A', fontWeight: '600' }}>{t('common.seeAll')}</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 16, gap: 14 }}>
+            {DISHES.map((d, i) => (
+              <TouchableOpacity key={i} style={{ alignItems: 'center', gap: 6 }} activeOpacity={0.75}>
+                <View style={{ width: 66, height: 66, borderRadius: 33, padding: 2.5, borderWidth: 2, borderColor: i === 0 ? '#E8591A' : '#E5E0D8' }}>
+                  <View style={{ flex: 1, borderRadius: 28, backgroundColor: '#F5F0EB' }} />
                 </View>
-                <Text style={styles.recipeName} numberOfLines={2}>{item.name}</Text>
-                <Text style={styles.recipeRegion}>📍 {item.region}</Text>
-                <TouchableOpacity style={styles.recipeBtn}>
-                  <Text style={styles.recipeBtnText}>{t('scanner.viewRecipe')}</Text>
+                <Text style={{ fontSize: 10.5, fontWeight: '500', color: '#6D4C41', maxWidth: 64, textAlign: 'center' }}>{d.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Popular recipes */}
+        <View style={{ marginTop: 18, paddingLeft: 16 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12, paddingRight: 16 }}>
+            <Text style={{ color: '#2C1810', fontSize: 15, fontWeight: '700', fontFamily: 'Inter-Bold' }}>{t('home.popularRecipes')}</Text>
+            <TouchableOpacity>
+              <Text style={{ fontSize: 11, color: '#E8591A', fontWeight: '600' }}>{t('common.seeAll')}</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 16, gap: 12 }}>
+            {POPULAR.map((d, i) => (
+              <TouchableOpacity key={i} style={{ width: 186 }} activeOpacity={0.8}>
+                <View style={{ height: 136, backgroundColor: '#F5F0EB', borderRadius: 14, borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name="ChefHat" size={32} color="#E5E0D8" />
+                </View>
+                <View style={{ paddingTop: 8 }}>
+                  <Text style={{ color: '#2C1810', fontSize: 13, fontWeight: '600', fontFamily: 'Inter-SemiBold' }}>{d.name}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                    <Icon name="MapPin" size={10} color="#8C8278" />
+                    <Text style={{ color: '#8C8278', fontSize: 11 }}>{d.region}</Text>
+                    <Text style={{ color: '#E5E0D8', fontSize: 11 }}> · </Text>
+                    <Icon name="Clock" size={10} color="#8C8278" />
+                    <Text style={{ color: '#8C8278', fontSize: 11 }}>{d.time}</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={{ marginTop: 7, alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: '#FBDCDC' }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={{ color: '#E8591A', fontSize: 11, fontWeight: '600' }}>{t('recipe.title')}</Text>
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Events this week */}
+        <View style={{ marginTop: 18, paddingHorizontal: 16 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
+            <Text style={{ color: '#2C1810', fontSize: 15, fontWeight: '700', fontFamily: 'Inter-Bold' }}>{t('home.eventsThisWeek')}</Text>
+            <TouchableOpacity>
+              <Text style={{ fontSize: 11, color: '#E8591A', fontWeight: '600' }}>{t('common.seeAll')}</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity style={{ backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 16, overflow: 'hidden' }} activeOpacity={0.85}>
+            <View style={{ position: 'relative' }}>
+              <View style={{ height: 128, backgroundColor: '#F5F0EB', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name="Calendar" size={40} color="#E5E0D8" />
+              </View>
+              <View style={{ position: 'absolute', top: 10, left: 10, backgroundColor: '#C62828', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 }}>
+                <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>SAM. 28 NOV</Text>
+              </View>
+            </View>
+            <View style={{ padding: 14 }}>
+              <Text style={{ color: '#2C1810', fontSize: 14, fontWeight: '700', fontFamily: 'Inter-Bold' }}>Festival du Ndolé · Douala</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                <Icon name="MapPin" size={11} color="#8C8278" />
+                <Text style={{ color: '#8C8278', fontSize: 11 }}>Bonanjo, Douala · 14h–22h</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Icon name="Users" size={12} color="#8C8278" />
+                  <Text style={{ color: '#8C8278', fontSize: 11 }}>248 inscrits</Text>
+                </View>
+                <TouchableOpacity style={{ height: 36, paddingHorizontal: 16, backgroundColor: '#E8591A', borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>{t('events.register')}</Text>
                 </TouchableOpacity>
               </View>
-            )}
-          />
-        )}
-
-        {/* Tendances */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t('home.trending')}</Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
-        {(trending.data ?? MOCK_TRENDING).map((item) => (
-          <View key={item.dishId} style={styles.trendRow}>
-            <Text style={styles.trendRank}>
-              {String(item.rank).padStart(2, '0')}
-            </Text>
-            <View style={styles.trendImage}>
-              <Text>🍽</Text>
+        {/* Daily challenge */}
+        <View style={{ marginTop: 18, paddingHorizontal: 16, marginBottom: 8 }}>
+          <Text style={{ color: '#2C1810', fontSize: 15, fontWeight: '700', fontFamily: 'Inter-Bold', marginBottom: 10 }}>
+            {t('games.dailyChallenge')}
+          </Text>
+          <TouchableOpacity
+            style={{ backgroundColor: '#FBF3DC', borderWidth: 1, borderColor: '#F9A825', borderRadius: 16, padding: 14 }}
+            activeOpacity={0.85}
+            onPress={() => nav.navigate('Games')}
+          >
+            <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+              <View style={{ width: 50, height: 50, borderRadius: 25, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name="Flame" size={24} color="#fff" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: '#2C1810', fontSize: 14, fontWeight: '700', fontFamily: 'Inter-Bold' }}>Devinez le plat mystère</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 }}>
+                  <Icon name="Users" size={11} color="#6D4C41" />
+                  <Text style={{ color: '#6D4C41', fontSize: 11 }}>1 247 joueurs</Text>
+                  <Text style={{ color: '#E5E0D8' }}> · </Text>
+                  <Icon name="Clock" size={11} color="#6D4C41" />
+                  <Text style={{ color: '#6D4C41', fontSize: 11 }}>finit dans 4h 23m</Text>
+                </View>
+              </View>
+              <TouchableOpacity style={{ height: 36, paddingHorizontal: 14, backgroundColor: '#E8591A', borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>{t('games.play')}</Text>
+              </TouchableOpacity>
             </View>
-            <View style={styles.trendInfo}>
-              <Text style={styles.trendName}>{item.name}</Text>
-              <Text style={styles.trendScans}>+{item.scansWeek} scans cette semaine</Text>
-            </View>
-            <Text style={styles.trendArrow}>›</Text>
-          </View>
-        ))}
+          </TouchableOpacity>
+        </View>
 
-        <View style={{ height: 100 }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-// Données mock pour le développement (remplacées par l'API)
-const MOCK_RECIPES = [
-  { id: '1', name: 'Ndolé',        region: 'Littoral', duration: 90, imageUrl: undefined },
-  { id: '2', name: 'Poulet DG',    region: 'Centre',   duration: 60, imageUrl: undefined },
-  { id: '3', name: 'Eru',          region: 'Sud-Ouest',duration: 75, imageUrl: undefined },
-];
-
-const MOCK_TRENDING = [
-  { rank: 1, dishId: 'ndole',   name: 'Ndolé',        scansWeek: 420, region: 'Littoral' },
-  { rank: 2, dishId: 'pdg',     name: 'Poulet DG',    scansWeek: 340, region: 'Centre' },
-  { rank: 3, dishId: 'mbongo',  name: 'Mbongo Tchobi',scansWeek: 260, region: 'Littoral' },
-];
-
-const styles = StyleSheet.create({
-  safe:    { flex: 1, backgroundColor: colors.cream },
-  appBar:  {
-    flexDirection: 'row', alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
-  },
-  logo:       { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  logoCircle: {
-    width: 32, height: 32, borderRadius: 16,
-    backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center',
-  },
-  logoText:   { fontFamily: fontFamily.serifBold, fontSize: 12, color: colors.white },
-  logoName:   { fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink },
-  appBarRight:{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  iconBtn:    { padding: spacing.xs },
-  iconText:   { fontSize: 20 },
-
-  scannerCTA: {
-    marginHorizontal: spacing.md, marginTop: spacing.sm,
-    backgroundColor: colors.ink, borderRadius: radius.lg,
-    flexDirection: 'row', alignItems: 'center',
-    padding: spacing.md, gap: spacing.md,
-  },
-  scannerCTALeft: { flex: 1 },
-  scannerCTATitle: {
-    fontFamily: fontFamily.bold, fontSize: fontSize.lg, color: colors.white,
-    marginBottom: 4,
-  },
-  scannerCTASub: {
-    fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.inkMute,
-  },
-  scannerFAB: {
-    width: 48, height: 48, borderRadius: radius.full,
-    backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center',
-  },
-  scannerFABIcon: { fontSize: 22 },
-
-  searchBar: {
-    flexDirection: 'row', alignItems: 'center',
-    marginHorizontal: spacing.md, marginTop: spacing.md,
-    backgroundColor: colors.surface, borderRadius: radius.lg,
-    borderWidth: 1, borderColor: colors.border,
-    paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
-    gap: spacing.sm,
-  },
-  searchIcon:        { fontSize: 16, color: colors.inkMute },
-  searchPlaceholder: { flex: 1, fontFamily: fontFamily.regular, fontSize: fontSize.md, color: colors.inkMute },
-  micIcon:           { fontSize: 16 },
-
-  sectionHeader: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: spacing.md, marginTop: spacing.lg, marginBottom: spacing.sm,
-  },
-  sectionTitle: { fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink },
-  seeAll:       { fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: colors.primary },
-
-  storiesRow: { paddingHorizontal: spacing.md, gap: spacing.md },
-  storyItem:  { alignItems: 'center', width: 64 },
-  storyCircle:{
-    width: 56, height: 56, borderRadius: 28,
-    backgroundColor: colors.primarySoft, borderWidth: 2, borderColor: colors.primary,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 4,
-  },
-  storyEmoji: { fontSize: 24 },
-  storyLabel: { fontFamily: fontFamily.medium, fontSize: fontSize.xs, color: colors.inkSoft, textAlign: 'center' },
-
-  loader:     { paddingVertical: spacing.xl },
-  recipesRow: { paddingHorizontal: spacing.md, gap: spacing.md },
-  recipeCard: {
-    width: 160, backgroundColor: colors.surface,
-    borderRadius: radius.md, overflow: 'hidden',
-    borderWidth: 1, borderColor: colors.border,
-  },
-  recipeImage: {
-    height: 100, backgroundColor: colors.surface2,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  recipePlaceholder: { fontSize: 40 },
-  recipeName:  {
-    fontFamily: fontFamily.bold, fontSize: fontSize.sm, color: colors.ink,
-    padding: spacing.sm, paddingBottom: 2,
-  },
-  recipeRegion:{
-    fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.inkMute,
-    paddingHorizontal: spacing.sm, marginBottom: spacing.sm,
-  },
-  recipeBtn: {
-    marginHorizontal: spacing.sm, marginBottom: spacing.sm,
-    backgroundColor: colors.primarySoft, borderRadius: radius.sm, padding: spacing.xs,
-    alignItems: 'center',
-  },
-  recipeBtnText: { fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: colors.primary },
-
-  trendRow: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
-    borderBottomWidth: 1, borderBottomColor: colors.border, gap: spacing.sm,
-  },
-  trendRank: { fontFamily: fontFamily.serifBold, fontSize: fontSize.lg, color: colors.primary, width: 28 },
-  trendImage:{
-    width: 44, height: 44, borderRadius: radius.sm,
-    backgroundColor: colors.surface2, alignItems: 'center', justifyContent: 'center',
-  },
-  trendInfo:  { flex: 1 },
-  trendName:  { fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink },
-  trendScans: { fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.inkMute },
-  trendArrow: { fontSize: 20, color: colors.inkMute },
-});

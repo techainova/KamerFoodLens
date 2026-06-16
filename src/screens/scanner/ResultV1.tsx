@@ -1,192 +1,194 @@
-// src/screens/scanner/ResultV1.tsx
-// Résultat reconnaissance IA — Hero + bottom sheet infos
-
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+  View, Text, ScrollView, TouchableOpacity, StatusBar,
+  SafeAreaView, Animated,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useScanResult } from '@/hooks/useScanResult';
-import { WFButton, WFChip } from '@/components/ui';
-import { colors, fontFamily, fontSize, radius, spacing } from '@/constants/theme';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { ScannerStackParams } from '@/navigation/types';
+import Icon from '@/components/ui/Icon';
 
-export default function ResultV1() {
-  const { t }                              = useTranslation();
-  const { result, goRecipe, goRestaurants, share } = useScanResult();
+type ResultNav = NativeStackNavigationProp<ScannerStackParams, 'Result'>;
 
-  if (result.isLoading) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.primary} size="large" />
-        <Text style={styles.loadingText}>{t('scanner.analyzing')}</Text>
-      </View>
-    );
-  }
+const DISH = {
+  name: 'Ndolé',
+  region: 'Littoral · Cameroun',
+  confidence: 92,
+  story: "Plat emblématique des Sawa et Bantous du Littoral, le ndolé est préparé avec des feuilles amères de plante éponyme, de la pâte d'arachide, du poisson fumé ou de la viande. Il est souvent servi lors des grandes cérémonies.",
+};
 
-  const data = result.data ?? MOCK_RESULT;
+const SIMILAR = ['Eru', 'Mbongo', 'Kwacoco', 'Koki', 'Sanga'];
 
+function ConfidenceBadge({ value }: { value: number }) {
+  const color  = value >= 80 ? '#2E7D32' : value >= 60 ? '#F9A825' : '#C62828';
+  const bgColor = value >= 80 ? '#E3F0E4' : value >= 60 ? '#FBF3DC' : '#FBDCDC';
   return (
-    <View style={styles.container}>
-      {/* Hero image */}
-      <View style={styles.hero}>
-        <View style={styles.heroImage}>
-          <Text style={styles.heroEmoji}>🍲</Text>
-        </View>
-
-        {/* Boutons flottants */}
-        <View style={styles.heroActions}>
-          <TouchableOpacity style={styles.heroBtn} accessibilityLabel="Retour">
-            <Text style={styles.heroBtnText}>‹</Text>
-          </TouchableOpacity>
-          <View style={styles.heroActionsRight}>
-            <TouchableOpacity style={styles.heroBtn} onPress={share} accessibilityLabel="Partager">
-              <Text style={styles.heroBtnText}>↗</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.heroBtn} accessibilityLabel="Sauvegarder">
-              <Text style={styles.heroBtnText}>🔖</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Région */}
-        <View style={styles.regionBadge}>
-          <Text style={styles.regionText}>CM · {data.region.toUpperCase()}</Text>
-        </View>
-        <Text style={styles.heroTitle}>{data.dishName}</Text>
-      </View>
-
-      {/* Bottom sheet */}
-      <ScrollView style={styles.sheet} showsVerticalScrollIndicator={false}>
-        <View style={styles.handle} />
-
-        {/* Confiance */}
-        <View style={styles.confidenceRow}>
-          <View style={styles.confidenceDot} />
-          <Text style={styles.confidenceText}>
-            Confiance {data.confidence}% / Confidence {data.confidence}%
-          </Text>
-        </View>
-
-        {/* Stats */}
-        <View style={styles.statsRow}>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{data.duration}</Text>
-            <Text style={styles.statLabel}>min / min</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{data.cookType}</Text>
-            <Text style={styles.statLabel}>cuisson / cook</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{'★'.repeat(data.spiceLevel)}</Text>
-            <Text style={styles.statLabel}>épicé / spice</Text>
-          </View>
-        </View>
-
-        {/* Histoire */}
-        <View style={styles.storyRow}>
-          <Text style={styles.storyLabel}>Histoire / Story</Text>
-          <TouchableOpacity accessibilityLabel="Écouter">
-            <Text style={styles.listenBtn}>🔊 Écouter</Text>
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.storyText} numberOfLines={3}>{data.story}</Text>
-        <TouchableOpacity><Text style={styles.readMore}>+ Lire</Text></TouchableOpacity>
-
-        {/* Note */}
-        <View style={styles.ratingRow}>
-          <Text style={styles.ratingLabel}>Noter ce plat</Text>
-          <View style={styles.stars}>
-            {[1,2,3,4,5].map((s) => (
-              <Text key={s} style={styles.star}>⭐</Text>
-            ))}
-          </View>
-        </View>
-
-        {/* Similaires */}
-        <Text style={styles.similarLabel}>SIMILAIRES / SIMILAR</Text>
-        <View style={styles.chipsRow}>
-          {data.similarDishes.map((d) => (
-            <WFChip key={d.id} label={d.name} />
-          ))}
-        </View>
-
-        {/* Actions */}
-        <WFButton label="Voir la recette ›" onPress={goRecipe} fullWidth size="lg" />
-        <View style={{ height: spacing.sm }} />
-        <WFButton label="Trouver des restaurants" onPress={goRestaurants} variant="secondary" fullWidth size="lg" />
-
-        <View style={{ height: 40 }} />
-      </ScrollView>
+    <View style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: bgColor }}>
+      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />
+      <Text style={{ fontSize: 13, fontWeight: '700', color, fontFamily: 'Inter-Bold' }}>
+        {value}% — {value >= 80 ? 'Haute confiance' : value >= 60 ? 'Confiance moyenne' : 'Faible confiance'}
+      </Text>
     </View>
   );
 }
 
-const MOCK_RESULT = {
-  scanId: '1', dishName: 'Ndolé', dishNameEN: 'Ndolé',
-  region: 'Littoral', confidence: 87, duration: 90,
-  cookType: 'Mijoté', spiceLevel: 3 as const,
-  story: 'Plat emblématique des Sawa et Bantous du Littoral, le ndolé est préparé avec des feuilles amères, de la pâte d\'arachide, du poisson fumé ou de la viande...',
-  similarDishes: [{ id: '1', name: 'Eru' }, { id: '2', name: 'Mbongo' }, { id: '3', name: 'Kwacoco' }, { id: '4', name: 'Koki' }],
-};
+export default function ResultV1() {
+  const navigation = useNavigation<ResultNav>();
+  const { t } = useTranslation();
+  const [savedToJournal, setSavedToJournal] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.ink },
-  loading:   { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.cream, gap: spacing.md },
-  loadingText:{ fontFamily: fontFamily.medium, fontSize: fontSize.md, color: colors.inkSoft },
+  return (
+    <View style={{ flex: 1, backgroundColor: '#2C1810' }}>
+      <StatusBar barStyle="light-content" />
 
-  hero:      { height: '55%', position: 'relative' },
-  heroImage: { flex: 1, backgroundColor: colors.surface2, alignItems: 'center', justifyContent: 'center' },
-  heroEmoji: { fontSize: 80 },
+      {/* Hero image slot */}
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 440 }}>
+        <View style={{ flex: 1, backgroundColor: '#3D2418' }} />
+        {/* Overlay gradient simulation */}
+        <View style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(44,24,16,0.15)' }} />
+        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 180, backgroundColor: 'rgba(44,24,16,0.7)' }} />
+        {/* Placeholder icon */}
+        <View style={{ position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="ChefHat" size={80} color="rgba(255,255,255,0.12)" />
+          <Text style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, marginTop: 8, fontStyle: 'italic' }}>photo du plat · dish photo</Text>
+        </View>
+      </View>
 
-  heroActions: {
-    position: 'absolute', top: 48, left: spacing.md, right: spacing.md,
-    flexDirection: 'row', justifyContent: 'space-between',
-  },
-  heroActionsRight: { flexDirection: 'row', gap: spacing.sm },
-  heroBtn: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center',
-  },
-  heroBtnText: { fontSize: 18, color: colors.white },
+      {/* Top controls */}
+      <SafeAreaView style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
+        <View style={{ paddingHorizontal: 16, paddingTop: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <TouchableOpacity
+            style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.35)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }}
+            onPress={() => navigation.goBack()}
+          >
+            <Icon name="ArrowLeft" size={18} color="#fff" />
+          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TouchableOpacity style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.35)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name="Share2" size={17} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: bookmarked ? 'rgba(232,89,26,0.5)' : 'rgba(0,0,0,0.35)', borderWidth: 1, borderColor: bookmarked ? '#E8591A' : 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }}
+              onPress={() => setBookmarked(!bookmarked)}
+            >
+              <Icon name="Bookmark" size={17} color="#fff" fill={bookmarked ? '#fff' : 'none'} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
 
-  regionBadge: {
-    position: 'absolute', bottom: 72, left: spacing.md,
-  },
-  regionText: { fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: 'rgba(255,255,255,0.7)', letterSpacing: 2 },
-  heroTitle: {
-    position: 'absolute', bottom: spacing.lg, left: spacing.md,
-    fontFamily: fontFamily.serifBold, fontSize: 40, color: colors.white,
-  },
+      {/* Dish name on hero */}
+      <View style={{ position: 'absolute', zIndex: 5, top: 300, left: 20, right: 20 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+          <Text style={{ fontSize: 16 }}>🇨🇲</Text>
+          <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', fontFamily: 'JetBrainsMono-Regular' }}>
+            {DISH.region}
+          </Text>
+        </View>
+        <Text style={{ fontFamily: 'PlayfairDisplay-Bold', color: '#fff', fontSize: 42, lineHeight: 46 }}>
+          {DISH.name}
+        </Text>
+      </View>
 
-  sheet:   { flex: 1, backgroundColor: colors.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, marginTop: -20 },
-  handle:  { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: 'center', marginTop: spacing.sm, marginBottom: spacing.md },
+      {/* Bottom sheet */}
+      <ScrollView
+        style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
+        contentContainerStyle={{ paddingBottom: 32 }}
+        showsVerticalScrollIndicator={false}
+        scrollEnabled
+      >
+        <View style={{ marginTop: 390 }}>
+          <View style={{ backgroundColor: '#FFFAF5', borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 12, paddingHorizontal: 20 }}>
+            {/* Handle */}
+            <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: '#E5E0D8', alignSelf: 'center', marginBottom: 20 }} />
 
-  confidenceRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, marginBottom: spacing.md },
-  confidenceDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.success },
-  confidenceText:{ fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: colors.success },
+            {/* Confidence */}
+            <ConfidenceBadge value={DISH.confidence} />
 
-  statsRow:  { flexDirection: 'row', paddingHorizontal: spacing.md, marginBottom: spacing.lg, gap: spacing.lg },
-  statItem:  { alignItems: 'center' },
-  statValue: { fontFamily: fontFamily.serifBold, fontSize: fontSize.xxl, color: colors.ink },
-  statLabel: { fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.inkMute },
+            {/* Story section */}
+            <View style={{ marginTop: 18 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#2C1810', fontFamily: 'Inter-Bold' }}>
+                  {t('scanner.storyTitle')}
+                </Text>
+                <TouchableOpacity style={{ width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name="Volume2" size={16} color="#6D4C41" />
+                </TouchableOpacity>
+              </View>
+              <Text style={{ fontSize: 13, color: '#6D4C41', lineHeight: 21 }}>
+                {DISH.story}
+              </Text>
+            </View>
 
-  storyRow:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.md, marginBottom: spacing.sm },
-  storyLabel:{ fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink },
-  listenBtn: { fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: colors.primary },
-  storyText: { fontFamily: fontFamily.regular, fontSize: fontSize.base, color: colors.inkSoft, paddingHorizontal: spacing.md, lineHeight: 22 },
-  readMore:  { fontFamily: fontFamily.bold, fontSize: fontSize.sm, color: colors.primary, paddingHorizontal: spacing.md, marginTop: 4, marginBottom: spacing.md },
+            {/* Primary actions */}
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 20 }}>
+              <TouchableOpacity
+                style={{ flex: 1, height: 50, backgroundColor: '#E8591A', borderRadius: 25, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                onPress={() => navigation.navigate('Recipe', { dishId: 'ndole-001' })}
+                activeOpacity={0.85}
+              >
+                <Icon name="ChefHat" size={18} color="#fff" />
+                <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700', fontFamily: 'Inter-Bold' }}>
+                  {t('scanner.viewRecipe')}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ flex: 1, height: 50, borderWidth: 2, borderColor: '#2E7D32', borderRadius: 25, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                activeOpacity={0.85}
+                onPress={() => navigation.navigate('MapScreen' as never)}
+              >
+                <Icon name="MapPin" size={18} color="#2E7D32" />
+                <Text style={{ color: '#2E7D32', fontSize: 14, fontWeight: '700', fontFamily: 'Inter-Bold' }}>
+                  {t('scanner.findRestaurants')}
+                </Text>
+              </TouchableOpacity>
+            </View>
 
-  ratingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.md, marginBottom: spacing.md },
-  ratingLabel:{ fontFamily: fontFamily.medium, fontSize: fontSize.md, color: colors.ink },
-  stars:     { flexDirection: 'row' },
-  star:      { fontSize: 18 },
+            {/* Secondary action */}
+            <TouchableOpacity
+              style={{ marginTop: 10, height: 46, borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 23, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#fff' }}
+              onPress={() => setSavedToJournal(true)}
+              activeOpacity={0.8}
+            >
+              <Icon name="Bookmark" size={16} color={savedToJournal ? '#2E7D32' : '#6D4C41'} fill={savedToJournal ? '#2E7D32' : 'none'} />
+              <Text style={{ color: savedToJournal ? '#2E7D32' : '#6D4C41', fontSize: 13, fontWeight: '600' }}>
+                {savedToJournal ? '✓ Ajouté au journal' : t('scanner.addToJournal')}
+              </Text>
+            </TouchableOpacity>
 
-  similarLabel:{ fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: colors.inkMute, letterSpacing: 1, paddingHorizontal: spacing.md, marginBottom: spacing.sm },
-  chipsRow:    { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: spacing.md, marginBottom: spacing.lg },
-});
+            {/* Similar dishes */}
+            <View style={{ marginTop: 20 }}>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: '#2C1810', marginBottom: 10 }}>
+                {t('scanner.similar')}
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                {SIMILAR.map((s) => (
+                  <TouchableOpacity
+                    key={s}
+                    style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                  >
+                    <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#F5F0EB' }} />
+                    <Text style={{ fontSize: 13, color: '#6D4C41', fontWeight: '500' }}>{s}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* Scan again */}
+            <TouchableOpacity
+              style={{ marginTop: 16, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 }}
+              onPress={() => navigation.goBack()}
+            >
+              <Icon name="RefreshCw" size={14} color="#E8591A" />
+              <Text style={{ color: '#E8591A', fontSize: 13, fontWeight: '600' }}>
+                {t('scanner.scanAgain')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}

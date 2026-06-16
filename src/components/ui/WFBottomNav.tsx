@@ -1,131 +1,138 @@
-// src/components/ui/WFBottomNav.tsx
-// Barre de navigation inférieure — 5 onglets avec FAB Scanner central
-
 import React from 'react';
-import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { View, Text, Pressable, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, fontFamily, fontSize, radius, shadows, spacing } from '@/constants/theme';
+import { useTranslation } from 'react-i18next';
+import { colors, shadows } from '@/constants/theme';
+import Icon, { type IconName } from './Icon';
 
-export type TabName = 'home' | 'search' | 'scanner' | 'favorites' | 'profile';
+export type TabName = 'home' | 'search' | 'scanner' | 'favorites' | 'pro' | 'profile';
 
-interface TabItem {
-  name:  TabName;
-  label: string;
-  icon:  string;
-}
+type TabDef = {
+  name: TabName;
+  icon: IconName;
+  iconActive?: IconName;
+  labelKey: string;
+  proOnly?: boolean;
+};
 
-const TABS: TabItem[] = [
-  { name: 'home',      label: 'Accueil',   icon: '⌂' },
-  { name: 'search',    label: 'Recherche',  icon: '⌕' },
-  { name: 'scanner',   label: 'Scanner',    icon: '◉' },
-  { name: 'favorites', label: 'Favoris',    icon: '♡' },
-  { name: 'profile',   label: 'Profil',     icon: '◯' },
+const TABS_STANDARD: TabDef[] = [
+  { name: 'home',      icon: 'Home',     labelKey: 'nav.home' },
+  { name: 'search',    icon: 'Search',   labelKey: 'nav.search' },
+  { name: 'scanner',   icon: 'ScanLine', labelKey: 'nav.scanner' },
+  { name: 'favorites', icon: 'Heart',    labelKey: 'nav.favorites' },
+  { name: 'profile',   icon: 'User',     labelKey: 'nav.profile' },
+];
+
+const TABS_PRO: TabDef[] = [
+  { name: 'home',    icon: 'Home',     labelKey: 'nav.home' },
+  { name: 'search',  icon: 'Search',   labelKey: 'nav.search' },
+  { name: 'scanner', icon: 'ScanLine', labelKey: 'nav.scanner' },
+  { name: 'pro',     icon: 'Star',     labelKey: 'nav.pro', proOnly: true },
+  { name: 'profile', icon: 'User',     labelKey: 'nav.profile' },
 ];
 
 interface Props {
-  activeTab: TabName;
+  activeTab:  TabName;
   onTabPress: (tab: TabName) => void;
+  isPro?:     boolean;
 }
 
-export function WFBottomNav({ activeTab, onTabPress }: Props) {
+export function WFBottomNav({ activeTab, onTabPress, isPro = false }: Props) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const TABS = isPro ? TABS_PRO : TABS_STANDARD;
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+    <View style={[
+      {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.surface,
+        paddingTop: 8,
+        paddingBottom: insets.bottom + 8,
+        minHeight: 64,
+        borderTopWidth: 1,
+        borderTopColor: colors.border,
+      },
+      shadows.md,
+    ]}>
       {TABS.map((tab) => {
         const isScanner = tab.name === 'scanner';
         const isActive  = activeTab === tab.name;
+        const isProTab  = tab.proOnly === true;
 
+        const activeColor   = isProTab ? colors.gold : colors.primary;
+        const inactiveColor = colors.inkMute;
+        const iconColor     = isActive ? activeColor : inactiveColor;
+
+        // ── Scanner FAB (button surélevé au centre) ──────────────
         if (isScanner) {
           return (
-            <TouchableOpacity
+            <Pressable
               key={tab.name}
               onPress={() => onTabPress(tab.name)}
-              style={styles.scannerWrapper}
+              style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: -22 }}
               accessibilityRole="button"
-              accessibilityLabel={tab.label}
+              accessibilityLabel={t(tab.labelKey)}
+              accessible
             >
-              <View style={[styles.scannerFAB, shadows.lg]}>
-                <Text style={styles.scannerIcon}>{tab.icon}</Text>
+              <View style={[
+                {
+                  width: 60,
+                  height: 60,
+                  borderRadius: 30,
+                  backgroundColor: activeTab === 'scanner' ? colors.primaryPressed : colors.primary,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderWidth: 3,
+                  borderColor: colors.surface,
+                },
+                shadows.elev3,
+              ]}>
+                <Icon name="ScanLine" size={26} color={colors.fgOnDark} strokeWidth={2} />
               </View>
-            </TouchableOpacity>
+              <Text style={{
+                fontSize: 11,
+                fontWeight: '500',
+                color: activeTab === 'scanner' ? colors.primary : inactiveColor,
+                marginTop: 4,
+              }}>
+                {t(tab.labelKey)}
+              </Text>
+            </Pressable>
           );
         }
 
+        // ── Onglet normal ─────────────────────────────────────────
         return (
-          <TouchableOpacity
+          <Pressable
             key={tab.name}
             onPress={() => onTabPress(tab.name)}
-            style={styles.tab}
+            style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 4, minHeight: 48 }}
             accessibilityRole="button"
-            accessibilityLabel={tab.label}
+            accessibilityLabel={t(tab.labelKey)}
+            accessibilityState={{ selected: isActive }}
+            accessible
           >
-            <Text style={[styles.tabIcon, isActive && styles.tabIconActive]}>
-              {tab.icon}
+            {/* Icon fill on active state */}
+            <Icon
+              name={tab.icon}
+              size={22}
+              color={iconColor}
+              fill={isActive && !isProTab ? colors.primarySoft : 'none'}
+              strokeWidth={isActive ? 2 : 1.75}
+            />
+            <Text style={{
+              fontSize: 11,
+              fontWeight: isActive ? '700' : '500',
+              color: iconColor,
+              marginTop: 3,
+            }}>
+              {t(tab.labelKey)}
             </Text>
-            <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
+          </Pressable>
         );
       })}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection:   'row',
-    alignItems:      'center',
-    backgroundColor: colors.surface,
-    borderTopWidth:  1,
-    borderTopColor:  colors.border,
-    paddingTop:      spacing.sm,
-    ...shadows.sm,
-  },
-  tab: {
-    flex:           1,
-    alignItems:     'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.xs,
-  },
-  tabIcon: {
-    fontSize:   22,
-    color:      colors.inkMute,
-    marginBottom: 2,
-  },
-  tabIconActive: { color: colors.primary },
-  tabLabel: {
-    fontFamily: fontFamily.medium,
-    fontSize:   fontSize.xs,
-    color:      colors.inkMute,
-  },
-  tabLabelActive: { color: colors.primary },
-
-  // FAB Scanner
-  scannerWrapper: {
-    flex:           1,
-    alignItems:     'center',
-    justifyContent: 'center',
-    marginTop:      -24,
-  },
-  scannerFAB: {
-    width:           58,
-    height:          58,
-    borderRadius:    radius.full,
-    backgroundColor: colors.primary,
-    alignItems:      'center',
-    justifyContent:  'center',
-    borderWidth:     3,
-    borderColor:     colors.surface,
-  },
-  scannerIcon: {
-    fontSize: 24,
-    color:    colors.white,
-  },
-});

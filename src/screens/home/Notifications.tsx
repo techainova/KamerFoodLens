@@ -1,129 +1,127 @@
-// src/screens/home/Notifications.tsx
-// Centre de notifications — Tout / Système / Communauté / Événements
-
 import React, { useState } from 'react';
-import {
-  FlatList, StyleSheet, Text, TouchableOpacity, View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
-import { colors, fontFamily, fontSize, spacing, radius } from '@/constants/theme';
+import type { IconName } from '@/components/ui/Icon';
+import Icon from '@/components/ui/Icon';
 
-type NotifTab = 'all' | 'system' | 'community' | 'events';
+type Notif = {
+  icon: IconName;
+  iconBg: string;
+  titleKey: string;
+  descKey: string;
+  time: string;
+  unread: boolean;
+};
 
-const TABS: { key: NotifTab; label: string }[] = [
-  { key: 'all',       label: 'Tout' },
-  { key: 'system',    label: 'Système' },
-  { key: 'community', label: 'Communauté' },
-  { key: 'events',    label: 'Événements' },
-];
-
-const MOCK_NOTIFS = [
-  { id: '1', type: 'system',    icon: '📷', title: 'Plat identifié : Eru', sub: '92% de confiance · Voir le résultat', time: 'maintenant', unread: true },
-  { id: '2', type: 'system',    icon: '🏆', title: 'Nouveau badge : 100 scans !', sub: 'Vous êtes maintenant Amateur', time: '2h', unread: true },
-  { id: '3', type: 'events',    icon: '📅', title: 'Festival du Ndolé samedi', sub: 'Bonanjo, Douala · Plus que 3 jours', time: '5h', unread: false },
-  { id: '4', type: 'community', icon: '💬', title: 'Chef Joëlle a répondu', sub: '« Pour le mbongo, l\'écorce... »', time: 'hier', unread: false },
-  { id: '5', type: 'system',    icon: '🎟', title: 'Tirage tombola dans 2 jours', sub: 'Vous avez 3 tickets en jeu', time: 'hier', unread: false },
+const NOTIFS: Notif[] = [
+  { icon: 'Camera', iconBg: '#E8591A', titleKey: 'notif.scan', descKey: 'notif.scanDesc', time: 'maintenant', unread: true },
+  { icon: 'Trophy', iconBg: '#F9A825', titleKey: 'notif.badge', descKey: 'notif.badgeDesc', time: '2h', unread: true },
+  { icon: 'Calendar', iconBg: '#2E7D32', titleKey: 'notif.event', descKey: 'notif.eventDesc', time: '5h', unread: false },
+  { icon: 'Globe', iconBg: '#1A237E', titleKey: 'notif.forum', descKey: 'notif.forumDesc', time: 'hier', unread: false },
+  { icon: 'Ticket', iconBg: '#6D4C41', titleKey: 'notif.tombola', descKey: 'notif.tombolaDesc', time: 'hier', unread: false },
 ];
 
 export default function Notifications() {
-  const navigation        = useNavigation();
-  const [tab, setTab]     = useState<NotifTab>('all');
+  const { t } = useTranslation();
+  const nav = useNavigation();
+  const [activeTab, setActiveTab] = useState(0);
 
-  const filtered = tab === 'all'
-    ? MOCK_NOTIFS
-    : MOCK_NOTIFS.filter((n) => n.type === tab);
+  const TABS = [
+    t('notif.all'),
+    t('notif.system'),
+    t('notif.community'),
+    t('notif.events'),
+  ];
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>‹</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+
+      {/* AppBar */}
+      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}>
+        <TouchableOpacity
+          style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}
+          onPress={() => nav.goBack()}
+        >
+          <Icon name="ArrowLeft" size={17} color="#6D4C41" />
         </TouchableOpacity>
-        <Text style={styles.title}>Notifications</Text>
+        <Text style={{ flex: 1, fontSize: 15, fontWeight: '700', color: '#2C1810', fontFamily: 'Inter-Bold' }}>
+          {t('profile.notifications')}
+        </Text>
         <TouchableOpacity>
-          <Text style={styles.markAll}>Tout lire</Text>
+          <Text style={{ fontSize: 12, color: '#E8591A', fontWeight: '600', fontFamily: 'Inter-SemiBold' }}>
+            {t('notif.markAllRead')}
+          </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Onglets */}
-      <View style={styles.tabsRow}>
-        {TABS.map((t) => (
+      {/* Tabs */}
+      <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}>
+        {TABS.map((tab, i) => (
           <TouchableOpacity
-            key={t.key}
-            onPress={() => setTab(t.key)}
-            style={[styles.tabBtn, tab === t.key && styles.tabBtnActive]}
+            key={i}
+            onPress={() => setActiveTab(i)}
+            style={{ flex: 1, paddingVertical: 13, alignItems: 'center', borderBottomWidth: 2, borderColor: i === activeTab ? '#E8591A' : 'transparent' }}
           >
-            <Text style={[styles.tabText, tab === t.key && styles.tabTextActive]}>
-              {t.label}
+            <Text style={{ fontSize: 12, fontWeight: i === activeTab ? '700' : '500', color: i === activeTab ? '#E8591A' : '#8C8278', fontFamily: i === activeTab ? 'Inter-Bold' : 'Inter-Regular' }}>
+              {tab}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* Liste */}
-      <FlatList
-        data={filtered}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+        {NOTIFS.map((n, i) => (
           <TouchableOpacity
-            style={[styles.notifRow, item.unread && styles.notifUnread]}
-            accessibilityLabel={item.title}
+            key={i}
+            activeOpacity={0.7}
+            style={{
+              flexDirection: 'row', gap: 14, paddingVertical: 14,
+              borderBottomWidth: 1, borderColor: '#F5F0EB',
+              backgroundColor: n.unread ? '#FFFBF7' : 'transparent',
+              marginHorizontal: -16, paddingHorizontal: 16,
+              position: 'relative',
+            }}
           >
-            <View style={styles.notifIcon}>
-              <Text style={styles.notifEmoji}>{item.icon}</Text>
-              {item.unread && <View style={styles.unreadDot} />}
+            {/* Icon circle */}
+            <View style={{
+              width: 44, height: 44, borderRadius: 22, flexShrink: 0,
+              alignItems: 'center', justifyContent: 'center',
+              backgroundColor: n.unread ? n.iconBg : '#F5F0EB',
+            }}>
+              <Icon name={n.icon} size={20} color={n.unread ? '#fff' : n.iconBg} />
             </View>
-            <View style={styles.notifContent}>
-              <Text style={[styles.notifTitle, item.unread && styles.notifTitleBold]}>
-                {item.title}
+
+            {/* Content */}
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                <Text style={{ fontSize: 13, fontWeight: n.unread ? '700' : '500', color: '#2C1810', flex: 1, fontFamily: n.unread ? 'Inter-Bold' : 'Inter-Regular' }}>
+                  {t(n.titleKey)}
+                </Text>
+                <Text style={{ fontSize: 11, color: '#8C8278', flexShrink: 0 }}>{n.time}</Text>
+              </View>
+              <Text style={{ fontSize: 12, color: '#6D4C41', marginTop: 3, lineHeight: 17 }}>
+                {t(n.descKey)}
               </Text>
-              <Text style={styles.notifSub} numberOfLines={1}>{item.sub}</Text>
             </View>
-            <Text style={styles.notifTime}>{item.time}</Text>
+
+            {/* Unread dot */}
+            {n.unread && (
+              <View style={{ position: 'absolute', top: 20, right: 16, width: 8, height: 8, borderRadius: 4, backgroundColor: '#E8591A' }} />
+            )}
           </TouchableOpacity>
+        ))}
+
+        {/* Empty state for other tabs */}
+        {activeTab > 0 && (
+          <View style={{ paddingTop: 60, alignItems: 'center', gap: 12 }}>
+            <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#F5F0EB', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name="Bell" size={28} color="#E5E0D8" />
+            </View>
+            <Text style={{ color: '#8C8278', fontSize: 13 }}>Aucune notification</Text>
+          </View>
         )}
-      />
+      </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe:   { flex: 1, backgroundColor: colors.cream },
-  header: {
-    flexDirection: 'row', alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
-  },
-  backBtn:  { padding: spacing.xs },
-  backIcon: { fontSize: 28, color: colors.ink },
-  title:    { fontFamily: fontFamily.bold, fontSize: fontSize.lg, color: colors.ink },
-  markAll:  { fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: colors.primary },
-  tabsRow:  { flexDirection: 'row', paddingHorizontal: spacing.md, gap: spacing.sm, marginBottom: spacing.sm },
-  tabBtn:   {
-    paddingHorizontal: spacing.md, paddingVertical: spacing.xs,
-    borderRadius: radius.full, borderWidth: 1, borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  tabBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  tabText:      { fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: colors.inkMute },
-  tabTextActive:{ color: colors.white },
-  notifRow:    {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: spacing.md, paddingVertical: spacing.md,
-    borderBottomWidth: 1, borderBottomColor: colors.border, gap: spacing.md,
-  },
-  notifUnread:  { backgroundColor: colors.primarySoft },
-  notifIcon:    { position: 'relative' },
-  notifEmoji:   { fontSize: 28 },
-  unreadDot:    {
-    position: 'absolute', top: 0, right: -2,
-    width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary,
-  },
-  notifContent:    { flex: 1 },
-  notifTitle:      { fontFamily: fontFamily.regular, fontSize: fontSize.md, color: colors.ink },
-  notifTitleBold:  { fontFamily: fontFamily.bold },
-  notifSub:        { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.inkMute, marginTop: 2 },
-  notifTime:       { fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.inkMute },
-});

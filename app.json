@@ -5,23 +5,38 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0D2B6E"
+    },
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.techainova.kmerfoodlens"
     },
     "android": {
-      "package": "com.techainova.kmerfoodlens"
+      "package": "com.techainova.kmerfoodlens",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
     },
     "plugins": [
       "expo-camera",
       "expo-location",
-      "expo-font"
+      "expo-font",
+      "expo-splash-screen",
+      "expo-notifications"
     ],
     "doctor": {
       "reactNativeDirectoryCheck": {
         "listUnknownPackages": false,
-        "exclude": ["expo-av", "expo-modules-jsi"]
+        "exclude": [
+          "expo-av",
+          "expo-modules-jsi"
+        ]
       }
     }
   }

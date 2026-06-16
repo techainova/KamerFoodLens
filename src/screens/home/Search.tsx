@@ -1,173 +1,168 @@
-// src/screens/home/Search.tsx
-// Recherche avancée — onglets Plats / Recettes / Restaurants / Événements
-
-import React from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, TextInput } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useSearch, type SearchTab } from '@/hooks/useSearch';
-import { WFChip } from '@/components/ui';
-import { colors, fontFamily, fontSize, radius, spacing } from '@/constants/theme';
+import { useNavigation } from '@react-navigation/native';
+import Icon from '@/components/ui/Icon';
 
-const TABS: { key: SearchTab; label: string }[] = [
-  { key: 'dishes',      label: 'Plats' },
-  { key: 'recipes',     label: 'Recettes' },
-  { key: 'restaurants', label: 'Restaurants' },
-  { key: 'events',      label: 'Événements' },
+const DISHES = [
+  { name: 'Ndolé', region: 'Littoral', match: 96, time: '45 min' },
+  { name: 'Poulet DG', region: 'Centre', match: 92, time: '60 min' },
+  { name: 'Mbongo Tchobi', region: 'Sud', match: 88, time: '90 min' },
+  { name: 'Eru', region: 'Sud-Ouest', match: 84, time: '40 min' },
+  { name: 'Koki', region: 'Ouest', match: 80, time: '50 min' },
+  { name: 'Sanga', region: 'Adamaoua', match: 76, time: '35 min' },
 ];
 
 export default function Search() {
   const { t } = useTranslation();
-  const { query, activeTab, results, onQueryChange, setActiveTab, clearSearch } =
-    useSearch();
+  const nav = useNavigation();
+  const [query, setQuery] = useState('ndolé');
+  const [activeTab, setActiveTab] = useState(0);
+  const [activeFilter, setActiveFilter] = useState<number | null>(null);
+
+  const TABS = [
+    t('scanner.title'),
+    t('recipe.title'),
+    t('map.title'),
+    t('events.title'),
+  ];
+
+  const FILTERS = [
+    { label: t('search.region'), hasChev: true },
+    { label: t('search.category'), hasChev: true },
+    { label: t('search.vegetarian') },
+    { label: t('search.spicy') },
+    { label: t('search.under30') },
+  ];
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
 
-      {/* Barre recherche */}
-      <View style={styles.searchRow}>
-        <TouchableOpacity style={styles.backBtn}>
-          <Text style={styles.backIcon}>‹</Text>
+      {/* Search bar */}
+      <View style={{ paddingHorizontal: 16, paddingVertical: 12, flexDirection: 'row', gap: 10, alignItems: 'center', backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+        <TouchableOpacity
+          style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}
+          onPress={() => nav.goBack()}
+        >
+          <Icon name="ArrowLeft" size={17} color="#6D4C41" />
         </TouchableOpacity>
-        <View style={styles.inputWrap}>
-          <Text style={styles.searchIcon}>🔍</Text>
+
+        <View style={{ flex: 1, height: 44, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E8591A', borderRadius: 14, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
+          <Icon name="Search" size={16} color="#8C8278" />
           <TextInput
-            style={styles.input}
+            style={{ flex: 1, fontSize: 13, color: '#2C1810', fontFamily: 'Inter-Regular' }}
             value={query}
-            onChangeText={onQueryChange}
-            placeholder={t('common.search')}
-            placeholderTextColor={colors.inkMute}
+            onChangeText={setQuery}
+            placeholder={t('home.search')}
+            placeholderTextColor="#8C8278"
             autoFocus
-            returnKeyType="search"
-            accessibilityLabel={t('common.search')}
           />
           {query.length > 0 && (
-            <TouchableOpacity onPress={clearSearch} accessibilityLabel="Effacer">
-              <Text style={styles.clearIcon}>✕</Text>
+            <TouchableOpacity onPress={() => setQuery('')} style={{ padding: 2 }}>
+              <Icon name="X" size={14} color="#8C8278" />
             </TouchableOpacity>
           )}
         </View>
+
+        <TouchableOpacity style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="Mic" size={20} color="#fff" />
+        </TouchableOpacity>
       </View>
 
-      {/* Onglets */}
-      <FlatList
-        horizontal
-        data={TABS}
-        keyExtractor={(t) => t.key}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.tabsRow}
-        renderItem={({ item }) => (
-          <WFChip
-            label={item.label}
-            active={activeTab === item.key}
-            onPress={() => setActiveTab(item.key)}
-          />
-        )}
-      />
+      {/* Tabs */}
+      <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}>
+        {TABS.map((tab, i) => (
+          <TouchableOpacity
+            key={i}
+            onPress={() => setActiveTab(i)}
+            style={{ flex: 1, paddingVertical: 13, alignItems: 'center', borderBottomWidth: 2, borderColor: i === activeTab ? '#E8591A' : 'transparent' }}
+          >
+            <Text style={{ fontSize: 12, fontWeight: i === activeTab ? '700' : '500', color: i === activeTab ? '#E8591A' : '#8C8278', fontFamily: i === activeTab ? 'Inter-Bold' : 'Inter-Regular' }}>
+              {tab}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
-      {/* Résultats */}
-      {results.isLoading ? (
-        <ActivityIndicator color={colors.primary} style={styles.loader} />
-      ) : results.data && results.data.length > 0 ? (
-        <>
-          <Text style={styles.resultCount}>
-            {results.data.length} résultats / results
-          </Text>
-          <FlatList
-            data={results.data}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.list}
-            renderItem={({ item }) => (
+      {/* Filter chips */}
+      <View style={{ borderBottomWidth: 1, borderColor: '#F5F0EB', backgroundColor: '#fff' }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingVertical: 10 }}>
+          {FILTERS.map((f, i) => {
+            const active = activeFilter === i;
+            return (
               <TouchableOpacity
-                style={styles.resultRow}
-                accessibilityLabel={item.name}
+                key={i}
+                onPress={() => setActiveFilter(active ? null : i)}
+                style={{
+                  height: 32, paddingHorizontal: 14, borderRadius: 16,
+                  borderWidth: 1, borderColor: active ? '#E8591A' : '#E5E0D8',
+                  backgroundColor: active ? '#FBF3DC' : '#fff',
+                  alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 4,
+                }}
               >
-                <View style={styles.resultImage}>
-                  <Text>🍽</Text>
-                </View>
-                <View style={styles.resultInfo}>
-                  <Text style={styles.resultName}>{item.name}</Text>
-                  {item.subtitle && (
-                    <Text style={styles.resultSub}>{item.subtitle}</Text>
-                  )}
-                </View>
-                {item.score !== undefined && (
-                  <View style={styles.scoreBadge}>
-                    <Text style={styles.scoreText}>{item.score}% match</Text>
-                  </View>
-                )}
+                <Text style={{ fontSize: 12, fontWeight: active ? '700' : '500', color: active ? '#E8591A' : '#6D4C41', fontFamily: active ? 'Inter-Bold' : 'Inter-Regular' }}>
+                  {f.label}
+                </Text>
+                {f.hasChev && <Icon name="ChevronDown" size={12} color={active ? '#E8591A' : '#8C8278'} />}
               </TouchableOpacity>
-            )}
-          />
-        </>
-      ) : query.length >= 2 ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyText}>Aucun résultat pour « {query} »</Text>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+
+        {/* Result count */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 14 }}>
+          <Text style={{ fontSize: 13, color: '#2C1810', fontWeight: '600', fontFamily: 'Inter-SemiBold' }}>24</Text>
+          <Text style={{ fontSize: 12, color: '#8C8278' }}>{t('search.results')}</Text>
+          {query.length > 0 && (
+            <Text style={{ fontSize: 12, color: '#8C8278' }}>pour « {query} »</Text>
+          )}
         </View>
-      ) : (
-        <View style={styles.empty}>
-          <Text style={styles.emptyText}>
-            Recherchez un plat, une recette, un restaurant...
-          </Text>
+
+        {/* 2-column grid */}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+          {DISHES.map((d, i) => (
+            <TouchableOpacity
+              key={i}
+              style={{ width: '47.5%' }}
+              activeOpacity={0.8}
+            >
+              {/* Image slot */}
+              <View style={{ height: 126, backgroundColor: '#F5F0EB', borderRadius: 14, borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                <Icon name="ChefHat" size={34} color="#E5E0D8" />
+                {/* Match % badge */}
+                <View style={{ position: 'absolute', top: 8, right: 8, backgroundColor: '#2E7D32', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 }}>
+                  <Text style={{ color: '#fff', fontSize: 10, fontWeight: '700' }}>{d.match}%</Text>
+                </View>
+                {/* Favorite */}
+                <TouchableOpacity style={{ position: 'absolute', bottom: 8, right: 8, width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name="Heart" size={14} color="#E5E0D8" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Info */}
+              <View style={{ paddingTop: 8 }}>
+                <Text style={{ color: '#2C1810', fontSize: 13, fontWeight: '600', fontFamily: 'Inter-SemiBold' }}>{d.name}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                  <Icon name="MapPin" size={10} color="#8C8278" />
+                  <Text style={{ color: '#8C8278', fontSize: 11 }}>{d.region}</Text>
+                  <Text style={{ color: '#E5E0D8' }}>·</Text>
+                  <Icon name="Clock" size={10} color="#8C8278" />
+                  <Text style={{ color: '#8C8278', fontSize: 11 }}>{d.time}</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 5 }}>
+                  <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, backgroundColor: '#E3F0E4' }}>
+                    <Text style={{ color: '#2E7D32', fontSize: 10, fontWeight: '700' }}>{t('search.match')}</Text>
+                  </View>
+                </View>
+              </View>
+            </TouchableOpacity>
+          ))}
         </View>
-      )}
+
+      </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.cream },
-  searchRow: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: spacing.md, paddingVertical: spacing.sm, gap: spacing.sm,
-  },
-  backBtn:   { padding: spacing.xs },
-  backIcon:  { fontSize: 28, color: colors.ink, lineHeight: 32 },
-  inputWrap: {
-    flex: 1, flexDirection: 'row', alignItems: 'center',
-    backgroundColor: colors.surface, borderRadius: radius.lg,
-    borderWidth: 1, borderColor: colors.border,
-    paddingHorizontal: spacing.sm, gap: spacing.sm,
-  },
-  searchIcon: { fontSize: 16 },
-  input: {
-    flex: 1, fontFamily: fontFamily.regular,
-    fontSize: fontSize.base, color: colors.ink,
-    paddingVertical: spacing.sm,
-  },
-  clearIcon: { fontSize: 14, color: colors.inkMute, padding: spacing.xs },
-  tabsRow:   { paddingHorizontal: spacing.md, paddingBottom: spacing.sm },
-  loader:    { paddingTop: spacing.xl },
-  resultCount:{
-    fontFamily: fontFamily.medium, fontSize: fontSize.sm,
-    color: colors.inkMute, paddingHorizontal: spacing.md, marginBottom: spacing.sm,
-  },
-  list:      { paddingHorizontal: spacing.md },
-  resultRow: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingVertical: spacing.sm, borderBottomWidth: 1,
-    borderBottomColor: colors.border, gap: spacing.md,
-  },
-  resultImage:{
-    width: 48, height: 48, borderRadius: radius.sm,
-    backgroundColor: colors.surface2, alignItems: 'center', justifyContent: 'center',
-  },
-  resultInfo: { flex: 1 },
-  resultName: { fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink },
-  resultSub:  { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.inkMute },
-  scoreBadge: {
-    backgroundColor: colors.successSoft, borderRadius: radius.sm,
-    paddingHorizontal: spacing.sm, paddingVertical: 2,
-  },
-  scoreText: { fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: colors.success },
-  empty:     { flex: 1, alignItems: 'center', paddingTop: spacing.xxl },
-  emptyText: { fontFamily: fontFamily.regular, fontSize: fontSize.md, color: colors.inkMute, textAlign: 'center' },
-});

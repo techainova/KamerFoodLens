@@ -1,140 +1,248 @@
-// src/screens/scanner/AudioText.tsx
-// Saisie description plat — voix ou texte
-
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+  View, Text, TouchableOpacity, SafeAreaView,
+  TextInput, ScrollView, Animated, Easing,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { useScanner } from '@/hooks/useScanner';
-import { WFButton } from '@/components/ui';
-import { colors, fontFamily, fontSize, radius, spacing } from '@/constants/theme';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { ScannerStackParams } from '@/navigation/types';
+import Icon from '@/components/ui/Icon';
 
-export default function AudioText() {
-  const { t }          = useTranslation();
-  const navigation     = useNavigation();
-  const [text, setText] = useState('');
-  const [activeMode, setActiveMode] = useState<'voice' | 'text'>('text');
+type Nav = NativeStackNavigationProp<ScannerStackParams, 'AudioText'>;
 
-  const { status, scanAudioText } = useScanner();
+const WAVE_BARS = 36;
+
+function WaveBar({ index, active }: { index: number; active: boolean }) {
+  const anim = useRef(new Animated.Value(0.3)).current;
+
+  useEffect(() => {
+    if (!active) { anim.setValue(0.3); return; }
+    const delay = (index % 8) * 60;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(anim, { toValue: 1, duration: 400 + (index % 4) * 80, useNativeDriver: true }),
+        Animated.timing(anim, { toValue: 0.15, duration: 400 + (index % 3) * 80, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [active, anim, index]);
+
+  const baseH = 8 + (index % 5) * 10;
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', height: 80 }}>
+      <Animated.View style={{
+        width: 3, borderRadius: 2,
+        height: baseH,
+        backgroundColor: index % 3 === 0 ? '#E8591A' : '#E5E0D8',
+        transform: [{ scaleY: anim }],
+      }} />
+    </View>
+  );
+}
 
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} accessibilityLabel="Retour">
-          <Text style={styles.backIcon}>‹</Text>
+export default function AudioText() {
+  const { t } = useTranslation();
+  const nav = useNavigation<Nav>();
+  const [activeTab, setActiveTab] = useState<'audio' | 'text'>('audio');
+  const [isRecording, setIsRecording] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [textInput, setTextInput] = useState('');
+  const [analyzing, setAnalyzing] = useState(false);
+
+  // Mic pulse animation
+  const micPulse = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    if (!isRecording) { micPulse.setValue(1); return; }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(micPulse, { toValue: 1.12, duration: 700, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(micPulse, { toValue: 1, duration: 700, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [isRecording, micPulse]);
+
+  const handleMicPress = () => {
+    if (isRecording) {
+      setIsRecording(false);
+      setTranscript('"Je cherche un plat avec des feuilles vertes et des arachides..."');
+    } else {
+      setIsRecording(true);
+      setTranscript('');
+    }
+  };
+
+  const handleAnalyze = async () => {
+    setAnalyzing(true);
+    await new Promise(r => setTimeout(r, 1200));
+    setAnalyzing(false);
+    nav.navigate('Result', { scanId: 'audio-scan-001' });
+  };
+
+  const hasInput = activeTab === 'audio' ? transcript.length > 0 : textInput.length > 2;
+
+  const TABS = [
+    { key: 'audio' as const, label: t('audioText.audioTab'), icon: 'Mic' as const },
+    { key: 'text'  as const, label: t('audioText.textTab'),  icon: 'MessageCircle' as const },
+  ];
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+
+      {/* AppBar */}
+      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}>
+        <TouchableOpacity
+          style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}
+          onPress={() => nav.goBack()}
+        >
+          <Icon name="ArrowLeft" size={17} color="#6D4C41" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('scanner.title')}</Text>
-        <View style={{ width: 32 }} />
+        <Text style={{ flex: 1, fontSize: 16, fontWeight: '700', color: '#2C1810', fontFamily: 'Inter-Bold' }}>
+          {t('audioText.title')}
+        </Text>
+        <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="ScanLine" size={18} color="#fff" />
+        </View>
       </View>
 
-      {/* Modes */}
-      <View style={styles.modesRow}>
-        <TouchableOpacity
-          style={[styles.modeBtn, activeMode === 'voice' && styles.modeBtnActive]}
-          onPress={() => setActiveMode('voice')}
-          accessibilityLabel="Mode vocal"
-        >
-          <Text style={styles.modeBtnText}>🎙 {t('scanner.audio')}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.modeBtn, activeMode === 'text' && styles.modeBtnActive]}
-          onPress={() => setActiveMode('text')}
-          accessibilityLabel="Mode texte"
-        >
-          <Text style={styles.modeBtnText}>✏️ {t('scanner.text')}</Text>
-        </TouchableOpacity>
+      {/* Tabs */}
+      <View style={{ flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+        {TABS.map((tab) => (
+          <TouchableOpacity
+            key={tab.key}
+            onPress={() => setActiveTab(tab.key)}
+            style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 14, borderBottomWidth: 2, borderColor: activeTab === tab.key ? '#E8591A' : 'transparent' }}
+          >
+            <Icon name={tab.icon} size={16} color={activeTab === tab.key ? '#E8591A' : '#8C8278'} />
+            <Text style={{ fontSize: 14, fontWeight: activeTab === tab.key ? '700' : '500', color: activeTab === tab.key ? '#E8591A' : '#8C8278' }}>
+              {tab.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
-      {/* Zone saisie */}
-      <View style={styles.inputArea}>
-        {activeMode === 'text' ? (
-          <TextInput
-            style={styles.textInput}
-            value={text}
-            onChangeText={setText}
-            placeholder={t('scanner.describeText')}
-            placeholderTextColor={colors.inkMute}
-            multiline
-            autoFocus
-            maxLength={500}
-            accessibilityLabel={t('scanner.describeText')}
-          />
-        ) : (
-          <View style={styles.voiceArea}>
-            <TouchableOpacity
-              style={styles.micBtn}
-              accessibilityLabel={t('scanner.describeVoice')}
-              accessibilityRole="button"
-            >
-              <Text style={styles.micIcon}>🎙</Text>
-            </TouchableOpacity>
-            <Text style={styles.voiceHint}>{t('scanner.describeVoice')}</Text>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+
+        {/* ── AUDIO TAB ── */}
+        {activeTab === 'audio' && (
+          <View style={{ flex: 1, alignItems: 'center', paddingTop: 32, paddingHorizontal: 24, gap: 24 }}>
+
+            {/* Waveform */}
+            <View style={{ width: '100%', height: 80, flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+              {Array.from({ length: WAVE_BARS }).map((_, i) => (
+                <WaveBar key={i} index={i} active={isRecording} />
+              ))}
+            </View>
+
+            {/* Mic button */}
+            <Animated.View style={{ transform: [{ scale: micPulse }] }}>
+              <TouchableOpacity
+                onPress={handleMicPress}
+                activeOpacity={0.85}
+                style={{
+                  width: 96, height: 96, borderRadius: 48,
+                  backgroundColor: isRecording ? '#C62828' : '#E8591A',
+                  alignItems: 'center', justifyContent: 'center',
+                  shadowColor: isRecording ? '#C62828' : '#E8591A',
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: 0.4,
+                  shadowRadius: 20,
+                  elevation: 10,
+                }}
+              >
+                <Icon name={isRecording ? 'Square' as never : 'Mic'} size={38} color="#fff" strokeWidth={1.75} />
+              </TouchableOpacity>
+            </Animated.View>
+
+            {/* Label */}
+            <View style={{ alignItems: 'center', gap: 4 }}>
+              <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: '#2C1810' }}>
+                {isRecording ? 'Enregistrement...' : t('audioText.speak')}
+              </Text>
+              <Text style={{ color: '#8C8278', fontSize: 12 }}>{t('audioText.spokenHint')}</Text>
+            </View>
+
+            {/* Transcript area */}
+            {(transcript.length > 0 || !isRecording) && (
+              <View style={{ width: '100%', backgroundColor: '#F5F0EB', borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 16, padding: 14, minHeight: 90 }}>
+                {transcript.length > 0 ? (
+                  <Text style={{ fontSize: 14, color: '#6D4C41', lineHeight: 22 }}>
+                    {transcript}
+                  </Text>
+                ) : (
+                  <Text style={{ fontSize: 13, color: '#8C8278', fontStyle: 'italic' }}>
+                    {t('audioText.spokenHint')}...
+                  </Text>
+                )}
+              </View>
+            )}
           </View>
         )}
-      </View>
 
-      {/* Bouton analyser */}
-      <View style={styles.footer}>
-        {status === 'analyzing' ? (
-          <View style={styles.analyzingRow}>
-            <ActivityIndicator color={colors.primary} />
-            <Text style={styles.analyzingText}>{t('scanner.analyzing')}</Text>
+        {/* ── TEXT TAB ── */}
+        {activeTab === 'text' && (
+          <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 24, gap: 16 }}>
+            <View style={{ gap: 8 }}>
+              <Text style={{ fontSize: 12, fontWeight: '600', color: '#6D4C41', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                {t('scanner.describeText')}
+              </Text>
+              <TextInput
+                style={{
+                  minHeight: 160, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8',
+                  borderRadius: 16, padding: 16, fontSize: 14, color: '#2C1810',
+                  lineHeight: 22, textAlignVertical: 'top',
+                }}
+                value={textInput}
+                onChangeText={setTextInput}
+                placeholder={t('audioText.textHint')}
+                placeholderTextColor="#8C8278"
+                multiline
+                maxLength={400}
+              />
+              <Text style={{ fontSize: 11, color: '#8C8278', textAlign: 'right' }}>
+                {textInput.length}/400 {t('audioText.charCount')}
+              </Text>
+            </View>
+
+            {/* Quick suggest chips */}
+            <View>
+              <Text style={{ fontSize: 12, color: '#8C8278', marginBottom: 8 }}>Suggestions :</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {['Feuilles vertes', 'Sauce rouge', 'Arachides', 'Poisson fumé', 'Plantain', 'Piment'].map((chip) => (
+                  <TouchableOpacity
+                    key={chip}
+                    onPress={() => setTextInput(prev => prev + (prev ? ', ' : '') + chip.toLowerCase())}
+                    style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}
+                  >
+                    <Text style={{ fontSize: 13, color: '#6D4C41' }}>{chip}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
           </View>
-        ) : (
-          <WFButton
-            label="Scanner / Analyze"
-            onPress={() => scanAudioText(text)}
-            disabled={!text.trim() && activeMode === 'text'}
-            fullWidth
-            size="lg"
-          />
         )}
+
+      </ScrollView>
+
+      {/* CTA bar */}
+      <View style={{ paddingHorizontal: 20, paddingVertical: 14, paddingBottom: 24, borderTopWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#FFFAF5', gap: 10 }}>
+        <TouchableOpacity
+          style={{ height: 54, backgroundColor: hasInput ? '#E8591A' : '#E5E0D8', borderRadius: 27, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+          onPress={handleAnalyze}
+          disabled={!hasInput || analyzing}
+          activeOpacity={0.85}
+        >
+          <Icon name="Search" size={20} color={hasInput ? '#fff' : '#8C8278'} />
+          <Text style={{ color: hasInput ? '#fff' : '#8C8278', fontSize: 15, fontWeight: '700', fontFamily: 'Inter-Bold' }}>
+            {analyzing ? t('scanner.analyzing') : t('audioText.analyze')}
+          </Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe:   { flex: 1, backgroundColor: colors.cream },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
-  },
-  backIcon:    { fontSize: 28, color: colors.ink },
-  headerTitle: { fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink },
-  modesRow:    { flexDirection: 'row', paddingHorizontal: spacing.md, gap: spacing.sm, marginBottom: spacing.md },
-  modeBtn:     {
-    flex: 1, paddingVertical: spacing.sm, borderRadius: radius.md,
-    borderWidth: 1, borderColor: colors.border, alignItems: 'center',
-    backgroundColor: colors.surface,
-  },
-  modeBtnActive: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
-  modeBtnText:   { fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: colors.inkSoft },
-  inputArea:   { flex: 1, marginHorizontal: spacing.md },
-  textInput:   {
-    flex: 1, fontFamily: fontFamily.regular, fontSize: fontSize.base,
-    color: colors.ink, textAlignVertical: 'top', padding: spacing.md,
-    backgroundColor: colors.surface, borderRadius: radius.md,
-    borderWidth: 1, borderColor: colors.border,
-  },
-  voiceArea:  { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.lg },
-  micBtn:     {
-    width: 96, height: 96, borderRadius: 48,
-    backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center',
-  },
-  micIcon:    { fontSize: 40 },
-  voiceHint:  { fontFamily: fontFamily.regular, fontSize: fontSize.md, color: colors.inkMute, textAlign: 'center' },
-  footer:     { padding: spacing.md },
-  analyzingRow:{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingVertical: spacing.md },
-  analyzingText:{ fontFamily: fontFamily.medium, fontSize: fontSize.md, color: colors.inkSoft },
-});

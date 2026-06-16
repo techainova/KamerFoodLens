@@ -1,233 +1,204 @@
-// src/screens/auth/Signup.tsx
-// Écran d'inscription — formulaire 2 étapes
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, TextInput } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '@/navigation/types';
+import LangSwitch from '@/components/auth/LangSwitch';
+import Icon from '@/components/ui/Icon';
 
-import React from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { useSignup } from '@/hooks/useSignup';
-import { WFButton, WFInput } from '@/components/ui';
-import { colors, fontFamily, fontSize, spacing } from '@/constants/theme';
+type Props = NativeStackScreenProps<RootStackParamList, 'Signup'>;
 
-const STRENGTH_COLOR: Record<string, string> = {
-  weak:   colors.error,
-  medium: colors.gold,
-  strong: colors.success,
-};
+export default function Signup({ navigation }: Props) {
+  const { t } = useTranslation();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [accepted, setAccepted] = useState(true);
 
-export default function Signup() {
-  const {
-    form, errors, loading, step,
-    passwordStrength, updateField, nextStep, submit, goLogin,
-  } = useSignup();
-
-  const strength = passwordStrength();
+  const pwStrength = password.length >= 12 ? 4 : password.length >= 8 ? 3 : password.length >= 4 ? 2 : password.length > 0 ? 1 : 0;
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView
-        contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.stepLabel}>{step} / 2</Text>
-          <Text style={styles.title}>Créer un compte</Text>
-          <Text style={styles.titleEN}>Create Account</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+      {/* AppBar */}
+      <View style={{ height: 52, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, borderBottomWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}>
+        <TouchableOpacity
+          style={{ width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={{ color: '#6D4C41', fontSize: 18, lineHeight: 22 }}>‹</Text>
+        </TouchableOpacity>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 15, fontWeight: '600', color: '#2C1810', fontFamily: 'Inter-SemiBold' }}>
+            {t('auth.createAccount')}
+          </Text>
+        </View>
+        <LangSwitch />
+      </View>
 
-          {/* Barre progression */}
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: step === 1 ? '50%' : '100%' }]} />
-          </View>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 48 }} keyboardShouldPersistTaps="handled">
+
+        {/* Progress bar 1/2 */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 18 }}>
+          <View style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: '#E8591A' }} />
+          <View style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: '#E5E0D8' }} />
+          <Text style={{ fontSize: 11, color: '#8C8278', fontWeight: '600' }}>1/2</Text>
         </View>
 
-        {/* ÉTAPE 1 */}
-        {step === 1 && (
-          <>
-            <View style={styles.row}>
-              <View style={styles.half}>
-                <WFInput
-                  label="PRÉNOM / First name"
-                  placeholder="Amah"
-                  value={form.firstName}
-                  onChangeText={(v) => updateField('firstName', v)}
-                  error={errors.firstName}
-                />
-              </View>
-              <View style={styles.half}>
-                <WFInput
-                  label="NOM / Last name"
-                  placeholder="Ndongo"
-                  value={form.lastName}
-                  onChangeText={(v) => updateField('lastName', v)}
-                  error={errors.lastName}
-                />
-              </View>
+        <View style={{ gap: 14 }}>
+          {/* First + Last */}
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View style={{ flex: 1, gap: 6 }}>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: '#6D4C41', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                {t('auth.firstName')}
+              </Text>
+              <TextInput
+                style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', paddingHorizontal: 14, fontSize: 14, color: '#2C1810' }}
+                value={firstName}
+                onChangeText={setFirstName}
+                placeholder="Amah"
+                placeholderTextColor="#8C8278"
+              />
             </View>
-
-            <WFInput
-              label="EMAIL / Email"
-              placeholder="amah@example.com"
-              value={form.email}
-              onChangeText={(v) => updateField('email', v)}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              error={errors.email}
-            />
-
-            <WFInput
-              label="TÉLÉPHONE / Phone"
-              placeholder="+237 6XX XX XX XX"
-              value={form.phone}
-              onChangeText={(v) => updateField('phone', v)}
-              keyboardType="phone-pad"
-              error={errors.phone}
-            />
-
-            <WFButton label="Suivant / Next →" onPress={nextStep} fullWidth size="lg" />
-          </>
-        )}
-
-        {/* ÉTAPE 2 */}
-        {step === 2 && (
-          <>
-            <WFInput
-              label="MOT DE PASSE / Password"
-              placeholder="••••••••"
-              value={form.password}
-              onChangeText={(v) => updateField('password', v)}
-              secureTextEntry
-              error={errors.password}
-            />
-
-            {/* Indicateur de force */}
-            {form.password.length > 0 && (
-              <View style={styles.strengthRow}>
-                <View style={[styles.strengthBar, { backgroundColor: STRENGTH_COLOR[strength] }]} />
-                <Text style={[styles.strengthText, { color: STRENGTH_COLOR[strength] }]}>
-                  Force : {strength === 'weak' ? 'Faible' : strength === 'medium' ? 'Moyenne' : 'Forte'}
-                </Text>
-              </View>
-            )}
-
-            <WFInput
-              label="CONFIRMER / Confirm password"
-              placeholder="••••••••"
-              value={form.confirmPassword}
-              onChangeText={(v) => updateField('confirmPassword', v)}
-              secureTextEntry
-              error={errors.confirmPassword}
-            />
-
-            {/* Checkbox CGU */}
-            <TouchableOpacity
-              style={styles.termsRow}
-              onPress={() => updateField('acceptTerms', !form.acceptTerms)}
-              accessibilityRole="checkbox"
-            >
-              <View style={[styles.checkbox, form.acceptTerms && styles.checkboxChecked]}>
-                {form.acceptTerms && <Text style={styles.checkmark}>✓</Text>}
-              </View>
-              <Text style={styles.termsText}>
-                J'accepte les{' '}
-                <Text style={styles.termsLink}>CGU</Text>
-                {' '}et la{' '}
-                <Text style={styles.termsLink}>politique</Text>
+            <View style={{ flex: 1, gap: 6 }}>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: '#6D4C41', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                {t('auth.lastName')}
               </Text>
-            </TouchableOpacity>
-            {errors.acceptTerms && (
-              <Text style={styles.errorText}>{errors.acceptTerms}</Text>
-            )}
+              <TextInput
+                style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', paddingHorizontal: 14, fontSize: 14, color: '#2C1810' }}
+                value={lastName}
+                onChangeText={setLastName}
+                placeholder="Ndongo"
+                placeholderTextColor="#8C8278"
+              />
+            </View>
+          </View>
 
-            {errors.general && (
-              <Text style={[styles.errorText, { textAlign: 'center', marginBottom: spacing.md }]}>
-                {errors.general}
-              </Text>
-            )}
+          {/* Email */}
+          <View style={{ gap: 6 }}>
+            <Text style={{ fontSize: 11, fontWeight: '600', color: '#6D4C41', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              {t('auth.email')}
+            </Text>
+            <View style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
+              <Text style={{ color: '#8C8278', fontSize: 16 }}>✉</Text>
+              <TextInput
+                style={{ flex: 1, fontSize: 14, color: '#2C1810' }}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                placeholder="amah@example.com"
+                placeholderTextColor="#8C8278"
+              />
+            </View>
+          </View>
 
-            <WFButton
-              label="S'inscrire / Sign Up"
-              onPress={submit}
-              loading={loading}
-              fullWidth
-              size="lg"
-            />
-          </>
-        )}
+          {/* Phone */}
+          <View style={{ gap: 6 }}>
+            <Text style={{ fontSize: 11, fontWeight: '600', color: '#6D4C41', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              {t('auth.phone')}
+            </Text>
+            <View style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
+              <Text style={{ color: '#8C8278', fontSize: 14 }}>📱</Text>
+              <TextInput
+                style={{ flex: 1, fontSize: 14, color: '#2C1810' }}
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="phone-pad"
+                placeholder="+237 6XX XX XX XX"
+                placeholderTextColor="#8C8278"
+              />
+            </View>
+          </View>
 
-        {/* Lien connexion */}
-        <View style={styles.loginRow}>
-          <Text style={styles.loginHint}>Déjà un compte ? </Text>
-          <TouchableOpacity onPress={goLogin}>
-            <Text style={styles.loginLink}>Se connecter</Text>
+          {/* Password */}
+          <View style={{ gap: 6 }}>
+            <Text style={{ fontSize: 11, fontWeight: '600', color: '#6D4C41', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              {t('auth.password')}
+            </Text>
+            <View style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
+              <Text style={{ color: '#8C8278', fontSize: 16 }}>🔒</Text>
+              <TextInput
+                style={{ flex: 1, fontSize: 14, color: '#2C1810' }}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPw}
+                placeholder="••••••••"
+                placeholderTextColor="#8C8278"
+              />
+              <TouchableOpacity onPress={() => setShowPw(!showPw)}>
+                <Text style={{ color: '#8C8278', fontSize: 16 }}>{showPw ? '🙈' : '👁'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Password strength */}
+          <View>
+            <View style={{ flexDirection: 'row', gap: 4, height: 4 }}>
+              {[0, 1, 2, 3].map(i => (
+                <View key={i} style={{ flex: 1, borderRadius: 2, backgroundColor: i < pwStrength ? '#E8591A' : '#E5E0D8' }} />
+              ))}
+            </View>
+            <Text style={{ fontSize: 11, color: '#8C8278', marginTop: 4 }}>
+              {t('auth.pwStrengthMedium')}
+            </Text>
+          </View>
+
+          {/* Confirm */}
+          <View style={{ gap: 6 }}>
+            <Text style={{ fontSize: 11, fontWeight: '600', color: '#6D4C41', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              {t('auth.confirmPassword')}
+            </Text>
+            <View style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
+              <Text style={{ color: '#8C8278', fontSize: 16 }}>🔒</Text>
+              <TextInput
+                style={{ flex: 1, fontSize: 14, color: '#2C1810' }}
+                value={confirm}
+                onChangeText={setConfirm}
+                secureTextEntry
+                placeholder="••••••••"
+                placeholderTextColor="#8C8278"
+              />
+            </View>
+          </View>
+
+          {/* Terms */}
+          <TouchableOpacity
+            style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', marginTop: 4 }}
+            onPress={() => setAccepted(!accepted)}
+          >
+            <View style={{
+              width: 18, height: 18, borderRadius: 4, flexShrink: 0, marginTop: 1,
+              backgroundColor: accepted ? '#E8591A' : 'transparent',
+              borderWidth: accepted ? 0 : 1, borderColor: '#E5E0D8',
+              alignItems: 'center', justifyContent: 'center',
+            }}>
+              {accepted && <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>✓</Text>}
+            </View>
+            <Text style={{ flex: 1, fontSize: 12, color: '#6D4C41', lineHeight: 18 }}>
+              {t('auth.acceptTerms')}{' '}
+              <Text style={{ color: '#E8591A', fontWeight: '600' }}>{t('auth.terms')}</Text>
+              {' '}{t('auth.andThe')}{' '}
+              <Text style={{ color: '#E8591A', fontWeight: '600' }}>{t('auth.policy')}</Text>
+            </Text>
+          </TouchableOpacity>
+
+          {/* CTA */}
+          <TouchableOpacity
+            style={{ height: 56, backgroundColor: '#E8591A', borderRadius: 28, alignItems: 'center', justifyContent: 'center', marginTop: 6 }}
+            onPress={() => navigation.navigate('OTP', { email })}
+            activeOpacity={0.85}
+          >
+            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600', fontFamily: 'Inter-SemiBold' }}>
+              {t('auth.signup')}
+            </Text>
           </TouchableOpacity>
         </View>
+
       </ScrollView>
-    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  flex:      { flex: 1, backgroundColor: colors.cream },
-  container: { flexGrow: 1, paddingHorizontal: spacing.lg, paddingTop: 60, paddingBottom: 40 },
-  header:    { marginBottom: spacing.xl },
-  stepLabel: {
-    fontFamily: fontFamily.medium,
-    fontSize:   fontSize.sm,
-    color:      colors.inkMute,
-    marginBottom: 4,
-  },
-  title: {
-    fontFamily:   fontFamily.serifBold,
-    fontSize:     fontSize.xxl,
-    color:        colors.ink,
-    marginBottom: 2,
-  },
-  titleEN: {
-    fontFamily:   fontFamily.regular,
-    fontSize:     fontSize.md,
-    color:        colors.inkMute,
-    fontStyle:    'italic',
-    marginBottom: spacing.md,
-  },
-  progressBar: {
-    height: 4, backgroundColor: colors.border, borderRadius: 2,
-  },
-  progressFill: {
-    height: 4, backgroundColor: colors.primary, borderRadius: 2,
-  },
-  row:  { flexDirection: 'row', gap: spacing.sm },
-  half: { flex: 1 },
-  strengthRow: {
-    flexDirection: 'row', alignItems: 'center',
-    marginTop: -spacing.sm, marginBottom: spacing.md, gap: spacing.sm,
-  },
-  strengthBar: { height: 4, flex: 1, borderRadius: 2 },
-  strengthText: { fontFamily: fontFamily.medium, fontSize: fontSize.xs },
-  termsRow: {
-    flexDirection: 'row', alignItems: 'center',
-    marginBottom: spacing.md, gap: spacing.sm,
-  },
-  checkbox: {
-    width: 20, height: 20, borderRadius: 4,
-    borderWidth: 1.5, borderColor: colors.border,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  checkboxChecked: { backgroundColor: colors.primary, borderColor: colors.primary },
-  checkmark: { color: colors.white, fontSize: 12, fontFamily: fontFamily.bold },
-  termsText: { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.inkSoft, flex: 1 },
-  termsLink: { color: colors.primary, fontFamily: fontFamily.bold },
-  errorText: { fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.error, marginBottom: spacing.sm },
-  loginRow:  { flexDirection: 'row', justifyContent: 'center', marginTop: spacing.xl },
-  loginHint: { fontFamily: fontFamily.regular, fontSize: fontSize.md, color: colors.inkSoft },
-  loginLink: { fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.primary },
-});

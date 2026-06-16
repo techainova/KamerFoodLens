@@ -1,223 +1,228 @@
-// src/screens/community/Feed.tsx
-// Food Feed — liste de posts + stories + création post
-
 import React, { useState } from 'react';
 import {
-  FlatList, StyleSheet, Text, TouchableOpacity, View,
+  View, Text, ScrollView, TouchableOpacity, SafeAreaView,
+  StatusBar, TextInput,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFeed } from '@/hooks/useFeed';
-import { WFAvatar } from '@/components/ui';
-import { colors, fontFamily, fontSize, radius, spacing } from '@/constants/theme';
+import { useTranslation } from 'react-i18next';
+import { useNavigation } from '@react-navigation/native';
+import Icon from '@/components/ui/Icon';
 
-type FeedTab = 'forYou' | 'following' | 'trending';
+const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
+
+const STORIES = [
+  { id: '0', name: '+', isAdd: true },
+  { id: '1', name: 'Sami',      initials: 'SN', color: '#E8591A' },
+  { id: '2', name: 'Ngo',       initials: 'NM', color: '#2E7D32' },
+  { id: '3', name: 'Chef Joël', initials: 'CJ', color: '#F9A825' },
+  { id: '4', name: 'Maman P',   initials: 'MP', color: '#E8591A' },
+  { id: '5', name: 'Adèle',     initials: 'AB', color: '#1A237E' },
+];
+
+const POSTS = [
+  {
+    id: '1',
+    user: 'Sami Nguimfack',
+    initials: 'SN',
+    badge: 'Chef · niv. 4',
+    badgeColor: '#E8591A',
+    time: '2h',
+    text: "J'ai testé un nouveau Mbongo au poisson capitaine ce weekend à Edéa — vraiment incroyable ! La sauce noire avec les écorces fraîches donne une profondeur unique.",
+    imageCaption: 'Mbongo Tchobi · Edéa',
+    tags: ['#Mbongo', '#Edéa', '#LittoralCam'],
+    likes: 128,
+    comments: 24,
+    liked: false,
+    saved: false,
+  },
+  {
+    id: '2',
+    user: 'Maman Pauline',
+    initials: 'MP',
+    badge: 'Novice · niv. 1',
+    badgeColor: '#8C8278',
+    time: '4h',
+    text: "Ma recette de Ndolé du dimanche, transmise par ma grand-mère. Le secret c'est les écorces fraîches et beaucoup d'amour 🫶",
+    imageCaption: 'Ndolé familial · Douala',
+    tags: ['#Ndolé', '#Famille', '#Tradition'],
+    likes: 312,
+    comments: 56,
+    liked: true,
+    saved: true,
+  },
+  {
+    id: '3',
+    user: 'Chef Joël',
+    initials: 'CJ',
+    badge: 'Pro · Chef certifié',
+    badgeColor: '#F9A825',
+    time: '6h',
+    text: "Masterclass Poulet DG demain à 14h sur Zoom — places limitées ! On va décortiquer la technique de dorure des plantains et la marinade express.",
+    imageCaption: 'Poulet DG · Masterclass',
+    tags: ['#PouletDG', '#Masterclass', '#Formation'],
+    likes: 89,
+    comments: 31,
+    liked: false,
+    saved: false,
+  },
+];
+
+const TABS = ['Pour vous', 'Abonnements', 'Trending'];
 
 export default function Feed() {
-  const { posts, toggleLike } = useFeed();
-  const [tab, setTab] = useState<FeedTab>('forYou');
+  const { t } = useTranslation();
+  const navigation = useNavigation<any>();
+  const [activeTab, setActiveTab] = useState(0);
+  const [posts, setPosts] = useState(POSTS);
+
+  const toggleLike = (id: string) => {
+    setPosts(prev => prev.map(p =>
+      p.id === id ? { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 } : p
+    ));
+  };
+
+  const toggleSave = (id: string) => {
+    setPosts(prev => prev.map(p => p.id === id ? { ...p, saved: !p.saved } : p));
+  };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+      <StatusBar barStyle="dark-content" />
+
       {/* AppBar */}
-      <View style={styles.appBar}>
-        <View style={styles.logo}>
-          <View style={styles.logoCircle}><Text style={styles.logoText}>KFL</Text></View>
-          <Text style={styles.appBarTitle}>Food Feed</Text>
-        </View>
-        <TouchableOpacity accessibilityLabel="Rechercher">
-          <Text style={styles.appBarIcon}>🔍</Text>
+      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
+          <Icon name="ArrowLeft" size={22} color="#2C1810" />
         </TouchableOpacity>
+        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: '#2C1810' }}>
+          {t('community.feed')}
+        </Text>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <TouchableOpacity style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="Search" size={17} color="#6D4C41" />
+          </TouchableOpacity>
+          <TouchableOpacity style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="Bell" size={17} color="#6D4C41" />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Onglets */}
-      <View style={styles.tabs}>
-        {[
-          { key: 'forYou' as FeedTab,    label: 'Pour vous' },
-          { key: 'following' as FeedTab, label: 'Abonnements' },
-          { key: 'trending' as FeedTab,  label: 'Trending' },
-        ].map((t) => (
+      {/* Tabs */}
+      <View style={{ flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+        {TABS.map((tab, i) => (
           <TouchableOpacity
-            key={t.key}
-            onPress={() => setTab(t.key)}
-            style={[styles.tab, tab === t.key && styles.tabActive]}
+            key={i}
+            onPress={() => setActiveTab(i)}
+            style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 2, borderColor: i === activeTab ? '#E8591A' : 'transparent' }}
           >
-            <Text style={[styles.tabText, tab === t.key && styles.tabTextActive]}>
-              {t.label}
+            <Text style={{ fontSize: 14, fontWeight: i === activeTab ? '700' : '500', color: i === activeTab ? '#E8591A' : '#8C8278' }}>
+              {tab}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      <FlatList
-        data={posts}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          /* Stories */
-          <FlatList
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            data={['+ Toi', 'Sami', 'Ngo', 'Chef Joël', 'Maman P']}
-            keyExtractor={(s) => s}
-            contentContainerStyle={styles.storiesRow}
-            renderItem={({ item, index }) => (
-              <View style={styles.storyItem}>
-                <View style={[styles.storyCircle, index === 0 && styles.storyCircleAdd]}>
-                  {index === 0
-                    ? <Text style={styles.storyPlus}>+</Text>
-                    : <Text style={styles.storyEmoji}>👤</Text>
-                  }
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+
+        {/* Stories */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 14, gap: 12 }}>
+          {STORIES.map((s) => (
+            <TouchableOpacity key={s.id} style={{ alignItems: 'center', gap: 6 }}>
+              <View style={{
+                width: 62, height: 62, borderRadius: 31, padding: 2,
+                borderWidth: s.isAdd ? 1.5 : 2.5,
+                borderStyle: s.isAdd ? 'dashed' : 'solid',
+                borderColor: s.isAdd ? '#E5E0D8' : (s.color ?? '#E8591A'),
+              }}>
+                <View style={{ flex: 1, borderRadius: 28, backgroundColor: s.isAdd ? '#F5F0EB' : (s.color ?? '#E8591A') + '20', alignItems: 'center', justifyContent: 'center' }}>
+                  {s.isAdd ? (
+                    <Icon name="Plus" size={20} color="#8C8278" />
+                  ) : (
+                    <Text style={{ fontSize: 16, fontWeight: '700', color: s.color ?? '#E8591A', fontFamily: 'Inter-Bold' }}>
+                      {s.initials?.[0]}
+                    </Text>
+                  )}
                 </View>
-                <Text style={styles.storyName} numberOfLines={1}>{item}</Text>
               </View>
-            )}
-          />
-        }
-        renderItem={({ item }) => (
-          <View style={styles.postCard}>
-            {/* Header post */}
-            <View style={styles.postHeader}>
-              <WFAvatar initials={item.author.slice(0,2)} size="sm" />
-              <View style={styles.postAuthorInfo}>
-                <Text style={styles.postAuthor}>{item.author}</Text>
-                <Text style={styles.postMeta}>{item.authorLevel} · {item.timeAgo}</Text>
-              </View>
-              <TouchableOpacity style={styles.moreBtn}>
-                <Text style={styles.moreDots}>···</Text>
-              </TouchableOpacity>
-            </View>
+              <Text style={{ fontSize: 11, color: '#6D4C41', maxWidth: 56, textAlign: 'center' }} numberOfLines={1}>{s.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
 
-            {/* Texte */}
-            <Text style={styles.postText}>{item.text}</Text>
+        {/* Posts */}
+        <View style={{ paddingHorizontal: 0 }}>
+          {posts.map((post) => (
+            <View key={post.id} style={{ marginBottom: 2, borderTopWidth: 1, borderColor: '#F5F0EB', backgroundColor: '#fff', paddingVertical: 16 }}>
 
-            {/* Image placeholder */}
-            {item.imageCount > 0 && (
-              <View style={styles.postImagePlaceholder}>
-                <Text style={styles.postImageEmoji}>🍲</Text>
-                {item.imageCount > 1 && (
-                  <View style={styles.imageCountBadge}>
-                    <Text style={styles.imageCountText}>+{item.imageCount - 1}</Text>
+              {/* Header */}
+              <View style={{ paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: post.badgeColor + '18', borderWidth: 1.5, borderColor: post.badgeColor + '40', alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: post.badgeColor, fontFamily: 'Inter-Bold' }}>{post.initials[0]}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810', fontFamily: 'Inter-Bold' }}>{post.user}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 1 }}>
+                    <View style={{ paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8, backgroundColor: post.badgeColor + '15' }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: post.badgeColor, fontFamily: 'Inter-Bold' }}>{post.badge}</Text>
+                    </View>
+                    <Text style={{ fontSize: 11, color: '#8C8278' }}>· {post.time}</Text>
                   </View>
-                )}
+                </View>
+                <TouchableOpacity style={{ padding: 6 }}>
+                  <Icon name="MoreHorizontal" size={18} color="#8C8278" />
+                </TouchableOpacity>
               </View>
-            )}
 
-            {/* Tags */}
-            <View style={styles.tagsRow}>
-              {item.tags.map((tag) => (
-                <Text key={tag} style={styles.tag}>{tag}</Text>
-              ))}
+              {/* Text */}
+              <Text style={{ paddingHorizontal: 16, fontSize: 14, color: '#2C1810', lineHeight: 22, marginBottom: 10 }}>
+                {post.text}
+              </Text>
+
+              {/* Image placeholder */}
+              <View style={{ marginHorizontal: 16, height: 200, borderRadius: 16, backgroundColor: '#F5F0EB', borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
+                <Icon name="Camera" size={32} color="rgba(140,130,120,0.3)" />
+                <Text style={{ color: '#8C8278', fontSize: 11, fontStyle: 'italic', marginTop: 6 }}>{post.imageCaption}</Text>
+              </View>
+
+              {/* Tags */}
+              <View style={{ paddingHorizontal: 16, flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+                {post.tags.map(tag => (
+                  <TouchableOpacity key={tag} style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#F5F0EB' }}>
+                    <Text style={{ fontSize: 12, color: '#6D4C41', fontWeight: '500' }}>{tag}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Actions */}
+              <View style={{ paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+                <TouchableOpacity onPress={() => toggleLike(post.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                  <Icon name="Heart" size={20} color={post.liked ? '#E8591A' : '#8C8278'} fill={post.liked ? '#E8591A' : 'none'} />
+                  <Text style={{ fontSize: 13, color: post.liked ? '#E8591A' : '#8C8278', fontWeight: '500' }}>{post.likes}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                  <Icon name="MessageCircle" size={20} color="#8C8278" />
+                  <Text style={{ fontSize: 13, color: '#8C8278', fontWeight: '500' }}>{post.comments}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                  <Icon name="Share2" size={18} color="#8C8278" />
+                </TouchableOpacity>
+                <View style={{ flex: 1 }} />
+                <TouchableOpacity onPress={() => toggleSave(post.id)}>
+                  <Icon name="Bookmark" size={20} color={post.saved ? '#E8591A' : '#8C8278'} fill={post.saved ? '#E8591A' : 'none'} />
+                </TouchableOpacity>
+              </View>
             </View>
+          ))}
+        </View>
+      </ScrollView>
 
-            {/* Actions */}
-            <View style={styles.postActions}>
-              <TouchableOpacity
-                style={styles.actionBtn}
-                onPress={() => toggleLike(item.id)}
-                accessibilityLabel={item.liked ? 'Ne plus aimer' : 'Aimer'}
-              >
-                <Text style={styles.actionIcon}>{item.liked ? '❤️' : '🤍'}</Text>
-                <Text style={[styles.actionCount, item.liked && styles.actionCountLiked]}>
-                  {item.likes}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionBtn} accessibilityLabel="Commenter">
-                <Text style={styles.actionIcon}>💬</Text>
-                <Text style={styles.actionCount}>{item.comments}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionBtn} accessibilityLabel="Partager">
-                <Text style={styles.actionIcon}>↗</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.bookmarkBtn} accessibilityLabel="Sauvegarder">
-                <Text style={styles.actionIcon}>🔖</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-      />
-
-      {/* FAB créer post */}
+      {/* FAB */}
       <TouchableOpacity
-        style={styles.fab}
-        accessibilityRole="button"
-        accessibilityLabel="Créer un post"
+        onPress={() => navigation.navigate('CreatePost')}
+        style={{ position: 'absolute', bottom: 96, right: 20, width: 52, height: 52, borderRadius: 26, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center', shadowColor: '#E8591A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 6 }}
+        activeOpacity={0.85}
       >
-        <Text style={styles.fabIcon}>+</Text>
+        <Icon name="Plus" size={24} color="#fff" />
       </TouchableOpacity>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe:    { flex: 1, backgroundColor: colors.cream },
-  appBar:  {
-    flexDirection: 'row', alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
-  },
-  logo:       { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  logoCircle: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
-  logoText:   { fontFamily: fontFamily.serifBold, fontSize: 10, color: colors.white },
-  appBarTitle:{ fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink },
-  appBarIcon: { fontSize: 20, padding: spacing.xs },
-
-  tabs:        { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: colors.border },
-  tab:         { flex: 1, paddingVertical: spacing.sm, alignItems: 'center' },
-  tabActive:   { borderBottomWidth: 2, borderBottomColor: colors.primary },
-  tabText:     { fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: colors.inkMute },
-  tabTextActive:{ color: colors.primary, fontFamily: fontFamily.bold },
-
-  storiesRow:  { paddingHorizontal: spacing.md, paddingVertical: spacing.md, gap: spacing.md },
-  storyItem:   { alignItems: 'center', width: 56 },
-  storyCircle: {
-    width: 48, height: 48, borderRadius: 24,
-    backgroundColor: colors.surface2, borderWidth: 2, borderColor: colors.primary,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 4,
-  },
-  storyCircleAdd: { borderStyle: 'dashed', borderColor: colors.inkMute },
-  storyPlus:   { fontSize: 20, color: colors.inkMute },
-  storyEmoji:  { fontSize: 20 },
-  storyName:   { fontFamily: fontFamily.medium, fontSize: 10, color: colors.inkSoft, textAlign: 'center' },
-
-  postCard:    { backgroundColor: colors.surface, marginBottom: spacing.sm, padding: spacing.md },
-  postHeader:  { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm, gap: spacing.sm },
-  postAuthorInfo: { flex: 1 },
-  postAuthor:  { fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink },
-  postMeta:    { fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.inkMute },
-  moreBtn:     { padding: spacing.xs },
-  moreDots:    { fontSize: 16, color: colors.inkMute, letterSpacing: 2 },
-
-  postText:    { fontFamily: fontFamily.regular, fontSize: fontSize.base, color: colors.ink, lineHeight: 22, marginBottom: spacing.sm },
-
-  postImagePlaceholder: {
-    height: 180, backgroundColor: colors.surface2,
-    borderRadius: radius.md, alignItems: 'center', justifyContent: 'center',
-    marginBottom: spacing.sm, position: 'relative',
-  },
-  postImageEmoji:  { fontSize: 48 },
-  imageCountBadge: {
-    position: 'absolute', bottom: spacing.sm, right: spacing.sm,
-    backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: radius.sm,
-    paddingHorizontal: spacing.sm, paddingVertical: 2,
-  },
-  imageCountText: { fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: colors.white },
-
-  tagsRow:     { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginBottom: spacing.sm },
-  tag:         { fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: colors.primary },
-
-  postActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  actionBtn:   { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  actionIcon:  { fontSize: 18 },
-  actionCount: { fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: colors.inkSoft },
-  actionCountLiked: { color: colors.error },
-  bookmarkBtn: { marginLeft: 'auto' },
-
-  fab: {
-    position: 'absolute', bottom: 88, right: spacing.lg,
-    width: 52, height: 52, borderRadius: 26,
-    backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3, shadowRadius: 8, elevation: 8,
-  },
-  fabIcon: { fontSize: 28, color: colors.white, lineHeight: 32 },
-});

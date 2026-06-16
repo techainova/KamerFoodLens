@@ -1,163 +1,154 @@
-// src/screens/games/Games.tsx
-// Hub Jeux & Gamification — points + défis + modes de jeu
-
 import React from 'react';
 import {
-  ScrollView, StyleSheet, Text, TouchableOpacity, View,
+  View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuthStore } from '@/store/auth.store';
-import { colors, fontFamily, fontSize, radius, spacing, shadows } from '@/constants/theme';
+import { useNavigation } from '@react-navigation/native';
+import Icon from '@/components/ui/Icon';
 
-const GAME_MODES = [
-  { id: '1', emoji: '🧠', title: 'Quiz culinaire',   sub: '50 questions · 10 niveaux',  color: colors.primary },
-  { id: '2', emoji: '🎵', title: 'Blind Test Audio',  sub: 'Devinez au son',              color: colors.navy },
-  { id: '3', emoji: '📷', title: 'Défi Photo',       sub: 'Thème de la semaine',         color: colors.teal ?? colors.success },
-  { id: '4', emoji: '🎟', title: 'Tombola',          sub: 'Tirage mensuel',              color: colors.gold },
+const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
+const SHADOW_MD = { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.10, shadowRadius: 6, elevation: 4 };
+
+const LEADERBOARD = [
+  { rank: 1, user: 'Chef Joël', pts: 8420, initials: 'CJ', color: '#F9A825', isMe: false },
+  { rank: 2, user: 'Adèle Biya', pts: 7105, initials: 'AB', color: '#8C8278', isMe: false },
+  { rank: 3, user: 'Sami N.', pts: 6780, initials: 'SN', color: '#E8591A', isMe: false },
+  { rank: 4, user: 'Moi', pts: 4250, initials: 'MO', color: '#E8591A', isMe: true },
 ];
 
 export default function Games() {
-  const user = useAuthStore((s) => s.user);
+  const navigation = useNavigation<any>();
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+      <StatusBar barStyle="dark-content" />
 
-        {/* AppBar */}
-        <View style={styles.appBar}>
-          <View style={styles.logo}>
-            <View style={styles.logoCircle}><Text style={styles.logoText}>KFL</Text></View>
-            <Text style={styles.appBarTitle}>Jeux & Défis</Text>
-          </View>
-        </View>
+      {/* AppBar */}
+      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
+          <Icon name="ArrowLeft" size={22} color="#2C1810" />
+        </TouchableOpacity>
+        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: '#2C1810' }}>Jeux & Défis</Text>
+        <TouchableOpacity style={{ width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="Trophy" size={17} color="#F9A825" />
+        </TouchableOpacity>
+      </View>
 
-        {/* Points card */}
-        <View style={[styles.pointsCard, shadows.md]}>
-          <View style={styles.pointsLeft}>
-            <Text style={styles.pointsLabel}>MES POINTS</Text>
-            <Text style={styles.pointsValue}>{user?.xpPoints ?? 1250} pts</Text>
-            <Text style={styles.pointsSub}>Niveau : Amateur · {2000 - (user?.xpPoints ?? 1250)} pts du Chef</Text>
-          </View>
-          <Text style={styles.pointsEmoji}>🏆</Text>
-        </View>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
 
-        {/* Défi du jour */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Défi du jour</Text>
-        </View>
-
-        <View style={[styles.challengeCard, shadows.sm]}>
-          <View style={styles.challengeImagePlaceholder}>
-            <View style={styles.challengeBlur}>
-              <Text style={styles.challengeEmoji}>🍲</Text>
+        {/* XP Hero Banner */}
+        <View style={{ margin: 16, borderRadius: 20, backgroundColor: '#1A237E', padding: 20, ...SHADOW_MD }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+            <View>
+              <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>Votre niveau</Text>
+              <Text style={{ fontSize: 22, fontFamily: 'PlayfairDisplay-Bold', color: '#fff' }}>Chef Explorateur</Text>
+              <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>Prochain : Chef Maître</Text>
+            </View>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={{ fontSize: 24, fontWeight: '700', color: '#F9A825', fontFamily: 'Inter-Bold' }}>4 250</Text>
+              <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>points XP</Text>
             </View>
           </View>
-          <View style={styles.challengeInfo}>
-            <Text style={styles.challengeTitle}>Plat mystère du jour</Text>
-            <Text style={styles.challengeSub}>Identifiez ce plat ! · 1 247 joueurs</Text>
-            <Text style={styles.challengeTimer}>Termine dans 4h 23m</Text>
+          <View style={{ height: 7, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 4, overflow: 'hidden' }}>
+            <View style={{ height: '100%', width: '68%', backgroundColor: '#F9A825', borderRadius: 4 }} />
           </View>
-          <TouchableOpacity
-            style={styles.playBtn}
-            accessibilityRole="button"
-            accessibilityLabel="Jouer"
-          >
-            <Text style={styles.playBtnText}>Jouer · +20 pts</Text>
-          </TouchableOpacity>
+          <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 6 }}>4 250 / 6 250 XP · 68%</Text>
         </View>
 
-        {/* Modes de jeu */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Modes de jeu</Text>
+        {/* Game modes 2x2 */}
+        <View style={{ paddingHorizontal: 16, marginBottom: 20 }}>
+          <Text style={{ fontSize: 16, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', marginBottom: 12 }}>Modes de jeu</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+            {[
+              { icon: 'HelpCircle' as const, title: 'Quiz du jour', en: 'Daily Quiz', desc: '10 questions · +150 pts', color: '#E8591A', badge: 'NOUVEAU', screen: 'Quiz' },
+              { icon: 'Gift' as const, title: 'Tombola', en: 'Lucky Draw', desc: 'Tirage le 30 Juin', color: '#F9A825', badge: null, screen: 'Tombola' },
+              { icon: 'Award' as const, title: 'Badges', en: 'Achievements', desc: '12/25 débloqués', color: '#2E7D32', badge: null, screen: 'Badges' },
+              { icon: 'Zap' as const, title: 'Défi rapide', en: 'Speed Challenge', desc: '30 sec · 5 plats', color: '#1A237E', badge: null, screen: 'Quiz' },
+            ].map((mode) => (
+              <TouchableOpacity
+                key={mode.title}
+                onPress={() => navigation.navigate(mode.screen)}
+                style={{ width: '47.5%', backgroundColor: mode.color + '12', borderWidth: 1.5, borderColor: mode.color + '30', borderRadius: 18, padding: 16, ...SHADOW_SM }}
+                activeOpacity={0.85}
+              >
+                {mode.badge && (
+                  <View style={{ position: 'absolute', top: 10, right: 10, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8, backgroundColor: '#C62828' }}>
+                    <Text style={{ fontSize: 8, fontWeight: '700', color: '#fff' }}>{mode.badge}</Text>
+                  </View>
+                )}
+                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: mode.color + '20', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
+                  <Icon name={mode.icon} size={20} color={mode.color} />
+                </View>
+                <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810', marginBottom: 2, fontFamily: 'Inter-Bold' }}>{mode.title}</Text>
+                <Text style={{ fontSize: 11, color: '#8C8278', fontStyle: 'italic', marginBottom: 4 }}>{mode.en}</Text>
+                <Text style={{ fontSize: 12, color: '#6D4C41' }}>{mode.desc}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
-        <View style={styles.modesGrid}>
-          {GAME_MODES.map((mode) => (
+        {/* Daily challenge */}
+        <View style={{ marginHorizontal: 16, backgroundColor: '#FEF3EC', borderRadius: 18, padding: 16, borderWidth: 1.5, borderColor: '#E8591A40', marginBottom: 20, ...SHADOW_SM }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#E8591A20', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name="Flame" size={16} color="#E8591A" fill="#E8591A" />
+            </View>
+            <Text style={{ flex: 1, fontSize: 14, fontWeight: '700', color: '#E8591A', fontFamily: 'Inter-Bold' }}>Défi du jour</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Icon name="Clock" size={13} color="#8C8278" />
+              <Text style={{ fontSize: 12, color: '#8C8278', fontFamily: 'JetBrainsMono-Regular' }}>23:15:44</Text>
+            </View>
+          </View>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: '#2C1810', marginBottom: 4 }}>
+            Identifiez 3 plats du Littoral en mode rapide
+          </Text>
+          <Text style={{ fontSize: 12, color: '#8C8278', fontStyle: 'italic', marginBottom: 12 }}>
+            Identify 3 dishes from Littoral region
+          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Icon name="Zap" size={14} color="#E8591A" fill="#E8591A" />
+              <Text style={{ fontSize: 13, fontWeight: '700', color: '#E8591A' }}>+300 XP · Badge bonus</Text>
+            </View>
             <TouchableOpacity
-              key={mode.id}
-              style={[styles.modeCard, shadows.sm]}
-              accessibilityRole="button"
-              accessibilityLabel={mode.title}
+              onPress={() => navigation.navigate('Quiz')}
+              style={{ paddingHorizontal: 18, paddingVertical: 8, backgroundColor: '#E8591A', borderRadius: 20 }}
             >
-              <View style={[styles.modeIconBg, { backgroundColor: mode.color + '20' }]}>
-                <Text style={styles.modeEmoji}>{mode.emoji}</Text>
-              </View>
-              <Text style={styles.modeTitle}>{mode.title}</Text>
-              <Text style={styles.modeSub}>{mode.sub}</Text>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: '#fff' }}>Jouer</Text>
             </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Classement */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Top classement</Text>
-          <TouchableOpacity><Text style={styles.seeAll}>Voir tout</Text></TouchableOpacity>
-        </View>
-
-        {[
-          { rank: 1, name: 'Chef Joëlle K.', pts: 8420, emoji: '🥇' },
-          { rank: 2, name: 'Sami N.',        pts: 6310, emoji: '🥈' },
-          { rank: 3, name: 'Maman Pauline',  pts: 5180, emoji: '🥉' },
-        ].map((entry) => (
-          <View key={entry.rank} style={styles.rankRow}>
-            <Text style={styles.rankEmoji}>{entry.emoji}</Text>
-            <Text style={styles.rankName}>{entry.name}</Text>
-            <Text style={styles.rankPts}>{entry.pts} pts</Text>
           </View>
-        ))}
+        </View>
 
-        <View style={{ height: 100 }} />
+        {/* Leaderboard */}
+        <View style={{ paddingHorizontal: 16 }}>
+          <Text style={{ fontSize: 16, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', marginBottom: 12 }}>Classement</Text>
+          <View style={{ backgroundColor: '#fff', borderRadius: 18, borderWidth: 1, borderColor: '#E5E0D8', overflow: 'hidden', ...SHADOW_SM }}>
+            {LEADERBOARD.map((player, i) => (
+              <View
+                key={player.rank}
+                style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 12, backgroundColor: player.isMe ? '#FEF3EC' : '#fff', borderTopWidth: i > 0 ? 1 : 0, borderColor: '#F5F0EB' }}
+              >
+                {/* Medal */}
+                <View style={{ width: 32, alignItems: 'center' }}>
+                  {player.rank <= 3 ? (
+                    <Icon name="Trophy" size={18} color={player.rank === 1 ? '#F9A825' : player.rank === 2 ? '#8C8278' : '#E8591A'} fill={player.rank === 1 ? '#F9A825' : 'none'} />
+                  ) : (
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#8C8278' }}>#{player.rank}</Text>
+                  )}
+                </View>
+                <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: player.color + '20', borderWidth: 1.5, borderColor: player.color + '40', alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: player.color }}>{player.initials[0]}</Text>
+                </View>
+                <Text style={{ flex: 1, fontSize: 14, fontWeight: player.isMe ? '700' : '500', color: player.isMe ? '#E8591A' : '#2C1810' }}>
+                  {player.user}{player.isMe ? ' · Vous' : ''}
+                </Text>
+                <Text style={{ fontSize: 14, fontWeight: '700', color: player.rank === 1 ? '#F9A825' : '#2C1810' }}>
+                  {player.pts.toLocaleString()} pts
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-// teal fallback
-const teal = colors.success;
-
-const styles = StyleSheet.create({
-  safe:    { flex: 1, backgroundColor: colors.cream },
-  appBar:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  logo:    { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  logoCircle: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
-  logoText: { fontFamily: fontFamily.serifBold, fontSize: 10, color: colors.white },
-  appBarTitle:{ fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink },
-
-  pointsCard: {
-    marginHorizontal: spacing.md, marginBottom: spacing.md,
-    backgroundColor: colors.gold, borderRadius: radius.lg,
-    padding: spacing.lg, flexDirection: 'row', alignItems: 'center',
-  },
-  pointsLeft:   { flex: 1 },
-  pointsLabel:  { fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: 'rgba(255,255,255,0.7)', letterSpacing: 1, marginBottom: 4 },
-  pointsValue:  { fontFamily: fontFamily.serifBold, fontSize: 36, color: colors.white, marginBottom: 4 },
-  pointsSub:    { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: 'rgba(255,255,255,0.85)' },
-  pointsEmoji:  { fontSize: 48 },
-
-  sectionHeader:{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.md, marginBottom: spacing.sm },
-  sectionTitle: { fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink },
-  seeAll:       { fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: colors.primary },
-
-  challengeCard: { marginHorizontal: spacing.md, marginBottom: spacing.md, backgroundColor: colors.surface, borderRadius: radius.md, overflow: 'hidden', borderWidth: 1, borderColor: colors.border },
-  challengeImagePlaceholder:{ height: 80, backgroundColor: colors.surface2, alignItems: 'center', justifyContent: 'center' },
-  challengeBlur: { width: 60, height: 60, borderRadius: 30, backgroundColor: 'rgba(0,0,0,0.2)', alignItems: 'center', justifyContent: 'center' },
-  challengeEmoji:{ fontSize: 28, opacity: 0.3 },
-  challengeInfo: { padding: spacing.md, paddingBottom: spacing.sm },
-  challengeTitle:{ fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink },
-  challengeSub:  { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.inkMute, marginTop: 2 },
-  challengeTimer:{ fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: colors.primary, marginTop: 4 },
-  playBtn:       { marginHorizontal: spacing.md, marginBottom: spacing.md, backgroundColor: colors.primary, borderRadius: radius.full, paddingVertical: spacing.sm, alignItems: 'center' },
-  playBtnText:   { fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.white },
-
-  modesGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: spacing.md, gap: spacing.md, marginBottom: spacing.md },
-  modeCard:  { width: '45%', backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.md, borderWidth: 1, borderColor: colors.border },
-  modeIconBg:{ width: 48, height: 48, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
-  modeEmoji: { fontSize: 24 },
-  modeTitle: { fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink, marginBottom: 2 },
-  modeSub:   { fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.inkMute },
-
-  rankRow:   { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border, gap: spacing.md },
-  rankEmoji: { fontSize: 24, width: 32 },
-  rankName:  { flex: 1, fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink },
-  rankPts:   { fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.primary },
-});

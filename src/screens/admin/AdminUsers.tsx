@@ -1,164 +1,97 @@
-// src/screens/admin/AdminUsers.tsx
-// Gestion utilisateurs — recherche + filtres + suspend/ban
-
-import React from 'react';
-import {
-  FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState } from 'react';
+import { View, Text, TextInput, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useAdmin } from '@/hooks/useAdmin';
-import { WFAvatar } from '@/components/ui';
-import { colors, fontFamily, fontSize, radius, spacing } from '@/constants/theme';
+import Icon from '@/components/ui/Icon';
 
-const ROLE_COLOR: Record<string, string> = {
-  standard: colors.inkMute,
-  pro:      colors.gold,
-  admin:    colors.navy,
-};
+const USERS = [
+  { name: 'Sami Nguimfack', email: 'sami@kfl.cm',    role: 'Standard', status: 'active',    joined: '3 Jan' },
+  { name: 'Adèle Biya',     email: 'adele@kfl.cm',   role: 'Pro',      status: 'active',    joined: '12 Jan' },
+  { name: 'Chef Joël',      email: 'joel@kfl.cm',    role: 'Pro',      status: 'suspended', joined: '1 Fév' },
+  { name: 'Maman Pauline',  email: 'pauline@kfl.cm', role: 'Pro',      status: 'active',    joined: '5 Fév' },
+];
 
-const STATUS_COLOR: Record<string, string> = {
-  active:    colors.success,
-  suspended: colors.gold,
-  banned:    colors.error,
-};
+const FILTERS = ['Tous', 'Standard', 'Pro', 'Suspendus'];
 
 export default function AdminUsers() {
-  const navigation = useNavigation();
-  const { users, searchQuery, setSearchQuery, suspendUser, banUser } = useAdmin();
-  const [expandedId, setExpandedId] = React.useState<string | null>(null);
+  const navigation = useNavigation<any>();
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState(0);
+
+  const filtered = USERS.filter(u => {
+    const matchSearch = !search || u.name.toLowerCase().includes(search.toLowerCase());
+    const matchFilter =
+      filter === 0 ||
+      (filter === 1 && u.role === 'Standard') ||
+      (filter === 2 && u.role === 'Pro') ||
+      (filter === 3 && u.status === 'suspended');
+    return matchSearch && matchFilter;
+  });
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+      <StatusBar barStyle="light-content" />
+
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>x</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#1A237E' }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12, padding: 4 }}>
+          <Icon name="ArrowLeft" size={20} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.title}>Utilisateurs</Text>
-        <View style={styles.countBadge}>
-          <Text style={styles.countText}>{users.length}</Text>
+        <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700', flex: 1 }}>Utilisateurs ({USERS.length})</Text>
+      </View>
+
+      {/* Search + filters */}
+      <View style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8', gap: 8 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', height: 40, backgroundColor: '#F5F0EB', borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 12, paddingHorizontal: 12, gap: 8 }}>
+          <Icon name="Search" size={15} color="#8C8278" />
+          <TextInput
+            value={search} onChangeText={setSearch}
+            placeholder="Rechercher..." placeholderTextColor="#8C8278"
+            style={{ flex: 1, fontSize: 14, color: '#2C1810' }}
+          />
         </View>
-      </View>
-
-      {/* Recherche */}
-      <View style={styles.searchRow}>
-        <Text style={styles.searchIcon}>🔍</Text>
-        <TextInput
-          style={styles.searchInput}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder="Rechercher un utilisateur..."
-          placeholderTextColor={colors.inkMute}
-          accessibilityLabel="Rechercher"
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Text style={styles.clearIcon}>x</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      <FlatList
-        data={users}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        renderItem={({ item }) => {
-          const expanded = expandedId === item.id;
-          return (
-            <View style={styles.userCard}>
-              {/* Ligne principale */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            {FILTERS.map((f, i) => (
               <TouchableOpacity
-                style={styles.userRow}
-                onPress={() => setExpandedId(expanded ? null : item.id)}
-                accessibilityLabel={item.name}
+                key={i} onPress={() => setFilter(i)}
+                style={{ height: 28, paddingHorizontal: 12, borderRadius: 14, borderWidth: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: i === filter ? '#1A237E' : '#F5F0EB', borderColor: i === filter ? '#1A237E' : '#E5E0D8' }}
               >
-                <WFAvatar
-                  initials={item.name.slice(0, 2)}
-                  size="sm"
-                  online={item.status === 'active'}
-                />
-                <View style={styles.userInfo}>
-                  <Text style={styles.userName}>{item.name}</Text>
-                  <Text style={styles.userEmail}>{item.email}</Text>
-                  <View style={styles.userMetaRow}>
-                    <View style={[styles.roleBadge, { backgroundColor: ROLE_COLOR[item.role] + '20' }]}>
-                      <Text style={[styles.roleBadgeText, { color: ROLE_COLOR[item.role] }]}>
-                        {item.role.toUpperCase()}
-                      </Text>
-                    </View>
-                    <View style={[styles.statusDot, { backgroundColor: STATUS_COLOR[item.status] }]} />
-                    <Text style={styles.userMeta}>{item.status} · {item.scans} scans</Text>
-                  </View>
-                </View>
-                <Text style={styles.chevron}>{expanded ? 'v' : '>'}</Text>
+                <Text style={{ fontSize: 12, fontWeight: '500', color: i === filter ? '#fff' : '#6D4C41' }}>{f}</Text>
               </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
 
-              {/* Actions expandables */}
-              {expanded && (
-                <View style={styles.actionsRow}>
-                  <TouchableOpacity style={styles.actionBtn}>
-                    <Text style={styles.actionText}>Profil</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.actionBtn}>
-                    <Text style={styles.actionText}>Message</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.actionBtn, styles.warnBtn]}
-                    onPress={() => suspendUser(item.id)}
-                    accessibilityLabel="Suspendre"
-                  >
-                    <Text style={[styles.actionText, styles.warnText]}>Suspendre 30j</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.actionBtn, styles.dangerBtn]}
-                    onPress={() => banUser(item.id)}
-                    accessibilityLabel="Bannir"
-                  >
-                    <Text style={[styles.actionText, styles.dangerText]}>Bannir</Text>
-                  </TouchableOpacity>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+        <View style={{ borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', overflow: 'hidden' }}>
+          {filtered.map((user, i) => (
+            <TouchableOpacity
+              key={i}
+              onPress={() => navigation.navigate('AdminUserDetail', { userId: user.email })}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: i < filtered.length - 1 ? 1 : 0, borderColor: '#F5F0EB' }}
+            >
+              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#F5F0EB', borderWidth: 1, borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ color: '#6D4C41', fontSize: 13, fontWeight: '600' }}>{user.name[0]}</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: '#2C1810' }}>{user.name}</Text>
+                <Text style={{ fontSize: 11, color: '#8C8278' }}>{user.email} · {user.joined}</Text>
+              </View>
+              <View style={{ alignItems: 'flex-end', gap: 4 }}>
+                <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, backgroundColor: user.role === 'Pro' ? '#FBF3DC' : '#F5F0EB' }}>
+                  <Text style={{ fontSize: 11, fontWeight: '600', color: user.role === 'Pro' ? '#F9A825' : '#6D4C41' }}>{user.role}</Text>
                 </View>
-              )}
-            </View>
-          );
-        }}
-      />
+                <View style={{ paddingHorizontal: 6, paddingVertical: 1, borderRadius: 8, backgroundColor: user.status === 'active' ? '#E3F0E4' : '#FBDCDC' }}>
+                  <Text style={{ fontSize: 10, color: user.status === 'active' ? '#2E7D32' : '#C62828' }}>
+                    {user.status === 'active' ? '● Actif' : '● Suspendu'}
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe:    { flex: 1, backgroundColor: colors.cream },
-  header:  { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: colors.navy, gap: spacing.sm },
-  backBtn: { padding: spacing.xs },
-  backIcon:{ fontSize: 18, color: colors.white, fontWeight: 'bold' },
-  title:   { fontFamily: fontFamily.bold, fontSize: fontSize.lg, color: colors.white, flex: 1 },
-  countBadge: { backgroundColor: colors.primary, borderRadius: radius.full, paddingHorizontal: spacing.sm, paddingVertical: 2 },
-  countText:  { fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: colors.white },
-
-  searchRow: { flexDirection: 'row', alignItems: 'center', margin: spacing.md, backgroundColor: colors.surface, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.md, gap: spacing.sm },
-  searchIcon:  { fontSize: 16 },
-  searchInput: { flex: 1, fontFamily: fontFamily.regular, fontSize: fontSize.md, color: colors.ink, paddingVertical: spacing.sm },
-  clearIcon:   { fontSize: 14, color: colors.inkMute, padding: spacing.xs },
-
-  list:     { paddingHorizontal: spacing.md, paddingBottom: 40 },
-  userCard: { backgroundColor: colors.surface, borderRadius: radius.md, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
-  userRow:  { flexDirection: 'row', alignItems: 'center', padding: spacing.md, gap: spacing.md },
-  userInfo: { flex: 1 },
-  userName: { fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink },
-  userEmail:{ fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.inkMute },
-  userMetaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: 2 },
-  roleBadge:   { borderRadius: radius.sm, paddingHorizontal: spacing.xs, paddingVertical: 1 },
-  roleBadgeText:{ fontFamily: fontFamily.bold, fontSize: fontSize.xs },
-  statusDot:   { width: 6, height: 6, borderRadius: 3 },
-  userMeta:    { fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.inkMute },
-  chevron:     { fontSize: 14, color: colors.inkMute, fontWeight: 'bold' },
-
-  actionsRow:  { flexDirection: 'row', borderTopWidth: 1, borderTopColor: colors.border },
-  actionBtn:   { flex: 1, paddingVertical: spacing.sm, alignItems: 'center', borderRightWidth: 1, borderRightColor: colors.border },
-  actionText:  { fontFamily: fontFamily.medium, fontSize: fontSize.xs, color: colors.inkSoft },
-  warnBtn:     { backgroundColor: colors.goldSoft },
-  warnText:    { color: colors.gold },
-  dangerBtn:   { backgroundColor: colors.errorSoft },
-  dangerText:  { color: colors.error },
-});

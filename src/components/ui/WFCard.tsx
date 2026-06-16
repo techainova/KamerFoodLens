@@ -1,24 +1,22 @@
 // src/components/ui/WFCard.tsx
-// Carte de contenu KFL — fond surface, ombre, border radius
-
 import React from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
-import { colors, radius, shadows, spacing } from '@/constants/theme';
+import { colors, radius, shadows, spacing2 } from '@/constants/theme';
 import type { ShadowKey } from '@/constants/theme';
 
-interface Props {
-  children:  React.ReactNode;
-  padding?:  number;
-  shadow?:   ShadowKey;
-  style?:    ViewStyle | ViewStyle[];
+interface WFCardProps {
+  children: React.ReactNode;
+  padding?: number;
+  shadow?:  ShadowKey;
+  style?:   ViewStyle | ViewStyle[];
 }
 
 export function WFCard({
   children,
-  padding = spacing.md,
-  shadow  = 'md',
+  padding = spacing2.md,
+  shadow  = 'elev1',
   style,
-}: Props) {
+}: WFCardProps) {
   return (
     <View style={[styles.card, shadows[shadow], { padding }, style]}>
       {children}
@@ -30,7 +28,6 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderRadius:    radius.md,
-    borderWidth:     1,
-    borderColor:     colors.border,
+    // pas de borderWidth — l'ombre porte la séparation
   },
 });

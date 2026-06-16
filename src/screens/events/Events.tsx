@@ -1,196 +1,265 @@
-// src/screens/events/Events.tsx
-// Liste événements — calendrier + filtres + inscriptions
-
 import React, { useState } from 'react';
 import {
-  FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, View,
+  View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { WFButton } from '@/components/ui';
-import { colors, fontFamily, fontSize, radius, spacing } from '@/constants/theme';
+import { useNavigation } from '@react-navigation/native';
+import Icon from '@/components/ui/Icon';
 
-type EventType = 'all' | 'conference' | 'workshop' | 'live' | 'festival';
+const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
+const SHADOW_MD = { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.10, shadowRadius: 6, elevation: 4 };
 
-const DAYS = ['Lun 24', 'Mar 25', 'Mer 26', 'Jeu 27', 'Ven 28', 'Sam 29', 'Dim 30'];
+const FILTERS = ['Tous', 'En ligne', 'Présentiel', 'Gratuit', 'Cette semaine'];
 
-const MOCK_EVENTS = [
+const EVENTS = [
   {
-    id: '1', type: 'festival', date: 'Sam 29 Nov', time: '14h00 — 22h00',
-    title: 'Festival du Ndolé', org: 'Cameroon Food Heritage',
-    location: 'Bonanjo, Douala', price: '5 000 XAF', spots: 248,
-    badge: 'FESTIVAL',
+    id: '1',
+    title: 'Masterclass Mbongo Tchobi avec Chef Amina',
+    type: 'En ligne',
+    typeColor: '#1A237E',
+    date: '22 Juin',
+    time: '14h00',
+    duration: '2h',
+    location: 'Zoom',
+    price: 0,
+    seats: 12,
+    registered: false,
+    featured: true,
+    organizer: 'Chef Amina',
+    organizerInitials: 'CA',
+    organizerColor: '#E8591A',
+    tag: 'Technique',
+    tagColor: '#2E7D32',
   },
   {
-    id: '2', type: 'workshop', date: 'Dim 30 Nov', time: '10h00 — 13h00',
-    title: 'Atelier cuisson Mbongo', org: 'Chef Joëlle K.',
-    location: 'En ligne', price: 'Gratuit', spots: 64,
-    badge: 'ATELIER',
+    id: '2',
+    title: 'Festival de la gastronomie camerounaise — Douala',
+    type: 'Présentiel',
+    typeColor: '#E8591A',
+    date: '28–30 Juin',
+    time: '10h00',
+    duration: '3 jours',
+    location: 'Palais des Congrès, Douala',
+    price: 5000,
+    seats: 500,
+    registered: true,
+    featured: true,
+    organizer: 'KFL & Partenaires',
+    organizerInitials: 'KF',
+    organizerColor: '#E8591A',
+    tag: 'Festival',
+    tagColor: '#F9A825',
   },
   {
-    id: '3', type: 'live', date: 'Lun 24 Nov', time: '20h00',
-    title: 'Conférence Cuisine du Littoral', org: 'TechAINova',
-    location: 'Live stream', price: 'Gratuit', spots: 500,
-    badge: 'LIVE',
+    id: '3',
+    title: 'Atelier Ndolé & Plantains — Yaoundé',
+    type: 'Présentiel',
+    typeColor: '#E8591A',
+    date: '5 Juil.',
+    time: '09h00',
+    duration: '3h',
+    location: 'Centre Culinaire, Yaoundé',
+    price: 15000,
+    seats: 8,
+    registered: false,
+    featured: false,
+    organizer: 'École de Cuisine Cam',
+    organizerInitials: 'EC',
+    organizerColor: '#2E7D32',
+    tag: 'Atelier',
+    tagColor: '#E8591A',
+  },
+  {
+    id: '4',
+    title: 'Quiz Gastronomie Camerounaise — Live',
+    type: 'En ligne',
+    typeColor: '#1A237E',
+    date: '12 Juil.',
+    time: '19h00',
+    duration: '1h30',
+    location: 'KFL Live',
+    price: 0,
+    seats: 100,
+    registered: false,
+    featured: false,
+    organizer: 'KFL Team',
+    organizerInitials: 'KT',
+    organizerColor: '#E8591A',
+    tag: 'Jeu',
+    tagColor: '#F9A825',
   },
 ];
 
-const BADGE_COLORS: Record<string, string> = {
-  FESTIVAL: colors.gold,
-  ATELIER:  colors.green,
-  LIVE:     colors.error,
-};
-
 export default function Events() {
-  const [activeDay, setActiveDay]   = useState(2); // Mer 26
-  const [activeType, setActiveType] = useState<EventType>('all');
+  const navigation = useNavigation<any>();
+  const [activeFilter, setActiveFilter] = useState('Tous');
+  const [events, setEvents] = useState(EVENTS);
 
-  const TYPES: { key: EventType; label: string }[] = [
-    { key: 'all',         label: 'Tous' },
-    { key: 'conference',  label: 'Conférences' },
-    { key: 'workshop',    label: 'Ateliers' },
-    { key: 'live',        label: 'Lives' },
-    { key: 'festival',    label: 'Festivals' },
-  ];
+  const filtered = events.filter(e => {
+    if (activeFilter === 'En ligne') return e.type === 'En ligne';
+    if (activeFilter === 'Présentiel') return e.type === 'Présentiel';
+    if (activeFilter === 'Gratuit') return e.price === 0;
+    if (activeFilter === 'Cette semaine') return ['22 Juin', '28–30 Juin'].includes(e.date);
+    return true;
+  });
+
+  const toggleRegister = (id: string) => {
+    setEvents(prev => prev.map(e => e.id === id ? { ...e, registered: !e.registered } : e));
+  };
+
+  const featured = filtered.filter(e => e.featured);
+  const regular = filtered.filter(e => !e.featured);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+      <StatusBar barStyle="dark-content" />
+
       {/* AppBar */}
-      <View style={styles.appBar}>
-        <View style={styles.logo}>
-          <View style={styles.logoCircle}><Text style={styles.logoText}>KFL</Text></View>
-          <Text style={styles.title}>Événements</Text>
-        </View>
-        <TouchableOpacity accessibilityLabel="Filtrer"><Text style={styles.filterIcon}>⚙️</Text></TouchableOpacity>
+      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
+          <Icon name="ArrowLeft" size={22} color="#2C1810" />
+        </TouchableOpacity>
+        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: '#2C1810' }}>Événements</Text>
+        <TouchableOpacity style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="Bell" size={17} color="#6D4C41" />
+        </TouchableOpacity>
       </View>
 
-      {/* Calendrier horizontal */}
-      <FlatList
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        data={DAYS}
-        keyExtractor={(d) => d}
-        contentContainerStyle={styles.daysRow}
-        renderItem={({ item, index }) => (
+      {/* Filters */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }} style={{ backgroundColor: '#fff', maxHeight: 52, borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+        {FILTERS.map(f => (
           <TouchableOpacity
-            onPress={() => setActiveDay(index)}
-            style={[styles.dayBtn, index === activeDay && styles.dayBtnActive]}
-            accessibilityLabel={item}
+            key={f}
+            onPress={() => setActiveFilter(f)}
+            style={{ paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, backgroundColor: f === activeFilter ? '#E8591A' : '#F5F0EB', borderWidth: 1, borderColor: f === activeFilter ? '#E8591A' : '#E5E0D8' }}
           >
-            <Text style={[styles.dayNum, index === activeDay && styles.dayNumActive]}>
-              {item.split(' ')[1]}
-            </Text>
-            <Text style={[styles.dayLabel, index === activeDay && styles.dayLabelActive]}>
-              {item.split(' ')[0]}
-            </Text>
-            {index === 4 && <View style={styles.dayDot} />}
+            <Text style={{ fontSize: 13, fontWeight: '600', color: f === activeFilter ? '#fff' : '#6D4C41' }}>{f}</Text>
           </TouchableOpacity>
-        )}
-      />
-
-      {/* Filtres type */}
-      <FlatList
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        data={TYPES}
-        keyExtractor={(t) => t.key}
-        contentContainerStyle={styles.filtersRow}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => setActiveType(item.key)}
-            style={[styles.filterBtn, activeType === item.key && styles.filterBtnActive]}
-          >
-            <Text style={[styles.filterText, activeType === item.key && styles.filterTextActive]}>
-              {item.label}
-            </Text>
-          </TouchableOpacity>
-        )}
-      />
-
-      {/* Section Cette semaine */}
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
-        <Text style={styles.sectionTitle}>Cette semaine / This week</Text>
-
-        {MOCK_EVENTS.map((event) => (
-          <View key={event.id} style={styles.eventCard}>
-            {/* Image placeholder */}
-            <View style={styles.eventImage}>
-              <Text style={styles.eventEmoji}>📅</Text>
-              <View style={[styles.eventBadge, { backgroundColor: BADGE_COLORS[event.badge] ?? colors.primary }]}>
-                <Text style={styles.eventBadgeText}>{event.badge}</Text>
-              </View>
-              <View style={styles.dateBadge}>
-                <Text style={styles.dateBadgeText}>{event.date.split(' ')[1]} {event.date.split(' ')[2]}</Text>
-              </View>
-            </View>
-
-            {/* Infos */}
-            <View style={styles.eventInfo}>
-              <Text style={styles.eventTitle}>{event.title}</Text>
-              <Text style={styles.eventOrg}>Organisé par {event.org}</Text>
-
-              <View style={styles.eventDetails}>
-                <Text style={styles.eventDetail}>📅 {event.date}</Text>
-                <Text style={styles.eventDetail}>⏰ {event.time}</Text>
-                <Text style={styles.eventDetail}>📍 {event.location}</Text>
-                <View style={styles.priceRow}>
-                  <Text style={styles.eventSpots}>👥 {event.spots}</Text>
-                  <WFButton
-                    label={`S'inscrire — ${event.price}`}
-                    onPress={() => {}}
-                    size="sm"
-                  />
-                </View>
-              </View>
-            </View>
-          </View>
         ))}
+      </ScrollView>
 
-        <View style={{ height: 100 }} />
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+
+        {/* Featured */}
+        {featured.length > 0 && (
+          <View style={{ paddingTop: 16 }}>
+            <Text style={{ paddingHorizontal: 16, fontSize: 13, fontWeight: '600', color: '#6D4C41', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>À la une</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 14 }}>
+              {featured.map(event => (
+                <TouchableOpacity
+                  key={event.id}
+                  onPress={() => navigation.navigate('EventDetail', { event })}
+                  activeOpacity={0.85}
+                  style={{ width: 260, backgroundColor: '#fff', borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: '#E5E0D8', ...SHADOW_MD }}
+                >
+                  {/* Hero */}
+                  <View style={{ height: 130, backgroundColor: '#F5F0EB', alignItems: 'center', justifyContent: 'center' }}>
+                    <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: event.organizerColor + '20', borderWidth: 2, borderColor: event.organizerColor + '40', alignItems: 'center', justifyContent: 'center', marginBottom: 6 }}>
+                      <Text style={{ fontSize: 20, fontWeight: '700', color: event.organizerColor }}>{event.organizerInitials[0]}</Text>
+                    </View>
+                    {/* Type badge */}
+                    <View style={{ position: 'absolute', top: 10, left: 10, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: event.typeColor }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: '#fff' }}>{event.type}</Text>
+                    </View>
+                    {/* Price badge */}
+                    <View style={{ position: 'absolute', top: 10, right: 10, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: event.price === 0 ? '#E3F0E4' : '#FBF3DC' }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: event.price === 0 ? '#2E7D32' : '#F9A825' }}>{event.price === 0 ? 'Gratuit' : `${event.price.toLocaleString()} XAF`}</Text>
+                    </View>
+                  </View>
+
+                  <View style={{ padding: 14 }}>
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810', lineHeight: 20, marginBottom: 8 }} numberOfLines={2}>{event.title}</Text>
+
+                    <View style={{ gap: 5, marginBottom: 12 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Icon name="Calendar" size={13} color="#E8591A" />
+                        <Text style={{ fontSize: 12, color: '#6D4C41' }}>{event.date} · {event.time}</Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Icon name="MapPin" size={13} color="#8C8278" />
+                        <Text style={{ fontSize: 12, color: '#8C8278' }} numberOfLines={1}>{event.location}</Text>
+                      </View>
+                    </View>
+
+                    <TouchableOpacity
+                      onPress={() => toggleRegister(event.id)}
+                      style={{ paddingVertical: 9, borderRadius: 12, backgroundColor: event.registered ? '#E3F0E4' : '#E8591A', alignItems: 'center' }}
+                    >
+                      <Text style={{ fontSize: 13, fontWeight: '700', color: event.registered ? '#2E7D32' : '#fff' }}>
+                        {event.registered ? 'Inscrit' : "S'inscrire"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Regular list */}
+        {regular.length > 0 && (
+          <View style={{ paddingHorizontal: 16, paddingTop: 20, gap: 12 }}>
+            <Text style={{ fontSize: 13, fontWeight: '600', color: '#6D4C41', textTransform: 'uppercase', letterSpacing: 0.5 }}>Prochains événements</Text>
+
+            {regular.map(event => (
+              <TouchableOpacity
+                key={event.id}
+                onPress={() => navigation.navigate('EventDetail', { event })}
+                activeOpacity={0.85}
+                style={{ backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#E5E0D8', overflow: 'hidden', ...SHADOW_SM }}
+              >
+                <View style={{ flexDirection: 'row' }}>
+                  {/* Date column */}
+                  <View style={{ width: 64, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center', paddingVertical: 16 }}>
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase' }}>{event.date.split(' ')[1] ?? ''}</Text>
+                    <Text style={{ fontSize: 22, fontWeight: '700', color: '#fff', lineHeight: 26 }}>{event.date.split(' ')[0] ?? event.date}</Text>
+                  </View>
+
+                  {/* Info */}
+                  <View style={{ flex: 1, padding: 14 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                      <View style={{ paddingHorizontal: 7, paddingVertical: 2, borderRadius: 7, backgroundColor: event.tagColor + '15' }}>
+                        <Text style={{ fontSize: 10, fontWeight: '700', color: event.tagColor }}>{event.tag}</Text>
+                      </View>
+                      <View style={{ paddingHorizontal: 7, paddingVertical: 2, borderRadius: 7, backgroundColor: event.typeColor + '15' }}>
+                        <Text style={{ fontSize: 10, fontWeight: '600', color: event.typeColor }}>{event.type}</Text>
+                      </View>
+                    </View>
+
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810', marginBottom: 6 }} numberOfLines={2}>{event.title}</Text>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Icon name="Clock" size={12} color="#8C8278" />
+                        <Text style={{ fontSize: 11, color: '#8C8278' }}>{event.time} · {event.duration}</Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Icon name="Users" size={12} color="#8C8278" />
+                        <Text style={{ fontSize: 11, color: '#8C8278' }}>{event.seats} places</Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    onPress={() => toggleRegister(event.id)}
+                    style={{ paddingRight: 14, justifyContent: 'center' }}
+                  >
+                    <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: event.registered ? '#E3F0E4' : '#E8591A15', borderWidth: 1.5, borderColor: event.registered ? '#2E7D32' : '#E8591A40', alignItems: 'center', justifyContent: 'center' }}>
+                      <Icon name={event.registered ? 'Check' : 'Plus'} size={15} color={event.registered ? '#2E7D32' : '#E8591A'} />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {filtered.length === 0 && (
+          <View style={{ alignItems: 'center', paddingTop: 80 }}>
+            <Icon name="Calendar" size={48} color="rgba(140,130,120,0.3)" />
+            <Text style={{ fontSize: 16, color: '#8C8278', marginTop: 12 }}>Aucun événement</Text>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe:    { flex: 1, backgroundColor: colors.cream },
-  appBar:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  logo:    { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  logoCircle: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
-  logoText: { fontFamily: fontFamily.serifBold, fontSize: 10, color: colors.white },
-  title:   { fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink },
-  filterIcon: { fontSize: 20, padding: spacing.xs },
-
-  daysRow: { paddingHorizontal: spacing.md, paddingBottom: spacing.sm, gap: spacing.sm },
-  dayBtn:  { width: 44, alignItems: 'center', paddingVertical: spacing.sm, borderRadius: radius.md },
-  dayBtnActive:{ backgroundColor: colors.primary },
-  dayNum:  { fontFamily: fontFamily.bold, fontSize: fontSize.lg, color: colors.ink },
-  dayNumActive: { color: colors.white },
-  dayLabel:{ fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.inkMute },
-  dayLabelActive:{ color: colors.white },
-  dayDot:  { width: 4, height: 4, borderRadius: 2, backgroundColor: colors.primary, marginTop: 2 },
-
-  filtersRow: { paddingHorizontal: spacing.md, paddingBottom: spacing.md, gap: spacing.sm },
-  filterBtn:  { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: radius.full, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  filterBtnActive:{ backgroundColor: colors.primary, borderColor: colors.primary },
-  filterText:     { fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: colors.inkMute },
-  filterTextActive:{ color: colors.white },
-
-  list:         { paddingHorizontal: spacing.md },
-  sectionTitle: { fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink, marginBottom: spacing.md },
-
-  eventCard:    { backgroundColor: colors.surface, borderRadius: radius.lg, marginBottom: spacing.md, overflow: 'hidden', borderWidth: 1, borderColor: colors.border },
-  eventImage:   { height: 140, backgroundColor: colors.surface2, alignItems: 'center', justifyContent: 'center', position: 'relative' },
-  eventEmoji:   { fontSize: 48 },
-  eventBadge:   { position: 'absolute', top: spacing.sm, left: spacing.sm, borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: 2 },
-  eventBadgeText:{ fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: colors.white },
-  dateBadge:    { position: 'absolute', top: spacing.sm, right: spacing.sm, backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: 2 },
-  dateBadgeText:{ fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: colors.white },
-
-  eventInfo:    { padding: spacing.md },
-  eventTitle:   { fontFamily: fontFamily.serifBold, fontSize: fontSize.xl, color: colors.ink, marginBottom: 4 },
-  eventOrg:     { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.inkMute, marginBottom: spacing.md },
-  eventDetails: { gap: spacing.xs },
-  eventDetail:  { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.inkSoft },
-  priceRow:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.sm },
-  eventSpots:   { fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: colors.inkMute },
-});

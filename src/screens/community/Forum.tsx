@@ -1,167 +1,199 @@
-// src/screens/community/Forum.tsx
-// Forum thématique — onglets + discussions
-
 import React, { useState } from 'react';
 import {
-  FlatList, StyleSheet, Text, TouchableOpacity, View,
+  View, Text, ScrollView, TouchableOpacity, SafeAreaView,
+  StatusBar, TextInput,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, fontFamily, fontSize, radius, spacing } from '@/constants/theme';
+import { useNavigation } from '@react-navigation/native';
+import Icon from '@/components/ui/Icon';
 
-type ForumTab = 'general' | 'recipes' | 'regions' | 'tips' | 'events';
+const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
 
-const TABS: { key: ForumTab; label: string }[] = [
-  { key: 'general',  label: 'Général' },
-  { key: 'recipes',  label: 'Recettes' },
-  { key: 'regions',  label: 'Régions' },
-  { key: 'tips',     label: 'Conseils' },
-  { key: 'events',   label: 'Events' },
-];
+const CATEGORIES = ['Tout', 'Recettes', 'Techniques', 'Restaurants', 'Culture'];
 
-const MOCK_DISCUSSIONS = [
+const THREADS = [
   {
-    id: '1', title: 'Le secret du Ndolé bien crémeux ?', badge: 'Populaire 🔥',
-    preview: 'Quelqu\'un peut me dire pourquoi mon ndolé devient toujours sec après cuisson ?',
-    tags: ['#Ndolé', '#Recette'], author: 'Adèle K.', likes: 28, views: 312, timeAgo: '2h',
+    id: '1',
+    category: 'Recettes',
+    catColor: '#E8591A',
+    title: 'Comment reproduire le Mbongo Tchobi authentique à la maison ?',
+    user: 'Chef Paul',
+    initials: 'CP',
+    initColor: '#E8591A',
+    time: '2h',
+    replies: 34,
+    views: 428,
+    hot: true,
+    pinned: false,
   },
   {
-    id: '2', title: 'Où trouver de l\'eru frais à Douala ?', badge: 'Nouveau 🆕',
-    preview: 'Je cherche un marché qui vend des feuilles d\'eru fraîches...',
-    tags: ['#Eru', '#Douala'], author: 'Jean P.', likes: 6, views: 84, timeAgo: '5h',
+    id: '2',
+    category: 'Culture',
+    catColor: '#1A237E',
+    title: 'Différences régionales du Ndolé : Douala vs Yaoundé vs Bafang',
+    user: 'Maman Caro',
+    initials: 'MC',
+    initColor: '#2E7D32',
+    time: '5h',
+    replies: 67,
+    views: 892,
+    hot: true,
+    pinned: false,
   },
   {
-    id: '3', title: 'Comment fumer le poisson maison ?', badge: 'Résolu ✅',
-    preview: 'Salut tous, j\'aimerais apprendre la technique traditionnelle...',
-    tags: ['#Poisson', '#Technique'], author: 'Chef Joël', likes: 42, views: 1200, timeAgo: 'hier',
+    id: '3',
+    category: 'Techniques',
+    catColor: '#2E7D32',
+    title: '[ÉPINGLÉ] Guide complet des épices camerounaises — njansang, écorces HK...',
+    user: 'Admin KFL',
+    initials: 'AK',
+    initColor: '#F9A825',
+    time: '2j',
+    replies: 156,
+    views: 2341,
+    hot: false,
+    pinned: true,
+  },
+  {
+    id: '4',
+    category: 'Restaurants',
+    catColor: '#8C8278',
+    title: 'Meilleurs restaurants de Poulet DG à Douala en 2024 ?',
+    user: 'Ngo Beatrice',
+    initials: 'NB',
+    initColor: '#1A237E',
+    time: '1j',
+    replies: 23,
+    views: 315,
+    hot: false,
+    pinned: false,
+  },
+  {
+    id: '5',
+    category: 'Recettes',
+    catColor: '#E8591A',
+    title: 'Achu Soup : les secrets de la pâte jaune bien onctueuse',
+    user: 'Charlotte NW',
+    initials: 'CW',
+    initColor: '#E8591A',
+    time: '3j',
+    replies: 41,
+    views: 567,
+    hot: false,
+    pinned: false,
   },
 ];
 
 export default function Forum() {
-  const [tab, setTab] = useState<ForumTab>('recipes');
+  const navigation = useNavigation<any>();
+  const [activeCategory, setActiveCategory] = useState('Tout');
+  const [search, setSearch] = useState('');
+
+  const filtered = THREADS.filter(t => {
+    const matchCat = activeCategory === 'Tout' || t.category === activeCategory;
+    const matchSearch = !search || t.title.toLowerCase().includes(search.toLowerCase());
+    return matchCat && matchSearch;
+  });
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+      <StatusBar barStyle="dark-content" />
+
       {/* AppBar */}
-      <View style={styles.appBar}>
-        <View style={styles.logo}>
-          <View style={styles.logoCircle}><Text style={styles.logoText}>KFL</Text></View>
-          <Text style={styles.appBarTitle}>Forum</Text>
-        </View>
-        <View style={styles.appBarRight}>
-          <TouchableOpacity accessibilityLabel="Rechercher"><Text style={styles.icon}>🔍</Text></TouchableOpacity>
-          <TouchableOpacity accessibilityLabel="Filtrer"><Text style={styles.icon}>⚙️</Text></TouchableOpacity>
+      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
+          <Icon name="ArrowLeft" size={22} color="#2C1810" />
+        </TouchableOpacity>
+        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: '#2C1810' }}>Forum</Text>
+        <TouchableOpacity style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="Bell" size={17} color="#6D4C41" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Search */}
+      <View style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F5F0EB', borderRadius: 12, paddingHorizontal: 12, height: 40 }}>
+          <Icon name="Search" size={15} color="#8C8278" />
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Chercher un sujet..."
+            placeholderTextColor="#8C8278"
+            style={{ flex: 1, marginLeft: 8, fontSize: 14, color: '#2C1810' }}
+          />
         </View>
       </View>
 
-      {/* Stats */}
-      <View style={styles.statsRow}>
-        <Text style={styles.statText}><Text style={styles.statNum}>1 248</Text> discussions</Text>
-        <Text style={styles.statDot}>·</Text>
-        <Text style={styles.statText}><Text style={styles.statNum}>342</Text> actifs aujourd'hui</Text>
-      </View>
-
-      {/* Onglets */}
-      <FlatList
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        data={TABS}
-        keyExtractor={(t) => t.key}
-        contentContainerStyle={styles.tabsRow}
-        renderItem={({ item }) => (
+      {/* Category chips */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }} style={{ backgroundColor: '#fff', maxHeight: 52, borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+        {CATEGORIES.map(cat => (
           <TouchableOpacity
-            onPress={() => setTab(item.key)}
-            style={[styles.tabBtn, tab === item.key && styles.tabBtnActive]}
+            key={cat}
+            onPress={() => setActiveCategory(cat)}
+            style={{ paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, backgroundColor: cat === activeCategory ? '#E8591A' : '#F5F0EB', borderWidth: 1, borderColor: cat === activeCategory ? '#E8591A' : '#E5E0D8' }}
           >
-            <Text style={[styles.tabText, tab === item.key && styles.tabTextActive]}>
-              {item.label}
-            </Text>
+            <Text style={{ fontSize: 13, fontWeight: '600', color: cat === activeCategory ? '#fff' : '#6D4C41' }}>{cat}</Text>
           </TouchableOpacity>
-        )}
-      />
+        ))}
+      </ScrollView>
 
-      {/* Discussions */}
-      <FlatList
-        data={MOCK_DISCUSSIONS}
-        keyExtractor={(d) => d.id}
-        contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
-          <TouchableOpacity style={styles.discussionCard} accessibilityLabel={item.title}>
-            <View style={styles.discussionHeader}>
-              <Text style={styles.discussionTitle}>{item.title}</Text>
-              <View style={styles.badgeWrap}>
-                <Text style={styles.badge}>{item.badge}</Text>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingVertical: 12, paddingHorizontal: 16, gap: 10, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+        {filtered.map(thread => (
+          <TouchableOpacity
+            key={thread.id}
+            onPress={() => navigation.navigate('ForumDetail', { thread })}
+            activeOpacity={0.85}
+            style={{ backgroundColor: '#fff', borderRadius: 16, padding: 16, borderWidth: thread.pinned ? 1.5 : 1, borderColor: thread.pinned ? '#F9A825' + '60' : '#E5E0D8', ...SHADOW_SM }}
+          >
+            {thread.pinned && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 }}>
+                <Icon name="Award" size={12} color="#F9A825" />
+                <Text style={{ fontSize: 10, fontWeight: '700', color: '#F9A825', textTransform: 'uppercase', letterSpacing: 0.5 }}>Épinglé</Text>
+              </View>
+            )}
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: thread.catColor + '15' }}>
+                <Text style={{ fontSize: 10, fontWeight: '700', color: thread.catColor }}>{thread.category}</Text>
+              </View>
+              {thread.hot && (
+                <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: '#FBDCDC' }}>
+                  <Text style={{ fontSize: 10, fontWeight: '700', color: '#C62828' }}>HOT</Text>
+                </View>
+              )}
+            </View>
+
+            <Text style={{ fontSize: 15, fontWeight: '700', color: '#2C1810', lineHeight: 22, marginTop: 8, marginBottom: 10 }} numberOfLines={2}>
+              {thread.title}
+            </Text>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: thread.initColor + '20', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: thread.initColor + '40' }}>
+                <Text style={{ fontSize: 10, fontWeight: '700', color: thread.initColor }}>{thread.initials[0]}</Text>
+              </View>
+              <Text style={{ flex: 1, fontSize: 12, color: '#6D4C41' }}>{thread.user} · {thread.time}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Icon name="MessageCircle" size={13} color="#8C8278" />
+                  <Text style={{ fontSize: 12, color: '#8C8278' }}>{thread.replies}</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Icon name="Eye" size={13} color="#8C8278" />
+                  <Text style={{ fontSize: 12, color: '#8C8278' }}>{thread.views}</Text>
+                </View>
               </View>
             </View>
-            <Text style={styles.preview} numberOfLines={2}>{item.preview}</Text>
-            <View style={styles.tagsRow}>
-              {item.tags.map((tag) => (
-                <Text key={tag} style={styles.tag}>{tag}</Text>
-              ))}
-            </View>
-            <View style={styles.metaRow}>
-              <Text style={styles.metaText}>👤 {item.author}</Text>
-              <Text style={styles.metaDot}>·</Text>
-              <Text style={styles.metaText}>🤍 {item.likes}</Text>
-              <Text style={styles.metaDot}>·</Text>
-              <Text style={styles.metaText}>👁 {item.views}</Text>
-              <Text style={styles.metaTime}>{item.timeAgo}</Text>
-            </View>
           </TouchableOpacity>
-        )}
-      />
+        ))}
+      </ScrollView>
 
-      {/* FAB nouvelle discussion */}
+      {/* FAB */}
       <TouchableOpacity
-        style={styles.fab}
-        accessibilityRole="button"
-        accessibilityLabel="Nouvelle discussion"
+        onPress={() => navigation.navigate('CreatePost')}
+        style={{ position: 'absolute', bottom: 96, right: 20, width: 52, height: 52, borderRadius: 26, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center', shadowColor: '#E8591A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 6 }}
+        activeOpacity={0.85}
       >
-        <Text style={styles.fabText}>+ Nouvelle discussion</Text>
+        <Icon name="Plus" size={24} color="#fff" />
       </TouchableOpacity>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe:    { flex: 1, backgroundColor: colors.cream },
-  appBar:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  logo:    { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  logoCircle: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
-  logoText: { fontFamily: fontFamily.serifBold, fontSize: 10, color: colors.white },
-  appBarTitle:{ fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink },
-  appBarRight:{ flexDirection: 'row', gap: spacing.sm },
-  icon:    { fontSize: 20, padding: spacing.xs },
-
-  statsRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, gap: spacing.sm, marginBottom: spacing.sm },
-  statText: { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.inkMute },
-  statNum:  { fontFamily: fontFamily.bold, color: colors.ink },
-  statDot:  { color: colors.inkMute },
-
-  tabsRow:     { paddingHorizontal: spacing.md, paddingBottom: spacing.sm, gap: spacing.sm },
-  tabBtn:      { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: radius.full, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  tabBtnActive:{ backgroundColor: colors.primary, borderColor: colors.primary },
-  tabText:     { fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: colors.inkMute },
-  tabTextActive:{ color: colors.white },
-
-  list:          { paddingHorizontal: spacing.md, paddingBottom: 100 },
-  discussionCard:{ backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.md, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.border },
-  discussionHeader:{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.sm, gap: spacing.sm },
-  discussionTitle:{ flex: 1, fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.ink },
-  badgeWrap:     { alignSelf: 'flex-start' },
-  badge:         { fontFamily: fontFamily.medium, fontSize: fontSize.xs, color: colors.primary, backgroundColor: colors.primarySoft, paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: radius.full },
-  preview:       { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.inkMute, lineHeight: 18, marginBottom: spacing.sm },
-  tagsRow:       { flexDirection: 'row', gap: spacing.xs, marginBottom: spacing.sm },
-  tag:           { fontFamily: fontFamily.medium, fontSize: fontSize.xs, color: colors.primary, backgroundColor: colors.primarySoft, paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: radius.full },
-  metaRow:       { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  metaText:      { fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.inkMute },
-  metaDot:       { color: colors.inkMute },
-  metaTime:      { fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.inkMute, marginLeft: 'auto' },
-
-  fab: {
-    position: 'absolute', bottom: 88, alignSelf: 'center',
-    backgroundColor: colors.primary, borderRadius: radius.full,
-    paddingHorizontal: spacing.xl, paddingVertical: spacing.sm,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 8,
-  },
-  fabText: { fontFamily: fontFamily.bold, fontSize: fontSize.md, color: colors.white },
-});
