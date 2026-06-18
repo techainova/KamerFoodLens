@@ -80,7 +80,7 @@ export type HomeStackParamList = HomeStackParams;
 export type ScannerStackParams = {
   Camera:    undefined;
   AudioText: undefined;
-  Result:    { scanId: string };
+  Result:    { scanId: string; classId?: string; confidence?: number; imageUri?: string };
   Recipe:    { dishId: string };
 };
 

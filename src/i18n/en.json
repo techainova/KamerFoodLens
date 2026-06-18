@@ -192,7 +192,18 @@
     "dishRegion": "Region of origin",
     "listenStory": "Listen",
     "addJournal": "Add to journal",
-    "scanAgain": "Scan another dish"
+    "scanAgain": "Scan another dish",
+    "errorTitle": "Recognition error",
+    "errorMsg": "Couldn't analyze this photo. Please try again.",
+    "notRecognizedDesc": "We couldn't confidently identify this dish. Try a sharper, better-lit photo framed on the dish.",
+    "ingredients": "Ingredients",
+    "prepTime": "Prep time",
+    "minutes": "min",
+    "spiceLevel": "Spice level",
+    "accompaniments": "Accompaniments",
+    "highConfidence": "High confidence",
+    "mediumConfidence": "Medium confidence",
+    "lowConfidence": "Low confidence"
   },
   "audioText": {
     "title": "Describe a dish",

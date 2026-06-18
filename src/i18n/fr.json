@@ -192,7 +192,18 @@
     "dishRegion": "Région d'origine",
     "listenStory": "Écouter",
     "addJournal": "Ajouter au journal",
-    "scanAgain": "Scanner un autre plat"
+    "scanAgain": "Scanner un autre plat",
+    "errorTitle": "Erreur de reconnaissance",
+    "errorMsg": "Impossible d'analyser cette photo. Veuillez réessayer.",
+    "notRecognizedDesc": "Nous n'avons pas pu identifier ce plat avec certitude. Essayez avec une photo plus nette, mieux éclairée et cadrée sur le plat.",
+    "ingredients": "Ingrédients",
+    "prepTime": "Temps de préparation",
+    "minutes": "min",
+    "spiceLevel": "Niveau épicé",
+    "accompaniments": "Accompagnements",
+    "highConfidence": "Haute confiance",
+    "mediumConfidence": "Confiance moyenne",
+    "lowConfidence": "Faible confiance"
   },
   "audioText": {
     "title": "Décrire un plat",

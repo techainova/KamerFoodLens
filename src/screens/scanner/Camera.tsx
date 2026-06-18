@@ -1,14 +1,17 @@
-﻿import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
   View, Text, TouchableOpacity, StatusBar, Animated,
-  SafeAreaView, Easing,
+  SafeAreaView, Easing, Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ScannerStackParams } from '@/navigation/types';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as ImagePicker from 'expo-image-picker';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
+import { useFoodScanner } from '@/hooks/useFoodScanner';
 
 type CameraNav = NativeStackNavigationProp<ScannerStackParams, 'Camera'>;
 type Mode = 'photo' | 'audio' | 'text';
@@ -48,12 +51,20 @@ function CornerBrackets() {
 
 export default function Camera() {
   const navigation = useNavigation<CameraNav>();
-    const C = useColors();
+  const C = useColors();
   const { t } = useTranslation();
+  const { isLoading, scanImage } = useFoodScanner();
 
   const [mode, setMode]         = useState<Mode>('photo');
-  const [analyzing, setAnalyzing] = useState(false);
   const [flashOn, setFlashOn]   = useState(false);
+  const [permission, requestPermission] = useCameraPermissions();
+  const cameraRef = useRef<CameraView>(null);
+
+  useEffect(() => {
+    if (permission && !permission.granted && permission.canAskAgain) {
+      requestPermission();
+    }
+  }, [permission, requestPermission]);
 
   // Scan line animation
   const scanAnim = useRef(new Animated.Value(0)).current;
@@ -81,7 +92,7 @@ export default function Camera() {
   // Analyzing pulse animation
   const pulseAnim = useRef(new Animated.Value(1)).current;
   useEffect(() => {
-    if (!analyzing) return;
+    if (!isLoading) return;
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, { toValue: 1.08, duration: 600, useNativeDriver: true }),
@@ -90,14 +101,43 @@ export default function Camera() {
     );
     loop.start();
     return () => { loop.stop(); pulseAnim.setValue(1); };
-  }, [analyzing, pulseAnim]);
+  }, [isLoading, pulseAnim]);
+
+  const handleScanResult = async (imageUri: string) => {
+    try {
+      const result = await scanImage(imageUri);
+      navigation.navigate('Result', {
+        scanId: `scan-${Date.now()}`,
+        classId: result.classId,
+        confidence: result.confidence,
+        imageUri,
+      });
+    } catch {
+      Alert.alert(t('scanner.errorTitle'), t('scanner.errorMsg'));
+    }
+  };
 
   const handleCapture = async () => {
-    if (analyzing) return;
-    setAnalyzing(true);
-    await new Promise(r => setTimeout(r, 1600));
-    setAnalyzing(false);
-    navigation.navigate('Result', { scanId: 'demo-scan-001' });
+    if (isLoading || !cameraRef.current) return;
+    try {
+      const photo = await cameraRef.current.takePictureAsync({ quality: 0.9 });
+      if (photo?.uri) await handleScanResult(photo.uri);
+    } catch {
+      Alert.alert(t('scanner.errorTitle'), t('scanner.errorMsg'));
+    }
+  };
+
+  const handlePickFromGallery = async () => {
+    if (isLoading) return;
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) return;
+
+    const pickerResult = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.9,
+    });
+    if (pickerResult.canceled || !pickerResult.assets?.[0]) return;
+    await handleScanResult(pickerResult.assets[0].uri);
   };
 
   const handleModeChange = (m: Mode) => {
@@ -118,8 +158,17 @@ export default function Camera() {
     <View style={{ flex: 1, backgroundColor: '#0B0B0B' }}>
       <StatusBar barStyle="light-content" />
 
-      {/* Camera viewfinder simulation */}
-      <View style={{ position: 'absolute', inset: 0, backgroundColor: '#1A1410' }} />
+      {/* Caméra réelle (aperçu live) */}
+      {permission?.granted ? (
+        <CameraView
+          ref={cameraRef}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+          facing="back"
+          flash={flashOn ? 'on' : 'off'}
+        />
+      ) : (
+        <View style={{ position: 'absolute', inset: 0, backgroundColor: '#1A1410' }} />
+      )}
 
       {/* Top bar */}
       <SafeAreaView style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
@@ -165,7 +214,7 @@ export default function Camera() {
 
       {/* Instruction text */}
       <View style={{ position: 'absolute', top: 488, left: 0, right: 0, alignItems: 'center', paddingHorizontal: 40 }}>
-        {analyzing ? (
+        {isLoading ? (
           <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
             <View style={{ backgroundColor: 'rgba(0,0,0,0.65)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: SUCCESS_GREEN }} />
@@ -202,7 +251,7 @@ export default function Camera() {
       <View style={{ position: 'absolute', bottom: 40, left: 0, right: 0, paddingHorizontal: 32, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
 
         {/* Gallery */}
-        <TouchableOpacity style={{ alignItems: 'center', gap: 6 }}>
+        <TouchableOpacity onPress={handlePickFromGallery} disabled={isLoading} style={{ alignItems: 'center', gap: 6 }}>
           <View style={{ width: 50, height: 50, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="Bookmark" size={22} color="rgba(255,255,255,0.7)" />
           </View>
@@ -212,12 +261,12 @@ export default function Camera() {
         {/* Capture button */}
         <TouchableOpacity
           onPress={handleCapture}
-          disabled={analyzing}
+          disabled={isLoading}
           style={{ alignItems: 'center', justifyContent: 'center' }}
           activeOpacity={0.85}
         >
           <View style={{ width: 80, height: 80, borderRadius: 40, borderWidth: 3, borderColor: SUCCESS_GREEN, padding: 5, alignItems: 'center', justifyContent: 'center' }}>
-            <View style={{ flex: 1, width: '100%', borderRadius: 35, backgroundColor: analyzing ? 'rgba(255,255,255,0.4)' : '#fff' }} />
+            <View style={{ flex: 1, width: '100%', borderRadius: 35, backgroundColor: isLoading ? 'rgba(255,255,255,0.4)' : '#fff' }} />
           </View>
         </TouchableOpacity>
 

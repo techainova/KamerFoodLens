@@ -21,14 +21,28 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "plugins": [
       "expo-camera",
       "expo-location",
       "expo-font",
       "expo-splash-screen",
-      "expo-notifications"
+      "expo-notifications",
+      "expo-image-picker",
+      [
+        "react-native-fast-tflite",
+        {
+          "enableCoreMLDelegate": true
+        }
+      ],
+      "./plugins/withTfliteNoCompress.js"
     ],
     "doctor": {
       "reactNativeDirectoryCheck": {
@@ -37,6 +51,11 @@
           "expo-av",
           "expo-modules-jsi"
         ]
+      }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "5d8901ec-d014-4e29-907d-6b4ac5e02c48"
       }
     }
   }

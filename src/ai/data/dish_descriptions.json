@@ -1,0 +1,62 @@
+{
+  "ekwang": {
+    "nomFR": "Ekwang",
+    "nomEN": "Ekwang",
+    "region": "Sud-Ouest, Cameroun",
+    "description": "Plat à base de cocoyam (taro) râpé et enroulé dans des feuilles de cocoyam, mijoté longuement dans une sauce à l'huile de palme avec poisson fumé ou viande.",
+    "ingredients": ["cocoyam râpé", "feuilles de cocoyam", "huile de palme", "poisson fumé", "piment", "crevettes séchées"],
+    "tempsPreparationMin": 150,
+    "niveauEpice": 2,
+    "accompagnements": ["aucun (plat complet)"]
+  },
+  "eru": {
+    "nomFR": "Eru",
+    "nomEN": "Eru",
+    "region": "Sud-Ouest, Cameroun",
+    "description": "Ragoût de feuilles d'eru (okok) finement émincées, cuites avec des feuilles de waterleaf, de l'huile de palme, du poisson fumé et de la viande, traditionnellement servi avec du fufu de manioc ou du garri.",
+    "ingredients": ["feuilles d'eru", "waterleaf", "huile de palme", "poisson fumé", "viande de bœuf", "crevettes séchées"],
+    "tempsPreparationMin": 75,
+    "niveauEpice": 2,
+    "accompagnements": ["fufu de manioc", "garri", "miondo"]
+  },
+  "jollof-ghana": {
+    "nomFR": "Riz Jollof (Ghana)",
+    "nomEN": "Ghanaian Jollof Rice",
+    "region": "Ghana, Afrique de l'Ouest",
+    "description": "Riz cuit dans une sauce tomate et poivron épicée, parfumée aux épices ouest-africaines, souvent accompagné de poulet, de bœuf ou de poisson grillé.",
+    "ingredients": ["riz long grain", "tomates", "poivron rouge", "oignon", "piment scotch bonnet", "épices jollof", "bouillon"],
+    "tempsPreparationMin": 60,
+    "niveauEpice": 3,
+    "accompagnements": ["poulet grillé", "salade", "plantain frit"]
+  },
+  "ndole": {
+    "nomFR": "Ndolé",
+    "nomEN": "Ndole",
+    "region": "Littoral, Cameroun",
+    "description": "Plat mijoté à base de feuilles de ndolé amères, pâte d'arachide et poisson fumé ou viande.",
+    "ingredients": ["feuilles de ndolé", "pâte d'arachide", "poisson fumé", "crevettes séchées", "huile de palme"],
+    "tempsPreparationMin": 90,
+    "niveauEpice": 2,
+    "accompagnements": ["plantain", "riz", "miondo"]
+  },
+  "palm-nut-soup": {
+    "nomFR": "Soupe de noix de palme",
+    "nomEN": "Palm Nut Soup",
+    "region": "Afrique Centrale et de l'Ouest",
+    "description": "Soupe onctueuse préparée à partir d'extrait de noix de palme, mijotée avec viande, poisson fumé et épices, servie en plat principal avec un féculent.",
+    "ingredients": ["extrait de noix de palme", "poisson fumé", "viande de bœuf", "piment", "gingembre", "épices"],
+    "tempsPreparationMin": 100,
+    "niveauEpice": 2,
+    "accompagnements": ["fufu", "riz", "banku"]
+  },
+  "waakye": {
+    "nomFR": "Waakye",
+    "nomEN": "Waakye",
+    "region": "Ghana, Afrique de l'Ouest",
+    "description": "Riz et haricots cuits ensemble avec des feuilles de sorgho (ou bicarbonate) qui leur donnent une teinte rouge-brun caractéristique, servi avec garri, spaghetti, œuf et sauce shito.",
+    "ingredients": ["riz", "haricots noirs", "feuilles de sorgho", "garri", "sauce shito", "œuf"],
+    "tempsPreparationMin": 80,
+    "niveauEpice": 2,
+    "accompagnements": ["garri", "spaghetti", "œuf bouilli", "avocat"]
+  }
+}
