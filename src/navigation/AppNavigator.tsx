@@ -44,10 +44,12 @@ import CourseDetail from '@/screens/courses/CourseDetail';
 import CoursePlayer from '@/screens/courses/CoursePlayer';
 
 // ── Games ────────────────────────────────────────────────────────────────────
-import Games   from '@/screens/games/Games';
-import Quiz    from '@/screens/games/Quiz';
-import Tombola from '@/screens/games/Tombola';
-import Badges  from '@/screens/games/Badges';
+import Games          from '@/screens/games/Games';
+import Quiz           from '@/screens/games/Quiz';
+import Tombola        from '@/screens/games/Tombola';
+import Badges         from '@/screens/games/Badges';
+import SpeedChallenge from '@/screens/games/SpeedChallenge';
+import LeaderboardFull from '@/screens/games/LeaderboardFull';
 
 // ── Profile ──────────────────────────────────────────────────────────────────
 import ProfileScreen   from '@/screens/profile/ProfileScreen';
@@ -55,10 +57,18 @@ import FavoritesScreen from '@/screens/profile/FavoritesScreen';
 import EditProfile     from '@/screens/profile/EditProfile';
 import SettingsScreen  from '@/screens/profile/Settings';
 import History         from '@/screens/profile/History';
+import ChangePassword  from '@/screens/profile/ChangePassword';
+import PrivacySettings from '@/screens/profile/PrivacySettings';
+import LanguagePicker  from '@/screens/profile/LanguagePicker';
+import ThemePicker     from '@/screens/profile/ThemePicker';
+import AboutKFL        from '@/screens/profile/AboutKFL';
 
 // ── Payment ──────────────────────────────────────────────────────────────────
-import Payment        from '@/screens/payment/Payment';
-import PaymentSuccess from '@/screens/payment/PaymentSuccess';
+import Payment              from '@/screens/payment/Payment';
+import PaymentSuccess       from '@/screens/payment/PaymentSuccess';
+import WalletScreen         from '@/screens/payment/WalletScreen';
+import TransactionHistory   from '@/screens/payment/TransactionHistory';
+import MobileMoneyConfirm   from '@/screens/payment/MobileMoneyConfirm';
 
 // ── Order ────────────────────────────────────────────────────────────────────
 import OrderMenu    from '@/screens/order/OrderMenu';
@@ -166,18 +176,27 @@ function HomeStackNav() {
       <HomeStack.Screen name="CoursePlayer"  component={CoursePlayer} />
 
       {/* ── Games sub-screens ───────────────────────────────────────── */}
-      <HomeStack.Screen name="Quiz"          component={Quiz} />
-      <HomeStack.Screen name="Tombola"       component={Tombola} />
-      <HomeStack.Screen name="Badges"        component={Badges} />
+      <HomeStack.Screen name="Quiz"            component={Quiz} />
+      <HomeStack.Screen name="Tombola"         component={Tombola} />
+      <HomeStack.Screen name="Badges"          component={Badges} />
+      <HomeStack.Screen name="SpeedChallenge"  component={SpeedChallenge} />
+      <HomeStack.Screen name="LeaderboardFull" component={LeaderboardFull} />
 
       {/* ── Profile sub-screens ─────────────────────────────────────── */}
-      <HomeStack.Screen name="EditProfile"   component={EditProfile} />
-      <HomeStack.Screen name="Settings"      component={SettingsScreen} />
-      <HomeStack.Screen name="History"       component={History} />
+      <HomeStack.Screen name="EditProfile"      component={EditProfile} />
+      <HomeStack.Screen name="Settings"         component={SettingsScreen} />
+      <HomeStack.Screen name="History"          component={History} />
+      <HomeStack.Screen name="ChangePassword"   component={ChangePassword} />
+      <HomeStack.Screen name="PrivacySettings"  component={PrivacySettings} />
+      <HomeStack.Screen name="LanguagePicker"   component={LanguagePicker} />
+      <HomeStack.Screen name="AboutKFL"         component={AboutKFL} />
 
       {/* ── Payment ─────────────────────────────────────────────────── */}
-      <HomeStack.Screen name="Payment"        component={Payment} />
-      <HomeStack.Screen name="PaymentSuccess" component={PaymentSuccess} />
+      <HomeStack.Screen name="Payment"              component={Payment} />
+      <HomeStack.Screen name="PaymentSuccess"       component={PaymentSuccess} />
+      <HomeStack.Screen name="WalletScreen"         component={WalletScreen} />
+      <HomeStack.Screen name="TransactionHistory"   component={TransactionHistory} />
+      <HomeStack.Screen name="MobileMoneyConfirm"   component={MobileMoneyConfirm} />
 
       {/* ── Order ───────────────────────────────────────────────────── */}
       <HomeStack.Screen name="OrderMenu"     component={OrderMenu} />
@@ -255,8 +274,54 @@ function ScannerStackNav() {
 function ProfileStackNav() {
   return (
     <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
-      <ProfileStack.Screen name="ProfileScreen"   component={ProfileScreen} />
-      <ProfileStack.Screen name="FavoritesScreen" component={FavoritesScreen} />
+      {/* ── Root ──────────────────────────────────────────────────── */}
+      <ProfileStack.Screen name="ProfileScreen"      component={ProfileScreen} />
+      <ProfileStack.Screen name="FavoritesScreen"    component={FavoritesScreen} />
+      <ProfileStack.Screen name="EditProfile"        component={EditProfile} />
+      <ProfileStack.Screen name="Settings"           component={SettingsScreen} />
+      <ProfileStack.Screen name="History"            component={History} />
+
+      {/* ── Settings sub-screens ──────────────────────────────────── */}
+      <ProfileStack.Screen name="ChangePassword"     component={ChangePassword} />
+      <ProfileStack.Screen name="PrivacySettings"    component={PrivacySettings} />
+      <ProfileStack.Screen name="LanguagePicker"     component={LanguagePicker} />
+      <ProfileStack.Screen name="ThemePicker"        component={ThemePicker} />
+      <ProfileStack.Screen name="AboutKFL"           component={AboutKFL} />
+      <ProfileStack.Screen name="AccessibilitySettings" component={AccessibilitySettings} />
+      <ProfileStack.Screen name="FoodJournal"        component={FoodJournal} />
+      <ProfileStack.Screen name="JournalStats"       component={JournalStats} />
+
+      {/* ── Wallet & payment reachable from Profile ────────────────── */}
+      <ProfileStack.Screen name="WalletScreen"       component={WalletScreen} />
+      <ProfileStack.Screen name="TransactionHistory" component={TransactionHistory} />
+      <ProfileStack.Screen name="Payment"            component={Payment} />
+      <ProfileStack.Screen name="PaymentSuccess"     component={PaymentSuccess} />
+      <ProfileStack.Screen name="MobileMoneyConfirm" component={MobileMoneyConfirm} />
+
+      {/* ── Admin reachable from Profile ─────────────────────────── */}
+      <ProfileStack.Screen name="AdminLogin"         component={AdminLogin} />
+      <ProfileStack.Screen name="AdminDashboard"     component={AdminDashboard} />
+      <ProfileStack.Screen name="AdminDashUnified"   component={AdminDashUnified} />
+      <ProfileStack.Screen name="AdminUsers"         component={AdminUsers} />
+      <ProfileStack.Screen name="AdminUserDetail"    component={AdminUserDetail} />
+      <ProfileStack.Screen name="AdminModeration"    component={AdminModeration} />
+      <ProfileStack.Screen name="AdminEvents"        component={AdminEvents} />
+      <ProfileStack.Screen name="AdminTombola"       component={AdminTombola} />
+      <ProfileStack.Screen name="AdminFinance"       component={AdminFinance} />
+      <ProfileStack.Screen name="AdminSettings"      component={AdminSettings} />
+      <ProfileStack.Screen name="AdminLogs"          component={AdminLogs} />
+      <ProfileStack.Screen name="AdminProList"       component={AdminProList} />
+      <ProfileStack.Screen name="AdminProDetail"     component={AdminProDetail} />
+      <ProfileStack.Screen name="AdminPayouts"       component={AdminPayouts} />
+      <ProfileStack.Screen name="AdminPush"          component={AdminPush} />
+
+      {/* ── Pro reachable from Profile ────────────────────────────── */}
+      <ProfileStack.Screen name="UpgradePro"         component={UpgradePro} />
+      <ProfileStack.Screen name="ProDashboard"       component={ProDashboard} />
+      <ProfileStack.Screen name="SettingsProEntry"   component={SettingsProEntry} />
+      <ProfileStack.Screen name="SettingsProActive"  component={SettingsProActive} />
+      <ProfileStack.Screen name="ProfilePro"         component={ProfilePro} />
+      <ProfileStack.Screen name="Badges"             component={Badges} />
     </ProfileStack.Navigator>
   );
 }
@@ -268,7 +333,9 @@ export function AppNavigator() {
   return (
     <Tab.Navigator
       screenOptions={{ headerShown: false }}
-      tabBar={({ navigation, state }) => (
+      tabBar={({ navigation, state }) => {
+        if (state.index === 2) return null;
+        return (
         <WFBottomNav
           activeTab={TAB_NAMES[state.index] ?? 'home'}
           onTabPress={(tab) => {
@@ -291,7 +358,8 @@ export function AppNavigator() {
             navigation.navigate(routeName as never);
           }}
         />
-      )}
+        );
+      }}
     >
       <Tab.Screen name="HomeTab"      component={HomeStackNav} />
       <Tab.Screen name="SearchTab"    component={Search} />

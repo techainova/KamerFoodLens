@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
 const SHADOW_MD = { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.10, shadowRadius: 6, elevation: 4 };
@@ -91,6 +92,7 @@ const EVENTS = [
 
 export default function Events() {
   const navigation = useNavigation<any>();
+  const C = useColors();
   const [activeFilter, setActiveFilter] = useState('Tous');
   const [events, setEvents] = useState(EVENTS);
 
@@ -110,22 +112,22 @@ export default function Events() {
   const regular = filtered.filter(e => !e.featured);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
+      <StatusBar barStyle={C.statusBar} />
 
       {/* AppBar */}
-      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
           <Icon name="ArrowLeft" size={22} color="#2C1810" />
         </TouchableOpacity>
-        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: '#2C1810' }}>Événements</Text>
-        <TouchableOpacity style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>Événements</Text>
+        <TouchableOpacity style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
           <Icon name="Bell" size={17} color="#6D4C41" />
         </TouchableOpacity>
       </View>
 
       {/* Filters */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }} style={{ backgroundColor: '#fff', maxHeight: 52, borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }} style={{ backgroundColor: C.surface, maxHeight: 52, borderBottomWidth: 1, borderColor: C.border }}>
         {FILTERS.map(f => (
           <TouchableOpacity
             key={f}
@@ -142,17 +144,17 @@ export default function Events() {
         {/* Featured */}
         {featured.length > 0 && (
           <View style={{ paddingTop: 16 }}>
-            <Text style={{ paddingHorizontal: 16, fontSize: 13, fontWeight: '600', color: '#6D4C41', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>À la une</Text>
+            <Text style={{ paddingHorizontal: 16, fontSize: 13, fontWeight: '600', color: C.inkSoft, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>À la une</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 14 }}>
               {featured.map(event => (
                 <TouchableOpacity
                   key={event.id}
                   onPress={() => navigation.navigate('EventDetail', { event })}
                   activeOpacity={0.85}
-                  style={{ width: 260, backgroundColor: '#fff', borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: '#E5E0D8', ...SHADOW_MD }}
+                  style={{ width: 260, backgroundColor: C.surface, borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: C.border, ...SHADOW_MD }}
                 >
                   {/* Hero */}
-                  <View style={{ height: 130, backgroundColor: '#F5F0EB', alignItems: 'center', justifyContent: 'center' }}>
+                  <View style={{ height: 130, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center' }}>
                     <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: event.organizerColor + '20', borderWidth: 2, borderColor: event.organizerColor + '40', alignItems: 'center', justifyContent: 'center', marginBottom: 6 }}>
                       <Text style={{ fontSize: 20, fontWeight: '700', color: event.organizerColor }}>{event.organizerInitials[0]}</Text>
                     </View>
@@ -167,16 +169,16 @@ export default function Events() {
                   </View>
 
                   <View style={{ padding: 14 }}>
-                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810', lineHeight: 20, marginBottom: 8 }} numberOfLines={2}>{event.title}</Text>
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink, lineHeight: 20, marginBottom: 8 }} numberOfLines={2}>{event.title}</Text>
 
                     <View style={{ gap: 5, marginBottom: 12 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                         <Icon name="Calendar" size={13} color="#E8591A" />
-                        <Text style={{ fontSize: 12, color: '#6D4C41' }}>{event.date} · {event.time}</Text>
+                        <Text style={{ fontSize: 12, color: C.inkSoft }}>{event.date} · {event.time}</Text>
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                         <Icon name="MapPin" size={13} color="#8C8278" />
-                        <Text style={{ fontSize: 12, color: '#8C8278' }} numberOfLines={1}>{event.location}</Text>
+                        <Text style={{ fontSize: 12, color: C.inkMute }} numberOfLines={1}>{event.location}</Text>
                       </View>
                     </View>
 
@@ -198,14 +200,14 @@ export default function Events() {
         {/* Regular list */}
         {regular.length > 0 && (
           <View style={{ paddingHorizontal: 16, paddingTop: 20, gap: 12 }}>
-            <Text style={{ fontSize: 13, fontWeight: '600', color: '#6D4C41', textTransform: 'uppercase', letterSpacing: 0.5 }}>Prochains événements</Text>
+            <Text style={{ fontSize: 13, fontWeight: '600', color: C.inkSoft, textTransform: 'uppercase', letterSpacing: 0.5 }}>Prochains événements</Text>
 
             {regular.map(event => (
               <TouchableOpacity
                 key={event.id}
                 onPress={() => navigation.navigate('EventDetail', { event })}
                 activeOpacity={0.85}
-                style={{ backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#E5E0D8', overflow: 'hidden', ...SHADOW_SM }}
+                style={{ backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, overflow: 'hidden', ...SHADOW_SM }}
               >
                 <View style={{ flexDirection: 'row' }}>
                   {/* Date column */}
@@ -225,16 +227,16 @@ export default function Events() {
                       </View>
                     </View>
 
-                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810', marginBottom: 6 }} numberOfLines={2}>{event.title}</Text>
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 6 }} numberOfLines={2}>{event.title}</Text>
 
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                         <Icon name="Clock" size={12} color="#8C8278" />
-                        <Text style={{ fontSize: 11, color: '#8C8278' }}>{event.time} · {event.duration}</Text>
+                        <Text style={{ fontSize: 11, color: C.inkMute }}>{event.time} · {event.duration}</Text>
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                         <Icon name="Users" size={12} color="#8C8278" />
-                        <Text style={{ fontSize: 11, color: '#8C8278' }}>{event.seats} places</Text>
+                        <Text style={{ fontSize: 11, color: C.inkMute }}>{event.seats} places</Text>
                       </View>
                     </View>
                   </View>
@@ -256,7 +258,7 @@ export default function Events() {
         {filtered.length === 0 && (
           <View style={{ alignItems: 'center', paddingTop: 80 }}>
             <Icon name="Calendar" size={48} color="rgba(140,130,120,0.3)" />
-            <Text style={{ fontSize: 16, color: '#8C8278', marginTop: 12 }}>Aucun événement</Text>
+            <Text style={{ fontSize: 16, color: C.inkMute, marginTop: 12 }}>Aucun événement</Text>
           </View>
         )}
       </ScrollView>

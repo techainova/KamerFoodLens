@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import type { IconName } from '@/components/ui/Icon';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 type Notif = {
   icon: IconName;
@@ -23,6 +24,7 @@ const NOTIFS: Notif[] = [
 ];
 
 export default function Notifications() {
+    const C = useColors();
   const { t } = useTranslation();
   const nav = useNavigation();
   const [activeTab, setActiveTab] = useState(0);
@@ -35,17 +37,17 @@ export default function Notifications() {
   ];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
 
       {/* AppBar */}
-      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}>
+      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderColor: C.border, backgroundColor: C.surface }}>
         <TouchableOpacity
-          style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}
+          style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}
           onPress={() => nav.goBack()}
         >
           <Icon name="ArrowLeft" size={17} color="#6D4C41" />
         </TouchableOpacity>
-        <Text style={{ flex: 1, fontSize: 15, fontWeight: '700', color: '#2C1810', fontFamily: 'Inter-Bold' }}>
+        <Text style={{ flex: 1, fontSize: 15, fontWeight: '700', color: C.ink, fontFamily: 'Inter-Bold' }}>
           {t('profile.notifications')}
         </Text>
         <TouchableOpacity>
@@ -56,7 +58,7 @@ export default function Notifications() {
       </View>
 
       {/* Tabs */}
-      <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}>
+      <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: C.border, backgroundColor: C.surface }}>
         {TABS.map((tab, i) => (
           <TouchableOpacity
             key={i}
@@ -77,7 +79,7 @@ export default function Notifications() {
             activeOpacity={0.7}
             style={{
               flexDirection: 'row', gap: 14, paddingVertical: 14,
-              borderBottomWidth: 1, borderColor: '#F5F0EB',
+              borderBottomWidth: 1, borderColor: C.border,
               backgroundColor: n.unread ? '#FFFBF7' : 'transparent',
               marginHorizontal: -16, paddingHorizontal: 16,
               position: 'relative',
@@ -95,12 +97,12 @@ export default function Notifications() {
             {/* Content */}
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                <Text style={{ fontSize: 13, fontWeight: n.unread ? '700' : '500', color: '#2C1810', flex: 1, fontFamily: n.unread ? 'Inter-Bold' : 'Inter-Regular' }}>
+                <Text style={{ fontSize: 13, fontWeight: n.unread ? '700' : '500', color: C.ink, flex: 1, fontFamily: n.unread ? 'Inter-Bold' : 'Inter-Regular' }}>
                   {t(n.titleKey)}
                 </Text>
-                <Text style={{ fontSize: 11, color: '#8C8278', flexShrink: 0 }}>{n.time}</Text>
+                <Text style={{ fontSize: 11, color: C.inkMute, flexShrink: 0 }}>{n.time}</Text>
               </View>
-              <Text style={{ fontSize: 12, color: '#6D4C41', marginTop: 3, lineHeight: 17 }}>
+              <Text style={{ fontSize: 12, color: C.inkSoft, marginTop: 3, lineHeight: 17 }}>
                 {t(n.descKey)}
               </Text>
             </View>
@@ -115,10 +117,10 @@ export default function Notifications() {
         {/* Empty state for other tabs */}
         {activeTab > 0 && (
           <View style={{ paddingTop: 60, alignItems: 'center', gap: 12 }}>
-            <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#F5F0EB', alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center' }}>
               <Icon name="Bell" size={28} color="#E5E0D8" />
             </View>
-            <Text style={{ color: '#8C8278', fontSize: 13 }}>Aucune notification</Text>
+            <Text style={{ color: C.inkMute, fontSize: 13 }}>Aucune notification</Text>
           </View>
         )}
       </ScrollView>

@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, SafeAreaView, StatusBar, Animated,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const SHADOW_MD = { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.10, shadowRadius: 6, elevation: 4 };
 
@@ -66,6 +67,7 @@ type Phase = 'playing' | 'answered' | 'complete';
 
 export default function Quiz() {
   const navigation = useNavigation<any>();
+  const C = useColors();
   const [phase, setPhase] = useState<Phase>('playing');
   const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -133,19 +135,19 @@ export default function Quiz() {
 
   if (phase === 'complete') {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
-        <StatusBar barStyle="dark-content" />
+      <SafeAreaView style={{ flex: 1, backgroundColor: C.cream, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
+        <StatusBar barStyle={C.statusBar} />
         <View style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: percentage >= 70 ? '#E3F0E4' : '#FEF3EC', borderWidth: 3, borderColor: percentage >= 70 ? '#2E7D32' : '#E8591A', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
           <Icon name={percentage >= 70 ? 'Trophy' : 'Star'} size={40} color={percentage >= 70 ? '#2E7D32' : '#E8591A'} fill={percentage >= 70 ? 'none' : '#F9A825'} />
         </View>
-        <Text style={{ fontSize: 24, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', marginBottom: 6, textAlign: 'center' }}>
+        <Text style={{ fontSize: 24, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 6, textAlign: 'center' }}>
           {percentage >= 70 ? 'Excellent !' : 'Bon effort !'}
         </Text>
-        <Text style={{ fontSize: 15, color: '#6D4C41', marginBottom: 24, textAlign: 'center' }}>
+        <Text style={{ fontSize: 15, color: C.inkSoft, marginBottom: 24, textAlign: 'center' }}>
           {score} / {totalScore} points · {percentage}%
         </Text>
 
-        <View style={{ width: '100%', backgroundColor: '#fff', borderRadius: 18, padding: 20, borderWidth: 1, borderColor: '#E5E0D8', marginBottom: 24, ...SHADOW_MD }}>
+        <View style={{ width: '100%', backgroundColor: C.surface, borderRadius: 18, padding: 20, borderWidth: 1, borderColor: C.border, marginBottom: 24, ...SHADOW_MD }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
             {[
               { label: 'Score', value: `${score} pts`, color: '#E8591A' },
@@ -154,7 +156,7 @@ export default function Quiz() {
             ].map((stat) => (
               <View key={stat.label} style={{ alignItems: 'center' }}>
                 <Text style={{ fontSize: 20, fontWeight: '700', color: stat.color, fontFamily: 'Inter-Bold' }}>{stat.value}</Text>
-                <Text style={{ fontSize: 11, color: '#8C8278' }}>{stat.label}</Text>
+                <Text style={{ fontSize: 11, color: C.inkMute }}>{stat.label}</Text>
               </View>
             ))}
           </View>
@@ -167,24 +169,24 @@ export default function Quiz() {
         >
           <Text style={{ fontSize: 16, fontWeight: '700', color: '#fff' }}>Rejouer</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ width: '100%', height: 52, borderRadius: 16, borderWidth: 1.5, borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontSize: 16, fontWeight: '600', color: '#6D4C41' }}>Retour aux jeux</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ width: '100%', height: 52, borderRadius: 16, borderWidth: 1.5, borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontSize: 16, fontWeight: '600', color: C.inkSoft }}>Retour aux jeux</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
+      <StatusBar barStyle={C.statusBar} />
 
       {/* Header */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 10, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
             <Icon name="ArrowLeft" size={22} color="#2C1810" />
           </TouchableOpacity>
-          <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 18, color: '#2C1810' }}>Quiz du jour</Text>
+          <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 18, color: C.ink }}>Quiz du jour</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, backgroundColor: timeLeft <= 10 ? '#FBDCDC' : '#F5F0EB' }}>
             <Icon name="Clock" size={14} color={timeLeft <= 10 ? '#C62828' : '#6D4C41'} />
             <Text style={{ fontSize: 14, fontWeight: '700', color: timeLeft <= 10 ? '#C62828' : '#2C1810', fontFamily: 'JetBrainsMono-Regular' }}>
@@ -205,11 +207,11 @@ export default function Quiz() {
             />
           ))}
         </View>
-        <Text style={{ fontSize: 11, color: '#8C8278', marginTop: 5 }}>Question {currentQ + 1} sur {QUESTIONS.length}</Text>
+        <Text style={{ fontSize: 11, color: C.inkMute, marginTop: 5 }}>Question {currentQ + 1} sur {QUESTIONS.length}</Text>
       </View>
 
       {/* Timer progress */}
-      <View style={{ height: 3, backgroundColor: '#F5F0EB' }}>
+      <View style={{ height: 3, backgroundColor: C.surface2 }}>
         <Animated.View style={{ height: '100%', backgroundColor: timeLeft <= 10 ? '#C62828' : '#E8591A', width: progressAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) }} />
       </View>
 
@@ -220,15 +222,15 @@ export default function Quiz() {
           <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, backgroundColor: question!.categoryColor + '15' }}>
             <Text style={{ fontSize: 11, fontWeight: '700', color: question!.categoryColor }}>{question!.category}</Text>
           </View>
-          <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, backgroundColor: '#F5F0EB' }}>
-            <Text style={{ fontSize: 11, color: '#6D4C41' }}>{question!.region}</Text>
+          <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, backgroundColor: C.surface2 }}>
+            <Text style={{ fontSize: 11, color: C.inkSoft }}>{question!.region}</Text>
           </View>
-          <Text style={{ fontSize: 11, color: '#8C8278' }}>+{question!.points} pts</Text>
+          <Text style={{ fontSize: 11, color: C.inkMute }}>+{question!.points} pts</Text>
         </View>
 
         {/* Question card */}
-        <View style={{ backgroundColor: '#fff', borderRadius: 20, padding: 20, marginBottom: 20, borderWidth: 1, borderColor: '#E5E0D8', ...SHADOW_MD }}>
-          <Text style={{ fontSize: 17, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', lineHeight: 26 }}>
+        <View style={{ backgroundColor: C.surface, borderRadius: 20, padding: 20, marginBottom: 20, borderWidth: 1, borderColor: C.border, ...SHADOW_MD }}>
+          <Text style={{ fontSize: 17, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, lineHeight: 26 }}>
             {question!.question}
           </Text>
         </View>

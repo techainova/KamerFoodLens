@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, SafeAreaView,
   TextInput, Modal, Alert, ActivityIndicator,
@@ -11,6 +11,7 @@ import { useAuthStore } from '@/store/auth.store';
 import LangSwitch from '@/components/auth/LangSwitch';
 import KFLLogo from '@/components/ui/KFLLogo';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 function GoogleLogo({ size = 20 }: { size?: number }) {
   return (
@@ -46,6 +47,7 @@ function AppleLogo({ size = 20 }: { size?: number }) {
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
 export default function Login({ navigation }: Props) {
+    const C = useColors();
   const { t } = useTranslation();
   const [email, setEmail] = useState('amah@example.com');
   const [password, setPassword] = useState('');
@@ -98,7 +100,7 @@ export default function Login({ navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
       <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 48 }} keyboardShouldPersistTaps="handled">
 
         {/* Top: logo + lang switch */}
@@ -109,30 +111,30 @@ export default function Login({ navigation }: Props) {
 
         {/* Title */}
         <View style={{ marginTop: 32 }}>
-          <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontWeight: '700', fontSize: 26, color: '#2C1810', lineHeight: 30 }}>
+          <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontWeight: '700', fontSize: 26, color: C.ink, lineHeight: 30 }}>
             {t('auth.login')}
           </Text>
-          <Text style={{ fontSize: 13, color: '#8C8278', fontStyle: 'italic', marginTop: 2 }}>
+          <Text style={{ fontSize: 13, color: C.inkMute, fontStyle: 'italic', marginTop: 2 }}>
             {t('auth.loginSubtitle')}
           </Text>
         </View>
 
         {/* Image slot */}
-        <View style={{ marginTop: 20, height: 120, borderRadius: 16, backgroundColor: '#F5F0EB', borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: '#8C8278', fontSize: 11, fontStyle: 'italic' }}>ambiance culinaire</Text>
+        <View style={{ marginTop: 20, height: 120, borderRadius: 16, backgroundColor: C.surface2, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ color: C.inkMute, fontSize: 11, fontStyle: 'italic' }}>ambiance culinaire</Text>
         </View>
 
         {/* Form */}
         <View style={{ marginTop: 24, gap: 14 }}>
           {/* Email */}
           <View style={{ gap: 6 }}>
-            <Text style={{ fontSize: 11, fontWeight: '600', color: '#6D4C41', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkSoft, textTransform: 'uppercase', letterSpacing: 0.5 }}>
               {t('auth.email')}
             </Text>
-            <View style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
-              <Text style={{ color: '#8C8278', fontSize: 16 }}>✉</Text>
+            <View style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
+              <Icon name="Mail" size={16} color="#8C8278" />
               <TextInput
-                style={{ flex: 1, fontSize: 14, color: '#2C1810' }}
+                style={{ flex: 1, fontSize: 14, color: C.ink }}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -145,13 +147,13 @@ export default function Login({ navigation }: Props) {
 
           {/* Password */}
           <View style={{ gap: 6 }}>
-            <Text style={{ fontSize: 11, fontWeight: '600', color: '#6D4C41', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkSoft, textTransform: 'uppercase', letterSpacing: 0.5 }}>
               {t('auth.password')}
             </Text>
-            <View style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
-              <Text style={{ color: '#8C8278', fontSize: 16 }}>🔒</Text>
+            <View style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
+              <Icon name="Lock" size={16} color="#8C8278" />
               <TextInput
-                style={{ flex: 1, fontSize: 14, color: '#2C1810' }}
+                style={{ flex: 1, fontSize: 14, color: C.ink }}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPw}
@@ -159,7 +161,7 @@ export default function Login({ navigation }: Props) {
                 placeholderTextColor="#8C8278"
               />
               <TouchableOpacity onPress={() => setShowPw(!showPw)}>
-                <Text style={{ color: '#8C8278', fontSize: 16 }}>{showPw ? '🙈' : '👁'}</Text>
+                <Icon name={showPw ? 'EyeOff' : 'Eye'} size={18} color="#8C8278" />
               </TouchableOpacity>
             </View>
           </View>
@@ -187,17 +189,17 @@ export default function Login({ navigation }: Props) {
           {/* Divider */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 4 }}>
             <View style={{ flex: 1, height: 1, backgroundColor: '#E5E0D8' }} />
-            <Text style={{ color: '#8C8278', fontSize: 11 }}>— {t('common.or')} —</Text>
+            <Text style={{ color: C.inkMute, fontSize: 11 }}>— {t('common.or')} —</Text>
             <View style={{ flex: 1, height: 1, backgroundColor: '#E5E0D8' }} />
           </View>
 
           {/* Google */}
           <TouchableOpacity
             onPress={handleGoogle}
-            style={{ height: 52, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', borderRadius: 26, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+            style={{ height: 52, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, borderRadius: 26, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 }}
           >
             <GoogleLogo size={20} />
-            <Text style={{ color: '#6D4C41', fontSize: 14, fontWeight: '600', fontFamily: 'Inter-SemiBold' }}>
+            <Text style={{ color: C.inkSoft, fontSize: 14, fontWeight: '600', fontFamily: 'Inter-SemiBold' }}>
               {t('auth.continueWithGoogle')}
             </Text>
           </TouchableOpacity>
@@ -216,7 +218,7 @@ export default function Login({ navigation }: Props) {
 
         {/* Signup link */}
         <TouchableOpacity style={{ marginTop: 24, alignItems: 'center' }} onPress={() => navigation.navigate('Signup')}>
-          <Text style={{ color: '#8C8278', fontSize: 12 }}>
+          <Text style={{ color: C.inkMute, fontSize: 12 }}>
             {t('auth.noAccount')}{' '}
             <Text style={{ color: '#2E7D32', fontWeight: '600', textDecorationLine: 'underline' }}>
               {t('auth.signup')}
@@ -228,27 +230,27 @@ export default function Login({ navigation }: Props) {
       {/* ── Forgot Password Modal ── */}
       <Modal visible={forgotVisible} transparent animationType="slide" onRequestClose={() => setForgotVisible(false)}>
         <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' }}>
-          <View style={{ backgroundColor: '#FFFAF5', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 28, paddingBottom: 48 }}>
+          <View style={{ backgroundColor: C.cream, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 28, paddingBottom: 48 }}>
 
             <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: '#E5E0D8', alignSelf: 'center', marginBottom: 24 }} />
 
             {!forgotSent ? (
               <>
-                <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontWeight: '700', fontSize: 22, color: '#2C1810', marginBottom: 8 }}>
+                <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontWeight: '700', fontSize: 22, color: C.ink, marginBottom: 8 }}>
                   {t('auth.forgotPassword')}
                 </Text>
-                <Text style={{ fontSize: 13, color: '#6D4C41', lineHeight: 20, marginBottom: 20 }}>
+                <Text style={{ fontSize: 13, color: C.inkSoft, lineHeight: 20, marginBottom: 20 }}>
                   {t('auth.forgotPasswordDesc', 'Entrez votre email, nous vous enverrons un lien de réinitialisation.')}
                 </Text>
 
                 <View style={{ gap: 6, marginBottom: 20 }}>
-                  <Text style={{ fontSize: 11, fontWeight: '600', color: '#6D4C41', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkSoft, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                     {t('auth.email')}
                   </Text>
-                  <View style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
-                    <Text style={{ color: '#8C8278', fontSize: 16 }}>✉</Text>
+                  <View style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
+                    <Icon name="Mail" size={16} color="#8C8278" />
                     <TextInput
-                      style={{ flex: 1, fontSize: 14, color: '#2C1810' }}
+                      style={{ flex: 1, fontSize: 14, color: C.ink }}
                       value={forgotEmail}
                       onChangeText={setForgotEmail}
                       keyboardType="email-address"
@@ -274,19 +276,19 @@ export default function Login({ navigation }: Props) {
                 </TouchableOpacity>
 
                 <TouchableOpacity style={{ marginTop: 14, alignItems: 'center' }} onPress={() => setForgotVisible(false)}>
-                  <Text style={{ color: '#8C8278', fontSize: 12 }}>{t('common.cancel')}</Text>
+                  <Text style={{ color: C.inkMute, fontSize: 12 }}>{t('common.cancel')}</Text>
                 </TouchableOpacity>
               </>
             ) : (
               <>
                 <View style={{ alignItems: 'center', paddingVertical: 16 }}>
-                  <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: '#E3F0E4', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                    <Text style={{ fontSize: 36 }}>✉</Text>
+                  <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: C.successSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                    <Icon name="Mail" size={36} color="#2E7D32" />
                   </View>
-                  <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontWeight: '700', fontSize: 20, color: '#2C1810', textAlign: 'center', marginBottom: 10 }}>
+                  <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontWeight: '700', fontSize: 20, color: C.ink, textAlign: 'center', marginBottom: 10 }}>
                     {t('auth.checkYourEmail', 'Vérifiez votre email')}
                   </Text>
-                  <Text style={{ fontSize: 13, color: '#6D4C41', textAlign: 'center', lineHeight: 20, marginBottom: 24 }}>
+                  <Text style={{ fontSize: 13, color: C.inkSoft, textAlign: 'center', lineHeight: 20, marginBottom: 24 }}>
                     {t('auth.resetLinkSentTo', 'Lien envoyé à')} <Text style={{ fontWeight: '700' }}>{forgotEmail}</Text>
                   </Text>
                   <TouchableOpacity

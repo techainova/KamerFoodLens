@@ -1,96 +1,265 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
+// src/screens/pro/ProRevenues.tsx
+// Analytiques de revenus Pro — v2.0
+
+import React from 'react';
+import {
+  Alert,
+  ScrollView,
+  StatusBar,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useColors } from '@/hooks/useAppTheme';
 import Icon from '@/components/ui/Icon';
+import { fontFamily, fontSize, radius, spacing } from '@/constants/theme';
 
-const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
+const SHADOW_SM = {
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.07,
+  shadowRadius: 4,
+  elevation: 2,
+};
 
-const PERIODS = ['Ce mois', '3 mois', '6 mois', '1 an'];
-const BAR_DATA  = [80, 120, 95, 140, 110, 160, 195];
-const BAR_LABELS = ['L', 'M', 'Me', 'J', 'V', 'S', 'D'];
+const BAR_DAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+const BAR_HEIGHTS = [48, 78, 54, 96, 66, 108, 36];
+const BAR_ACTIVE_IDX = 5;
 
-const BREAKDOWN = [
-  { l: 'Commandes restaurant', v: '145 800', pct: 75, color: '#E8591A' },
-  { l: 'Abonnements formations', v: '38 400',  pct: 20, color: '#F9A825' },
-  { l: 'Événements',             v: '11 200',  pct: 5,  color: '#2E7D32' },
+const PAYMENT_MODES = [
+  { label: 'MTN Mobile Money', pct: 45, color: '#F9A825' },
+  { label: 'Orange Money',     pct: 32, color: '#E8591A' },
+  { label: 'Espèces',          pct: 15, color: '#2E7D32' },
+  { label: 'Carte',            pct: 8,  color: '#E5E0D8' },
 ];
+
+const PAYOUTS = [
+  { id: '1', date: '01 Juin 2026', amount: '65 000 XAF', status: 'Effectué' },
+  { id: '2', date: '15 Mai 2026',  amount: '72 000 XAF', status: 'Effectué' },
+  { id: '3', date: '01 Juil 2026', amount: '58 400 XAF', status: 'Planifié' },
+];
+
+function payoutStatusColor(status: string, C: ReturnType<typeof useColors>): string {
+  if (status === 'Effectué') return C.success;
+  if (status === 'En cours') return C.gold;
+  return C.inkMute;
+}
+
+function payoutStatusBg(status: string, C: ReturnType<typeof useColors>): string {
+  if (status === 'Effectué') return C.successSoft;
+  if (status === 'En cours') return C.goldSoft;
+  return C.surface2;
+}
 
 export default function ProRevenues() {
   const navigation = useNavigation<any>();
-  const [period, setPeriod] = useState(0);
-  const maxVal = Math.max(...BAR_DATA);
+  const C = useColors();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }} edges={['top']}>
+      <StatusBar barStyle={C.statusBar} />
 
       {/* AppBar */}
-      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
-          <Icon name="ArrowLeft" size={22} color="#2C1810" />
+      <View
+        style={{
+          flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+          paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
+          backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border,
+          ...SHADOW_SM,
+        }}
+      >
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: spacing.xs }} accessibilityLabel="Retour">
+          <Icon name="ArrowLeft" size={22} color={C.ink} />
         </TouchableOpacity>
-        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: '#2C1810' }}>Revenus</Text>
+
+        <Text style={{ fontFamily: fontFamily.bold, fontSize: fontSize.lg, color: C.ink }}>
+          Revenus
+        </Text>
+
+        <TouchableOpacity
+          style={{
+            flexDirection: 'row', alignItems: 'center', gap: 4,
+            backgroundColor: C.surface2, borderRadius: radius.sm,
+            paddingHorizontal: spacing.sm, paddingVertical: spacing.xs,
+          }}
+          accessibilityLabel="Sélectionner le mois"
+        >
+          <Text style={{ fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: C.ink }}>
+            Juin 2026
+          </Text>
+          <Icon name="ChevronDown" size={14} color={C.inkSoft} />
+        </TouchableOpacity>
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false}>
 
-        {/* Period tabs */}
-        <View style={{ flexDirection: 'row', backgroundColor: '#F5F0EB', borderRadius: 18, padding: 4, marginBottom: 16 }}>
-          {PERIODS.map((p, i) => (
-            <TouchableOpacity
-              key={i} onPress={() => setPeriod(i)}
-              style={{ flex: 1, paddingVertical: 8, borderRadius: 14, alignItems: 'center', backgroundColor: i === period ? '#fff' : 'transparent', ...( i === period ? SHADOW_SM : {}) }}
-            >
-              <Text style={{ fontSize: 12, fontWeight: '500', color: i === period ? '#F9A825' : '#8C8278' }}>{p}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Summary hero */}
-        <View style={{ padding: 16, borderRadius: 20, backgroundColor: '#1A237E', marginBottom: 16 }}>
-          <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12 }}>Revenus nets</Text>
-          <Text style={{ color: '#fff', fontSize: 28, fontFamily: 'PlayfairDisplay-Bold', marginVertical: 4 }}>195 400 XAF</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#2E7D32', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
-              <Icon name="TrendingUp" size={11} color="#fff" />
-              <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>+12%</Text>
+        {/* Hero card */}
+        <View style={{ paddingHorizontal: spacing.md, paddingTop: spacing.md }}>
+          <View style={{ backgroundColor: C.navy, borderRadius: radius.lg, padding: spacing.lg, ...SHADOW_SM }}>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+              <View>
+                <Text style={{ fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: 'rgba(255,255,255,0.65)', marginBottom: 4 }}>
+                  Total Juin 2026
+                </Text>
+                <Text style={{ fontFamily: fontFamily.serifBold, fontSize: fontSize.h2, color: C.surface }}>
+                  195 400 XAF
+                </Text>
+              </View>
+              <View
+                style={{
+                  backgroundColor: C.successSoft, borderRadius: radius.full,
+                  paddingHorizontal: spacing.sm, paddingVertical: spacing.xs,
+                  flexDirection: 'row', alignItems: 'center', gap: 4,
+                }}
+              >
+                <Icon name="TrendingUp" size={12} color={C.success} strokeWidth={2.5} />
+                <Text style={{ fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: C.success }}>
+                  +12% vs mai
+                </Text>
+              </View>
             </View>
-            <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>vs période précédente</Text>
+
+            <View
+              style={{
+                flexDirection: 'row', marginTop: spacing.lg,
+                borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.15)',
+                paddingTop: spacing.md, gap: spacing.sm,
+              }}
+            >
+              {[
+                { label: 'Commandes',    value: '47' },
+                { label: 'Panier moy.',  value: '4 157 XAF' },
+                { label: 'Taux accept.', value: '98%' },
+              ].map((s, i) => (
+                <View key={s.label} style={{ flex: 1, alignItems: 'center', borderRightWidth: i < 2 ? 1 : 0, borderRightColor: 'rgba(255,255,255,0.15)' }}>
+                  <Text style={{ fontFamily: fontFamily.bold, fontSize: fontSize.base, color: C.surface }}>
+                    {s.value}
+                  </Text>
+                  <Text style={{ fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: 'rgba(255,255,255,0.55)', marginTop: 2, textAlign: 'center' }}>
+                    {s.label}
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
         </View>
 
         {/* Bar chart */}
-        <View style={{ padding: 16, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', marginBottom: 16, ...SHADOW_SM }}>
-          <Text style={{ fontSize: 12, color: '#8C8278', marginBottom: 12 }}>Revenus journaliers (k XAF)</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-around', height: 96, marginBottom: 8 }}>
-            {BAR_DATA.map((v, i) => (
-              <View key={i} style={{ alignItems: 'center', width: 28 }}>
-                <View style={{ width: 20, borderRadius: 4, backgroundColor: '#F9A825', height: Math.round((v / maxVal) * 88) }} />
-              </View>
-            ))}
+        <View style={{ paddingHorizontal: spacing.md, marginTop: spacing.lg }}>
+          <Text style={{ fontFamily: fontFamily.bold, fontSize: fontSize.md, color: C.ink, marginBottom: spacing.md }}>
+            Activité de la semaine
+          </Text>
+          <View style={{ backgroundColor: C.surface, borderRadius: radius.md, padding: spacing.md, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 136, paddingBottom: 28 }}>
+              {BAR_DAYS.map((day, i) => {
+                const isActive = i === BAR_ACTIVE_IDX;
+                const barH = BAR_HEIGHTS[i];
+                return (
+                  <View key={`${day}-${i}`} style={{ alignItems: 'center', flex: 1 }}>
+                    {isActive && (
+                      <View style={{ backgroundColor: C.primary, borderRadius: radius.sm, paddingHorizontal: 5, paddingVertical: 2, marginBottom: 4 }}>
+                        <Text style={{ fontFamily: fontFamily.bold, fontSize: 9, color: C.surface }}>34K</Text>
+                      </View>
+                    )}
+                    <View style={{ width: 22, height: barH, backgroundColor: isActive ? C.primary : C.navySoft, borderRadius: radius.sm }} />
+                    <Text style={{ fontFamily: fontFamily.medium, fontSize: fontSize.xs, color: isActive ? C.primary : C.inkMute, marginTop: 6 }}>
+                      {day}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
           </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-            {BAR_LABELS.map((l, i) => (
-              <Text key={i} style={{ fontSize: 11, color: '#8C8278', width: 28, textAlign: 'center' }}>{l}</Text>
+        </View>
+
+        {/* Répartition paiement */}
+        <View style={{ paddingHorizontal: spacing.md, marginTop: spacing.lg }}>
+          <Text style={{ fontFamily: fontFamily.bold, fontSize: fontSize.md, color: C.ink, marginBottom: spacing.md }}>
+            Répartition par mode de paiement
+          </Text>
+          <View style={{ backgroundColor: C.surface, borderRadius: radius.md, padding: spacing.md, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
+            {PAYMENT_MODES.map((pm) => (
+              <View key={pm.label} style={{ marginBottom: spacing.md }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <Text style={{ fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: C.ink }}>
+                    {pm.label}
+                  </Text>
+                  <Text style={{ fontFamily: fontFamily.bold, fontSize: fontSize.sm, color: pm.color === '#E5E0D8' ? C.inkMute : pm.color }}>
+                    {pm.pct}%
+                  </Text>
+                </View>
+                <View style={{ height: 8, backgroundColor: C.surface2, borderRadius: radius.full, overflow: 'hidden' }}>
+                  <View style={{ height: 8, width: `${pm.pct}%`, backgroundColor: pm.color, borderRadius: radius.full }} />
+                </View>
+              </View>
             ))}
           </View>
         </View>
 
-        {/* Breakdown */}
-        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', marginBottom: 12 }}>Répartition</Text>
-        <View style={{ borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', overflow: 'hidden', ...SHADOW_SM }}>
-          {BREAKDOWN.map((row, i) => (
-            <View key={i} style={{ paddingHorizontal: 16, paddingVertical: 13, borderBottomWidth: i < 2 ? 1 : 0, borderColor: '#F5F0EB' }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <Text style={{ fontSize: 13, color: '#2C1810' }}>{row.l}</Text>
-                <Text style={{ fontSize: 13, fontWeight: '700', color: row.color }}>{row.v} XAF</Text>
+        {/* Historique des virements */}
+        <View style={{ paddingHorizontal: spacing.md, marginTop: spacing.lg }}>
+          <Text style={{ fontFamily: fontFamily.bold, fontSize: fontSize.md, color: C.ink, marginBottom: spacing.md }}>
+            Historique des virements
+          </Text>
+          <View style={{ backgroundColor: C.surface, borderRadius: radius.md, borderWidth: 1, borderColor: C.border, overflow: 'hidden', ...SHADOW_SM }}>
+            {PAYOUTS.map((p, i) => (
+              <View
+                key={p.id}
+                style={{
+                  flexDirection: 'row', alignItems: 'center', padding: spacing.md,
+                  borderTopWidth: i > 0 ? 1 : 0, borderTopColor: C.border, gap: spacing.sm,
+                }}
+              >
+                <View style={{ width: 36, height: 36, borderRadius: radius.sm, backgroundColor: C.navySoft, alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name="DollarSign" size={18} color={C.navy} strokeWidth={2} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontFamily: fontFamily.bold, fontSize: fontSize.sm, color: C.ink }}>
+                    {p.amount}
+                  </Text>
+                  <Text style={{ fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: C.inkMute, marginTop: 2 }}>
+                    {p.date}
+                  </Text>
+                </View>
+                <View style={{ backgroundColor: payoutStatusBg(p.status, C), borderRadius: radius.full, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs }}>
+                  <Text style={{ fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: payoutStatusColor(p.status, C) }}>
+                    {p.status}
+                  </Text>
+                </View>
               </View>
-              <View style={{ height: 4, backgroundColor: '#F5F0EB', borderRadius: 2, overflow: 'hidden' }}>
-                <View style={{ height: '100%', width: `${row.pct}%`, backgroundColor: row.color, borderRadius: 2 }} />
-              </View>
-            </View>
-          ))}
+            ))}
+          </View>
         </View>
+
+        {/* CTA virement */}
+        <View style={{ paddingHorizontal: spacing.md, marginTop: spacing.lg, marginBottom: spacing.xxl }}>
+          <TouchableOpacity
+            style={{
+              backgroundColor: C.primary, borderRadius: radius.md, paddingVertical: spacing.md,
+              alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: spacing.sm,
+              ...SHADOW_SM,
+            }}
+            onPress={() => {
+              Alert.alert(
+                'Demande de virement',
+                'Votre demande sera traitée sous 24–48h ouvrées.',
+                [
+                  { text: 'Annuler', style: 'cancel' },
+                  { text: 'Confirmer', onPress: () => navigation.navigate('AdminPayouts') },
+                ],
+              );
+            }}
+            accessibilityLabel="Demander un virement"
+          >
+            <Icon name="DollarSign" size={18} color={C.surface} strokeWidth={2.5} />
+            <Text style={{ fontFamily: fontFamily.bold, fontSize: fontSize.base, color: C.surface }}>
+              Demander un virement
+            </Text>
+          </TouchableOpacity>
+        </View>
+
       </ScrollView>
     </SafeAreaView>
   );

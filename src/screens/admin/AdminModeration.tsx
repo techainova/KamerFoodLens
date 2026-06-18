@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const TABS = ['En attente', 'Approuvés', 'Supprimés'];
 
@@ -13,10 +14,11 @@ const REPORTS = [
 
 export default function AdminModeration() {
   const navigation = useNavigation<any>();
+  const C = useColors();
   const [activeTab, setActiveTab] = useState(0);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
       <StatusBar barStyle="light-content" />
 
       {/* Header */}
@@ -31,7 +33,7 @@ export default function AdminModeration() {
       </View>
 
       {/* Tabs */}
-      <View style={{ flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+      <View style={{ flexDirection: 'row', backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
         {TABS.map((tab, i) => (
           <TouchableOpacity
             key={i} onPress={() => setActiveTab(i)}
@@ -46,27 +48,27 @@ export default function AdminModeration() {
         {activeTab === 0 ? (
           <View style={{ gap: 12 }}>
             {REPORTS.map((r, i) => (
-              <View key={i} style={{ padding: 16, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8' }}>
+              <View key={i} style={{ padding: 16, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                  <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, backgroundColor: '#FBDCDC' }}>
+                  <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, backgroundColor: C.errorSoft }}>
                     <Text style={{ color: '#C62828', fontSize: 11, fontWeight: '600' }}>{r.type}</Text>
                   </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, backgroundColor: '#FBDCDC' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, backgroundColor: C.errorSoft }}>
                     <Icon name="Flag" size={10} color="#C62828" />
                     <Text style={{ color: '#C62828', fontSize: 11, fontWeight: '600' }}>{r.reports} signalement{r.reports > 1 ? 's' : ''}</Text>
                   </View>
-                  <Text style={{ color: '#8C8278', fontSize: 11, marginLeft: 'auto' }}>{r.time}</Text>
+                  <Text style={{ color: C.inkMute, fontSize: 11, marginLeft: 'auto' }}>{r.time}</Text>
                 </View>
-                <Text style={{ fontSize: 14, color: '#2C1810', marginBottom: 4 }}>{r.content}</Text>
-                <Text style={{ fontSize: 12, color: '#8C8278', marginBottom: 12 }}>Utilisateur : {r.user}</Text>
+                <Text style={{ fontSize: 14, color: C.ink, marginBottom: 4 }}>{r.content}</Text>
+                <Text style={{ fontSize: 12, color: C.inkMute, marginBottom: 12 }}>Utilisateur : {r.user}</Text>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <TouchableOpacity style={{ flex: 1, height: 32, backgroundColor: '#E3F0E4', borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
+                  <TouchableOpacity style={{ flex: 1, height: 32, backgroundColor: C.successSoft, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
                     <Text style={{ color: '#2E7D32', fontSize: 12, fontWeight: '600' }}>Ignorer</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={{ flex: 1, height: 32, backgroundColor: '#FBDCDC', borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
+                  <TouchableOpacity style={{ flex: 1, height: 32, backgroundColor: C.errorSoft, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
                     <Text style={{ color: '#C62828', fontSize: 12, fontWeight: '600' }}>Supprimer</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={{ flex: 1, height: 32, backgroundColor: '#E8EAF6', borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
+                  <TouchableOpacity style={{ flex: 1, height: 32, backgroundColor: C.navySoft, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
                     <Text style={{ color: '#1A237E', fontSize: 12, fontWeight: '600' }}>Suspendre</Text>
                   </TouchableOpacity>
                 </View>
@@ -76,7 +78,7 @@ export default function AdminModeration() {
         ) : (
           <View style={{ alignItems: 'center', justifyContent: 'center', paddingTop: 64 }}>
             <Icon name="CheckCircle" size={40} color="rgba(46,125,50,0.3)" />
-            <Text style={{ color: '#8C8278', fontSize: 14, marginTop: 12, textAlign: 'center' }}>Aucun élément dans cet onglet.</Text>
+            <Text style={{ color: C.inkMute, fontSize: 14, marginTop: 12, textAlign: 'center' }}>Aucun élément dans cet onglet.</Text>
           </View>
         )}
       </ScrollView>

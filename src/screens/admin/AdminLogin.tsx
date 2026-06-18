@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 export default function AdminLogin() {
   const navigation = useNavigation<any>();
+  const C = useColors();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);

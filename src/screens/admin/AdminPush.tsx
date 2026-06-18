@@ -1,18 +1,20 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const TARGETS = ['Tous les utilisateurs', 'Standard seulement', 'Pro seulement', 'Segment personnalisé'];
 
 export default function AdminPush() {
   const navigation = useNavigation<any>();
+  const C = useColors();
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [target, setTarget] = useState(0);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
       <StatusBar barStyle="light-content" />
 
       {/* Header */}
@@ -41,36 +43,36 @@ export default function AdminPush() {
 
         {/* Title */}
         <View style={{ marginBottom: 16 }}>
-          <Text style={{ fontSize: 11, fontWeight: '600', color: '#8C8278', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>Titre</Text>
-          <View style={{ height: 48, borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 16, backgroundColor: '#fff', paddingHorizontal: 14, justifyContent: 'center' }}>
+          <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>Titre</Text>
+          <View style={{ height: 48, borderWidth: 1, borderColor: C.border, borderRadius: 16, backgroundColor: C.surface, paddingHorizontal: 14, justifyContent: 'center' }}>
             <TextInput
               value={title} onChangeText={setTitle}
               placeholder="Ex: Nouvelle recette disponible !"
               placeholderTextColor="#8C8278"
-              style={{ fontSize: 14, color: '#2C1810' }}
+              style={{ fontSize: 14, color: C.ink }}
             />
           </View>
-          <Text style={{ fontSize: 11, color: '#8C8278', marginTop: 4, textAlign: 'right' }}>{title.length}/50</Text>
+          <Text style={{ fontSize: 11, color: C.inkMute, marginTop: 4, textAlign: 'right' }}>{title.length}/50</Text>
         </View>
 
         {/* Body */}
         <View style={{ marginBottom: 16 }}>
-          <Text style={{ fontSize: 11, fontWeight: '600', color: '#8C8278', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>Message</Text>
-          <View style={{ borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 16, backgroundColor: '#fff', paddingHorizontal: 14, paddingVertical: 12, minHeight: 90 }}>
+          <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>Message</Text>
+          <View style={{ borderWidth: 1, borderColor: C.border, borderRadius: 16, backgroundColor: C.surface, paddingHorizontal: 14, paddingVertical: 12, minHeight: 90 }}>
             <TextInput
               value={body} onChangeText={setBody}
               placeholder="Texte complet de la notification..."
               placeholderTextColor="#8C8278"
               multiline numberOfLines={3}
-              style={{ fontSize: 14, color: '#2C1810' }}
+              style={{ fontSize: 14, color: C.ink }}
             />
           </View>
-          <Text style={{ fontSize: 11, color: '#8C8278', marginTop: 4, textAlign: 'right' }}>{body.length}/160</Text>
+          <Text style={{ fontSize: 11, color: C.inkMute, marginTop: 4, textAlign: 'right' }}>{body.length}/160</Text>
         </View>
 
         {/* Target */}
         <View style={{ marginBottom: 20 }}>
-          <Text style={{ fontSize: 11, fontWeight: '600', color: '#8C8278', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>Audience cible</Text>
+          <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>Audience cible</Text>
           <View style={{ gap: 8 }}>
             {TARGETS.map((t, i) => (
               <TouchableOpacity
@@ -88,7 +90,7 @@ export default function AdminPush() {
       </ScrollView>
 
       {/* CTA */}
-      <View style={{ paddingHorizontal: 16, paddingVertical: 14, borderTopWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}>
+      <View style={{ paddingHorizontal: 16, paddingVertical: 14, borderTopWidth: 1, borderColor: C.border, backgroundColor: C.surface }}>
         <TouchableOpacity
           style={{ height: 48, backgroundColor: '#1A237E', borderRadius: 24, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
           activeOpacity={0.85}

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, SafeAreaView,
   TextInput, ScrollView, Animated, Easing,
@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ScannerStackParams } from '@/navigation/types';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 type Nav = NativeStackNavigationProp<ScannerStackParams, 'AudioText'>;
 
@@ -45,6 +46,7 @@ function WaveBar({ index, active }: { index: number; active: boolean }) {
 }
 
 export default function AudioText() {
+    const C = useColors();
   const { t } = useTranslation();
   const nav = useNavigation<Nav>();
   const [activeTab, setActiveTab] = useState<'audio' | 'text'>('audio');
@@ -92,17 +94,17 @@ export default function AudioText() {
   ];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
 
       {/* AppBar */}
-      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}>
+      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderColor: C.border, backgroundColor: C.surface }}>
         <TouchableOpacity
-          style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}
+          style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}
           onPress={() => nav.goBack()}
         >
           <Icon name="ArrowLeft" size={17} color="#6D4C41" />
         </TouchableOpacity>
-        <Text style={{ flex: 1, fontSize: 16, fontWeight: '700', color: '#2C1810', fontFamily: 'Inter-Bold' }}>
+        <Text style={{ flex: 1, fontSize: 16, fontWeight: '700', color: C.ink, fontFamily: 'Inter-Bold' }}>
           {t('audioText.title')}
         </Text>
         <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center' }}>
@@ -111,7 +113,7 @@ export default function AudioText() {
       </View>
 
       {/* Tabs */}
-      <View style={{ flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+      <View style={{ flexDirection: 'row', backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
         {TABS.map((tab) => (
           <TouchableOpacity
             key={tab.key}
@@ -161,21 +163,21 @@ export default function AudioText() {
 
             {/* Label */}
             <View style={{ alignItems: 'center', gap: 4 }}>
-              <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: '#2C1810' }}>
+              <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>
                 {isRecording ? 'Enregistrement...' : t('audioText.speak')}
               </Text>
-              <Text style={{ color: '#8C8278', fontSize: 12 }}>{t('audioText.spokenHint')}</Text>
+              <Text style={{ color: C.inkMute, fontSize: 12 }}>{t('audioText.spokenHint')}</Text>
             </View>
 
             {/* Transcript area */}
             {(transcript.length > 0 || !isRecording) && (
-              <View style={{ width: '100%', backgroundColor: '#F5F0EB', borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 16, padding: 14, minHeight: 90 }}>
+              <View style={{ width: '100%', backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 14, minHeight: 90 }}>
                 {transcript.length > 0 ? (
-                  <Text style={{ fontSize: 14, color: '#6D4C41', lineHeight: 22 }}>
+                  <Text style={{ fontSize: 14, color: C.inkSoft, lineHeight: 22 }}>
                     {transcript}
                   </Text>
                 ) : (
-                  <Text style={{ fontSize: 13, color: '#8C8278', fontStyle: 'italic' }}>
+                  <Text style={{ fontSize: 13, color: C.inkMute, fontStyle: 'italic' }}>
                     {t('audioText.spokenHint')}...
                   </Text>
                 )}
@@ -188,13 +190,13 @@ export default function AudioText() {
         {activeTab === 'text' && (
           <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 24, gap: 16 }}>
             <View style={{ gap: 8 }}>
-              <Text style={{ fontSize: 12, fontWeight: '600', color: '#6D4C41', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              <Text style={{ fontSize: 12, fontWeight: '600', color: C.inkSoft, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 {t('scanner.describeText')}
               </Text>
               <TextInput
                 style={{
-                  minHeight: 160, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8',
-                  borderRadius: 16, padding: 16, fontSize: 14, color: '#2C1810',
+                  minHeight: 160, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border,
+                  borderRadius: 16, padding: 16, fontSize: 14, color: C.ink,
                   lineHeight: 22, textAlignVertical: 'top',
                 }}
                 value={textInput}
@@ -204,22 +206,22 @@ export default function AudioText() {
                 multiline
                 maxLength={400}
               />
-              <Text style={{ fontSize: 11, color: '#8C8278', textAlign: 'right' }}>
+              <Text style={{ fontSize: 11, color: C.inkMute, textAlign: 'right' }}>
                 {textInput.length}/400 {t('audioText.charCount')}
               </Text>
             </View>
 
             {/* Quick suggest chips */}
             <View>
-              <Text style={{ fontSize: 12, color: '#8C8278', marginBottom: 8 }}>Suggestions :</Text>
+              <Text style={{ fontSize: 12, color: C.inkMute, marginBottom: 8 }}>Suggestions :</Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                 {['Feuilles vertes', 'Sauce rouge', 'Arachides', 'Poisson fumé', 'Plantain', 'Piment'].map((chip) => (
                   <TouchableOpacity
                     key={chip}
                     onPress={() => setTextInput(prev => prev + (prev ? ', ' : '') + chip.toLowerCase())}
-                    style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}
+                    style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface }}
                   >
-                    <Text style={{ fontSize: 13, color: '#6D4C41' }}>{chip}</Text>
+                    <Text style={{ fontSize: 13, color: C.inkSoft }}>{chip}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -230,7 +232,7 @@ export default function AudioText() {
       </ScrollView>
 
       {/* CTA bar */}
-      <View style={{ paddingHorizontal: 20, paddingVertical: 14, paddingBottom: 24, borderTopWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#FFFAF5', gap: 10 }}>
+      <View style={{ paddingHorizontal: 20, paddingVertical: 14, paddingBottom: 24, borderTopWidth: 1, borderColor: C.border, backgroundColor: C.cream, gap: 10 }}>
         <TouchableOpacity
           style={{ height: 54, backgroundColor: hasInput ? '#E8591A' : '#E5E0D8', borderRadius: 27, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 }}
           onPress={handleAnalyze}

@@ -1,7 +1,8 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
 
@@ -13,9 +14,10 @@ const PRIZES = [
 
 export default function AdminTombola() {
   const navigation = useNavigation<any>();
+  const C = useColors();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
       <StatusBar barStyle="light-content" />
 
       {/* Header */}
@@ -47,19 +49,19 @@ export default function AdminTombola() {
         </View>
 
         {/* Prizes */}
-        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', marginBottom: 12 }}>Lots</Text>
-        <View style={{ borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', overflow: 'hidden', marginBottom: 20, ...SHADOW_SM }}>
+        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 12 }}>Lots</Text>
+        <View style={{ borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, overflow: 'hidden', marginBottom: 20, ...SHADOW_SM }}>
           {PRIZES.map((prize, i) => (
-            <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 13, borderBottomWidth: i < 2 ? 1 : 0, borderColor: '#F5F0EB' }}>
+            <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 13, borderBottomWidth: i < 2 ? 1 : 0, borderColor: C.border }}>
               <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: prize.color + '15', alignItems: 'center', justifyContent: 'center' }}>
                 <Icon name={prize.icon} size={18} color={prize.color} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#2C1810' }}>{prize.prize}</Text>
-                <Text style={{ fontSize: 12, color: '#8C8278' }}>{prize.rank} · {prize.value}</Text>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink }}>{prize.prize}</Text>
+                <Text style={{ fontSize: 12, color: C.inkMute }}>{prize.rank} · {prize.value}</Text>
               </View>
-              <TouchableOpacity style={{ height: 28, paddingHorizontal: 10, borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ fontSize: 11, color: '#6D4C41' }}>Éditer</Text>
+              <TouchableOpacity style={{ height: 28, paddingHorizontal: 10, borderWidth: 1, borderColor: C.border, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ fontSize: 11, color: C.inkSoft }}>Éditer</Text>
               </TouchableOpacity>
             </View>
           ))}
@@ -71,9 +73,9 @@ export default function AdminTombola() {
             <Icon name="Zap" size={16} color="#fff" />
             <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>Lancer le tirage au sort</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={{ height: 48, borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 24, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}>
+          <TouchableOpacity style={{ height: 48, borderWidth: 1, borderColor: C.border, borderRadius: 24, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}>
             <Icon name="FileText" size={16} color="#6D4C41" />
-            <Text style={{ fontSize: 14, color: '#6D4C41' }}>Exporter la liste des participants</Text>
+            <Text style={{ fontSize: 14, color: C.inkSoft }}>Exporter la liste des participants</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

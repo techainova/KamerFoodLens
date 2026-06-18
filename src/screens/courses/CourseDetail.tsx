@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
 
@@ -49,6 +50,7 @@ const DEFAULT_COURSE = {
 
 export default function CourseDetail() {
   const navigation = useNavigation<any>();
+  const C = useColors();
   const route = useRoute<any>();
   const course = { ...DEFAULT_COURSE, ...(route.params?.course ?? {}) };
 
@@ -66,7 +68,7 @@ export default function CourseDetail() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
       <StatusBar barStyle="light-content" />
 
       {/* Hero */}
@@ -100,70 +102,70 @@ export default function CourseDetail() {
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
 
         {/* Stats row */}
-        <View style={{ backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 14, flexDirection: 'row', gap: 0, borderBottomWidth: 1, borderColor: '#F5F0EB' }}>
+        <View style={{ backgroundColor: C.surface, paddingHorizontal: 16, paddingVertical: 14, flexDirection: 'row', gap: 0, borderBottomWidth: 1, borderColor: C.border }}>
           {[
             { icon: 'Star' as const, value: String(course.rating), label: 'Note', color: '#F9A825', fill: '#F9A825' },
-            { icon: 'Users' as const, value: String(course.students.toLocaleString()), label: 'Élèves', color: '#8C8278' },
-            { icon: 'Clock' as const, value: course.duration, label: 'Durée', color: '#8C8278' },
-            { icon: 'List' as const, value: String(course.lessons), label: 'Leçons', color: '#8C8278' },
+            { icon: 'Users' as const, value: String(course.students.toLocaleString()), label: 'Élèves', color: C.inkMute },
+            { icon: 'Clock' as const, value: course.duration, label: 'Durée', color: C.inkMute },
+            { icon: 'List' as const, value: String(course.lessons), label: 'Leçons', color: C.inkMute },
           ].map((stat, i) => (
             <View key={i} style={{ flex: 1, alignItems: 'center' }}>
               <Icon name={stat.icon} size={18} color={stat.color} fill={stat.fill} />
-              <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810', marginTop: 3 }}>{stat.value}</Text>
-              <Text style={{ fontSize: 10, color: '#8C8278' }}>{stat.label}</Text>
+              <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink, marginTop: 3 }}>{stat.value}</Text>
+              <Text style={{ fontSize: 10, color: C.inkMute }}>{stat.label}</Text>
             </View>
           ))}
         </View>
 
         {/* Instructor */}
-        <View style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: '#fff', borderRadius: 16, padding: 14, flexDirection: 'row', gap: 12, alignItems: 'center', borderWidth: 1, borderColor: '#E5E0D8', ...SHADOW_SM }}>
+        <View style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: C.surface, borderRadius: 16, padding: 14, flexDirection: 'row', gap: 12, alignItems: 'center', borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
           <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: course.instructorColor + '20', borderWidth: 1.5, borderColor: course.instructorColor + '40', alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ fontSize: 16, fontWeight: '700', color: course.instructorColor }}>{course.instructorInitials[0]}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810' }}>{course.instructor}</Text>
-            <Text style={{ fontSize: 12, color: '#6D4C41' }}>{course.instructorBio}</Text>
+            <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink }}>{course.instructor}</Text>
+            <Text style={{ fontSize: 12, color: C.inkSoft }}>{course.instructorBio}</Text>
           </View>
         </View>
 
         {/* Description */}
         <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
-          <Text style={{ fontSize: 16, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', marginBottom: 8 }}>Description</Text>
-          <Text style={{ fontSize: 14, color: '#6D4C41', lineHeight: 22 }}>{course.description}</Text>
+          <Text style={{ fontSize: 16, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 8 }}>Description</Text>
+          <Text style={{ fontSize: 14, color: C.inkSoft, lineHeight: 22 }}>{course.description}</Text>
         </View>
 
         {/* Tags */}
         <View style={{ paddingHorizontal: 16, paddingTop: 12, flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
           {course.tags.map((tag: string) => (
-            <View key={tag} style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, backgroundColor: '#F5F0EB', borderWidth: 1, borderColor: '#E5E0D8' }}>
-              <Text style={{ fontSize: 12, color: '#6D4C41', fontWeight: '500' }}>{tag}</Text>
+            <View key={tag} style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border }}>
+              <Text style={{ fontSize: 12, color: C.inkSoft, fontWeight: '500' }}>{tag}</Text>
             </View>
           ))}
         </View>
 
         {/* Curriculum */}
         <View style={{ paddingHorizontal: 16, paddingTop: 20 }}>
-          <Text style={{ fontSize: 16, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', marginBottom: 12 }}>Programme ({course.lessons} leçons)</Text>
+          <Text style={{ fontSize: 16, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 12 }}>Programme ({course.lessons} leçons)</Text>
           <View style={{ gap: 10 }}>
             {course.curriculum.map((section: { section: string; lessons: { id: string; title: string; duration: string; free: boolean }[] }) => (
-              <View key={section.section} style={{ backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: '#E5E0D8', overflow: 'hidden', ...SHADOW_SM }}>
+              <View key={section.section} style={{ backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, overflow: 'hidden', ...SHADOW_SM }}>
                 <TouchableOpacity
                   onPress={() => toggleSection(section.section)}
                   style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 12 }}
                   activeOpacity={0.8}
                 >
-                  <Text style={{ flex: 1, fontSize: 14, fontWeight: '700', color: '#2C1810' }}>{section.section}</Text>
-                  <Text style={{ fontSize: 12, color: '#8C8278', marginRight: 8 }}>{section.lessons.length} leçons</Text>
+                  <Text style={{ flex: 1, fontSize: 14, fontWeight: '700', color: C.ink }}>{section.section}</Text>
+                  <Text style={{ fontSize: 12, color: C.inkMute, marginRight: 8 }}>{section.lessons.length} leçons</Text>
                   <Icon name={expandedSections.has(section.section) ? 'ChevronUp' : 'ChevronDown'} size={16} color="#8C8278" />
                 </TouchableOpacity>
 
                 {expandedSections.has(section.section) && (
-                  <View style={{ borderTopWidth: 1, borderColor: '#F5F0EB' }}>
+                  <View style={{ borderTopWidth: 1, borderColor: C.border }}>
                     {section.lessons.map((lesson: { id: string; title: string; duration: string; free: boolean }, i: number) => (
                       <TouchableOpacity
                         key={lesson.id}
                         onPress={() => navigation.navigate('CoursePlayer', { course, lessonId: lesson.id })}
-                        style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 11, borderTopWidth: i > 0 ? 1 : 0, borderColor: '#F5F0EB', gap: 10 }}
+                        style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 11, borderTopWidth: i > 0 ? 1 : 0, borderColor: C.border, gap: 10 }}
                         activeOpacity={0.7}
                       >
                         <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: lesson.free ? '#E3F0E4' : '#F5F0EB', alignItems: 'center', justifyContent: 'center' }}>
@@ -171,11 +173,11 @@ export default function CourseDetail() {
                         </View>
                         <Text style={{ flex: 1, fontSize: 13, color: lesson.free ? '#2C1810' : '#6D4C41' }}>{lesson.title}</Text>
                         {lesson.free && (
-                          <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, backgroundColor: '#E3F0E4' }}>
+                          <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, backgroundColor: C.successSoft }}>
                             <Text style={{ fontSize: 9, fontWeight: '700', color: '#2E7D32' }}>GRATUIT</Text>
                           </View>
                         )}
-                        <Text style={{ fontSize: 11, color: '#8C8278' }}>{lesson.duration}</Text>
+                        <Text style={{ fontSize: 11, color: C.inkMute }}>{lesson.duration}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -187,9 +189,9 @@ export default function CourseDetail() {
       </ScrollView>
 
       {/* Bottom CTA */}
-      <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#E5E0D8' }}>
+      <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, backgroundColor: C.surface, borderTopWidth: 1, borderColor: C.border }}>
         {course.price > 0 && !enrolled && (
-          <Text style={{ fontSize: 20, fontWeight: '700', color: '#2C1810', textAlign: 'center', marginBottom: 10 }}>
+          <Text style={{ fontSize: 20, fontWeight: '700', color: C.ink, textAlign: 'center', marginBottom: 10 }}>
             {course.price.toLocaleString()} XAF
           </Text>
         )}

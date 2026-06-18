@@ -10,6 +10,44 @@ import Svg, { Path, Circle, Line, Polyline, Polygon, Rect, G } from 'react-nativ
 type IconDef = { paths: React.ReactNode };
 
 const ICONS: Record<string, IconDef> = {
+  SlidersHorizontal: {
+    paths: (
+      <>
+        <Line x1="21" y1="4" x2="14" y2="4" />
+        <Line x1="10" y1="4" x2="3" y2="4" />
+        <Line x1="21" y1="12" x2="12" y2="12" />
+        <Line x1="8" y1="12" x2="3" y2="12" />
+        <Line x1="21" y1="20" x2="16" y2="20" />
+        <Line x1="12" y1="20" x2="3" y2="20" />
+        <Line x1="14" y1="2" x2="14" y2="6" />
+        <Line x1="8" y1="10" x2="8" y2="14" />
+        <Line x1="16" y1="18" x2="16" y2="22" />
+      </>
+    ),
+  },
+  Headphones: {
+    paths: (
+      <>
+        <Path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H3v-7a9 9 0 1 1 18 0v7h-3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" />
+      </>
+    ),
+  },
+  Moon: {
+    paths: (
+      <>
+        <Path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+      </>
+    ),
+  },
+  Monitor: {
+    paths: (
+      <>
+        <Rect x="2" y="3" width="20" height="14" rx="2" />
+        <Line x1="8" y1="21" x2="16" y2="21" />
+        <Line x1="12" y1="17" x2="12" y2="21" />
+      </>
+    ),
+  },
   Bell: {
     paths: (
       <>
@@ -784,6 +822,39 @@ const ICONS: Record<string, IconDef> = {
         <Line x1="3" y1="12" x2="21" y2="12" />
         <Line x1="3" y1="6" x2="21" y2="6" />
         <Line x1="3" y1="18" x2="21" y2="18" />
+      </>
+    ),
+  },
+  ArrowUp: {
+    paths: (
+      <>
+        <Path d="M12 19V5" />
+        <Path d="m5 12 7-7 7 7" />
+      </>
+    ),
+  },
+  ArrowDown: {
+    paths: (
+      <>
+        <Path d="M12 5v14" />
+        <Path d="m19 12-7 7-7-7" />
+      </>
+    ),
+  },
+  Wallet: {
+    paths: (
+      <>
+        <Path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4" />
+        <Path d="M4 6v12c0 1.1.9 2 2 2h14v-4" />
+        <Path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z" />
+      </>
+    ),
+  },
+  RotateCcw: {
+    paths: (
+      <>
+        <Path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+        <Path d="M3 3v5h5" />
       </>
     ),
   },

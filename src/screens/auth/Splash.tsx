@@ -1,7 +1,8 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
+import { useColors } from '@/hooks/useAppTheme';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/types';
 import LangSwitch from '@/components/auth/LangSwitch';
@@ -10,6 +11,7 @@ import KFLLogo from '@/components/ui/KFLLogo';
 type Props = NativeStackScreenProps<RootStackParamList, 'Splash'>;
 
 export default function Splash({ navigation }: Props) {
+    const C = useColors();
   const { t } = useTranslation();
 
   return (

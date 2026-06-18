@@ -1,7 +1,8 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
 
@@ -19,9 +20,10 @@ const STATUS_CONF: Record<string, { label: string; color: string; bg: string }> 
 
 export default function AdminEvents() {
   const navigation = useNavigation<any>();
+  const C = useColors();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
       <StatusBar barStyle="light-content" />
 
       {/* Header */}
@@ -41,9 +43,9 @@ export default function AdminEvents() {
           {EVENTS.map((event, i) => {
             const s = STATUS_CONF[event.status];
             return (
-              <View key={i} style={{ padding: 16, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', ...SHADOW_SM }}>
+              <View key={i} style={{ padding: 16, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
                 <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <Text style={{ flex: 1, fontSize: 14, fontWeight: '700', color: '#2C1810', marginRight: 8 }}>{event.title}</Text>
+                  <Text style={{ flex: 1, fontSize: 14, fontWeight: '700', color: C.ink, marginRight: 8 }}>{event.title}</Text>
                   <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, backgroundColor: s.bg }}>
                     <Text style={{ fontSize: 11, fontWeight: '600', color: s.color }}>{s.label}</Text>
                   </View>
@@ -51,23 +53,23 @@ export default function AdminEvents() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                     <Icon name="Calendar" size={12} color="#8C8278" />
-                    <Text style={{ fontSize: 12, color: '#8C8278' }}>{event.date}</Text>
+                    <Text style={{ fontSize: 12, color: C.inkMute }}>{event.date}</Text>
                   </View>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                     <Icon name="Users" size={12} color="#8C8278" />
-                    <Text style={{ fontSize: 12, color: '#8C8278' }}>{event.attendees} inscrits</Text>
+                    <Text style={{ fontSize: 12, color: C.inkMute }}>{event.attendees} inscrits</Text>
                   </View>
                 </View>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <TouchableOpacity style={{ height: 32, paddingHorizontal: 12, backgroundColor: '#E8EAF6', borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
+                  <TouchableOpacity style={{ height: 32, paddingHorizontal: 12, backgroundColor: C.navySoft, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
                     <Text style={{ color: '#1A237E', fontSize: 12, fontWeight: '600' }}>Modifier</Text>
                   </TouchableOpacity>
                   {event.status === 'pending' && (
-                    <TouchableOpacity style={{ height: 32, paddingHorizontal: 12, backgroundColor: '#E3F0E4', borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
+                    <TouchableOpacity style={{ height: 32, paddingHorizontal: 12, backgroundColor: C.successSoft, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
                       <Text style={{ color: '#2E7D32', fontSize: 12, fontWeight: '600' }}>Approuver</Text>
                     </TouchableOpacity>
                   )}
-                  <TouchableOpacity style={{ height: 32, paddingHorizontal: 12, backgroundColor: '#FBDCDC', borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
+                  <TouchableOpacity style={{ height: 32, paddingHorizontal: 12, backgroundColor: C.errorSoft, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
                     <Text style={{ color: '#C62828', fontSize: 12, fontWeight: '600' }}>Supprimer</Text>
                   </TouchableOpacity>
                 </View>

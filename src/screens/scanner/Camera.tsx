@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+﻿import React, { useRef, useEffect, useState } from 'react';
 import {
   View, Text, TouchableOpacity, StatusBar, Animated,
   SafeAreaView, Easing,
@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ScannerStackParams } from '@/navigation/types';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 type CameraNav = NativeStackNavigationProp<ScannerStackParams, 'Camera'>;
 type Mode = 'photo' | 'audio' | 'text';
@@ -47,6 +48,7 @@ function CornerBrackets() {
 
 export default function Camera() {
   const navigation = useNavigation<CameraNav>();
+    const C = useColors();
   const { t } = useTranslation();
 
   const [mode, setMode]         = useState<Mode>('photo');

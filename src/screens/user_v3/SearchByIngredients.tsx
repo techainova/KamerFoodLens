@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
 
@@ -18,6 +19,7 @@ const RESULTS = [
 
 export default function SearchByIngredients() {
   const navigation = useNavigation<any>();
+  const C = useColors();
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<string[]>(['Feuilles de ndolé', "Pâte d'arachide", 'Poisson fumé']);
 
@@ -26,23 +28,23 @@ export default function SearchByIngredients() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
+      <StatusBar barStyle={C.statusBar} />
 
       {/* AppBar */}
-      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
           <Icon name="ArrowLeft" size={22} color="#2C1810" />
         </TouchableOpacity>
-        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: '#2C1810' }}>Chercher par ingrédients</Text>
+        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>Chercher par ingrédients</Text>
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
 
         {/* Search input */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', height: 48, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 16, paddingHorizontal: 14, gap: 10, marginBottom: 16 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', height: 48, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 16, paddingHorizontal: 14, gap: 10, marginBottom: 16 }}>
           <Icon name="Search" size={16} color="#8C8278" />
-          <TextInput value={search} onChangeText={setSearch} placeholder="Ajouter un ingrédient..." placeholderTextColor="#8C8278" style={{ flex: 1, fontSize: 14, color: '#2C1810' }} />
+          <TextInput value={search} onChangeText={setSearch} placeholder="Ajouter un ingrédient..." placeholderTextColor="#8C8278" style={{ flex: 1, fontSize: 14, color: C.ink }} />
           {search.length > 0 && (
             <TouchableOpacity onPress={() => { if (search.trim()) { toggle(search.trim()); setSearch(''); } }}
               style={{ height: 28, paddingHorizontal: 10, backgroundColor: '#E8591A', borderRadius: 14, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 4 }}>
@@ -54,7 +56,7 @@ export default function SearchByIngredients() {
         {/* Selected ingredients */}
         {selected.length > 0 && (
           <View style={{ marginBottom: 16 }}>
-            <Text style={{ fontSize: 11, fontWeight: '600', color: '#8C8278', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Mes ingrédients ({selected.length})</Text>
+            <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Mes ingrédients ({selected.length})</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
               {selected.map(ing => (
                 <TouchableOpacity key={ing} onPress={() => toggle(ing)}
@@ -71,12 +73,12 @@ export default function SearchByIngredients() {
 
         {/* Suggested ingredients */}
         <View style={{ marginBottom: 20 }}>
-          <Text style={{ fontSize: 11, fontWeight: '600', color: '#8C8278', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Ingrédients courants</Text>
+          <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Ingrédients courants</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
             {SUGGESTED.filter(i => !selected.includes(i)).map(ing => (
               <TouchableOpacity key={ing} onPress={() => toggle(ing)}
-                style={{ height: 32, paddingHorizontal: 12, borderRadius: 16, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ fontSize: 12, color: '#6D4C41' }}>+ {ing}</Text>
+                style={{ height: 32, paddingHorizontal: 12, borderRadius: 16, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ fontSize: 12, color: C.inkSoft }}>+ {ing}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -86,18 +88,18 @@ export default function SearchByIngredients() {
         {selected.length >= 2 && (
           <View>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810' }}>Recettes compatibles</Text>
-              <Text style={{ fontSize: 12, color: '#8C8278' }}>{RESULTS.length} résultats</Text>
+              <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink }}>Recettes compatibles</Text>
+              <Text style={{ fontSize: 12, color: C.inkMute }}>{RESULTS.length} résultats</Text>
             </View>
             <View style={{ gap: 10 }}>
               {RESULTS.map((r, i) => (
-                <TouchableOpacity key={i} style={{ flexDirection: 'row', gap: 12, alignItems: 'center', padding: 14, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', ...SHADOW_SM }}>
-                  <View style={{ width: 56, height: 56, borderRadius: 12, backgroundColor: '#F5F0EB', borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center' }}>
+                <TouchableOpacity key={i} style={{ flexDirection: 'row', gap: 12, alignItems: 'center', padding: 14, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
+                  <View style={{ width: 56, height: 56, borderRadius: 12, backgroundColor: C.surface2, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
                     <Icon name="ChefHat" size={22} color="rgba(140,130,120,0.35)" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 14, fontWeight: '600', color: '#2C1810' }}>{r.name}</Text>
-                    <Text style={{ fontSize: 12, color: '#8C8278', marginTop: 1 }}>{r.region}</Text>
+                    <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink }}>{r.name}</Text>
+                    <Text style={{ fontSize: 12, color: C.inkMute, marginTop: 1 }}>{r.region}</Text>
                     {r.missing.length > 0 && (
                       <Text style={{ fontSize: 12, color: '#E8591A', marginTop: 2 }}>Manquant: {r.missing.join(', ')}</Text>
                     )}

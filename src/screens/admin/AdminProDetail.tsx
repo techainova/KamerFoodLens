@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
 
 export default function AdminProDetail() {
   const navigation = useNavigation<any>();
+  const C = useColors();
   const [status, setStatus] = useState<'active' | 'suspended'>('active');
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
       <StatusBar barStyle="light-content" />
 
       {/* Header */}
@@ -24,20 +26,20 @@ export default function AdminProDetail() {
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 110 }} showsVerticalScrollIndicator={false}>
 
         {/* Pro info card */}
-        <View style={{ padding: 16, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', marginBottom: 16, ...SHADOW_SM }}>
+        <View style={{ padding: 16, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, marginBottom: 16, ...SHADOW_SM }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-            <View style={{ width: 56, height: 56, borderRadius: 16, backgroundColor: '#F5F0EB', borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ width: 56, height: 56, borderRadius: 16, backgroundColor: C.surface2, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
               <Icon name="ChefHat" size={24} color="rgba(140,130,120,0.5)" />
             </View>
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={{ fontSize: 15, fontWeight: '700', color: '#2C1810' }}>Chez Mama Pauline</Text>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: C.ink }}>Chez Mama Pauline</Text>
                 <View style={{ backgroundColor: '#F9A825', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 8 }}>
                   <Text style={{ color: '#fff', fontSize: 9, fontWeight: '700' }}>PRO</Text>
                 </View>
               </View>
-              <Text style={{ fontSize: 12, color: '#8C8278', marginTop: 2 }}>Maman Pauline · @chef_mama_pauline</Text>
-              <Text style={{ fontSize: 12, color: '#8C8278' }}>Cuisine camerounaise · Douala</Text>
+              <Text style={{ fontSize: 12, color: C.inkMute, marginTop: 2 }}>Maman Pauline · @chef_mama_pauline</Text>
+              <Text style={{ fontSize: 12, color: C.inkMute }}>Cuisine camerounaise · Douala</Text>
             </View>
           </View>
 
@@ -48,9 +50,9 @@ export default function AdminProDetail() {
             { l: 'Inscrit le',  v: '3 Jan 2026' },
             { l: 'Abonnement',  v: '3 000 XAF/mois · Actif' },
           ].map((row, i) => (
-            <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, borderBottomWidth: i < 4 ? 1 : 0, borderColor: '#F5F0EB' }}>
-              <Text style={{ fontSize: 13, color: '#8C8278' }}>{row.l}</Text>
-              <Text style={{ fontSize: 13, fontWeight: '500', color: '#2C1810' }}>{row.v}</Text>
+            <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, borderBottomWidth: i < 4 ? 1 : 0, borderColor: C.border }}>
+              <Text style={{ fontSize: 13, color: C.inkMute }}>{row.l}</Text>
+              <Text style={{ fontSize: 13, fontWeight: '500', color: C.ink }}>{row.v}</Text>
             </View>
           ))}
         </View>
@@ -62,16 +64,16 @@ export default function AdminProDetail() {
             { v: '195k', l: 'Revenus XAF',    color: '#2E7D32' },
             { v: '4.8',  l: 'Note',           color: '#F9A825' },
           ].map((s, i) => (
-            <View key={i} style={{ flex: 1, padding: 12, borderRadius: 14, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', alignItems: 'center', ...SHADOW_SM }}>
+            <View key={i} style={{ flex: 1, padding: 12, borderRadius: 14, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', ...SHADOW_SM }}>
               <Text style={{ fontSize: 15, fontWeight: '700', color: s.color }}>{s.v}</Text>
-              <Text style={{ fontSize: 10, color: '#8C8278', textAlign: 'center', marginTop: 2 }}>{s.l}</Text>
+              <Text style={{ fontSize: 10, color: C.inkMute, textAlign: 'center', marginTop: 2 }}>{s.l}</Text>
             </View>
           ))}
         </View>
 
         {/* Status control */}
-        <View style={{ padding: 16, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', ...SHADOW_SM }}>
-          <Text style={{ fontSize: 11, fontWeight: '600', color: '#8C8278', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>Statut du compte</Text>
+        <View style={{ padding: 16, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
+          <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>Statut du compte</Text>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <TouchableOpacity
               onPress={() => setStatus('active')}
@@ -90,9 +92,9 @@ export default function AdminProDetail() {
       </ScrollView>
 
       {/* Bottom actions */}
-      <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingVertical: 14, borderTopWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}>
-        <TouchableOpacity style={{ flex: 1, height: 44, borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontSize: 14, color: '#6D4C41' }}>Impersonifier</Text>
+      <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingVertical: 14, borderTopWidth: 1, borderColor: C.border, backgroundColor: C.surface }}>
+        <TouchableOpacity style={{ flex: 1, height: 44, borderWidth: 1, borderColor: C.border, borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontSize: 14, color: C.inkSoft }}>Impersonifier</Text>
         </TouchableOpacity>
         <TouchableOpacity style={{ flex: 1, height: 44, backgroundColor: '#1A237E', borderRadius: 22, alignItems: 'center', justifyContent: 'center' }} activeOpacity={0.85}>
           <Text style={{ fontSize: 14, fontWeight: '600', color: '#fff' }}>Enregistrer</Text>

@@ -3,6 +3,8 @@ import { View, Text, Pressable, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { colors, shadows } from '@/constants/theme';
+import { useColors } from '@/hooks/useAppTheme';
+import { useFontScale, useBoldText } from '@/hooks/useAccessibility';
 import Icon, { type IconName } from './Icon';
 
 export type TabName = 'home' | 'search' | 'scanner' | 'favorites' | 'pro' | 'profile';
@@ -40,6 +42,9 @@ interface Props {
 export function WFBottomNav({ activeTab, onTabPress, isPro = false }: Props) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const C = useColors();
+  const fontScale = useFontScale();
+  const boldText = useBoldText();
   const TABS = isPro ? TABS_PRO : TABS_STANDARD;
 
   return (
@@ -47,12 +52,12 @@ export function WFBottomNav({ activeTab, onTabPress, isPro = false }: Props) {
       {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.surface,
+        backgroundColor: C.surface,
         paddingTop: 8,
         paddingBottom: insets.bottom + 8,
         minHeight: 64,
         borderTopWidth: 1,
-        borderTopColor: colors.border,
+        borderTopColor: C.border,
       },
       shadows.md,
     ]}>
@@ -61,8 +66,8 @@ export function WFBottomNav({ activeTab, onTabPress, isPro = false }: Props) {
         const isActive  = activeTab === tab.name;
         const isProTab  = tab.proOnly === true;
 
-        const activeColor   = isProTab ? colors.gold : colors.primary;
-        const inactiveColor = colors.inkMute;
+        const activeColor   = isProTab ? C.gold : C.primary;
+        const inactiveColor = C.inkMute;
         const iconColor     = isActive ? activeColor : inactiveColor;
 
         // ── Scanner FAB (button surélevé au centre) ──────────────
@@ -81,20 +86,20 @@ export function WFBottomNav({ activeTab, onTabPress, isPro = false }: Props) {
                   width: 60,
                   height: 60,
                   borderRadius: 30,
-                  backgroundColor: activeTab === 'scanner' ? colors.primaryPressed : colors.primary,
+                  backgroundColor: activeTab === 'scanner' ? colors.primaryPressed : C.primary,
                   alignItems: 'center',
                   justifyContent: 'center',
                   borderWidth: 3,
-                  borderColor: colors.surface,
+                  borderColor: C.surface,
                 },
                 shadows.elev3,
               ]}>
                 <Icon name="ScanLine" size={26} color={colors.fgOnDark} strokeWidth={2} />
               </View>
               <Text style={{
-                fontSize: 11,
-                fontWeight: '500',
-                color: activeTab === 'scanner' ? colors.primary : inactiveColor,
+                fontSize: 11 * fontScale,
+                fontWeight: boldText ? '700' : '500',
+                color: activeTab === 'scanner' ? C.primary : inactiveColor,
                 marginTop: 4,
               }}>
                 {t(tab.labelKey)}
@@ -123,8 +128,8 @@ export function WFBottomNav({ activeTab, onTabPress, isPro = false }: Props) {
               strokeWidth={isActive ? 2 : 1.75}
             />
             <Text style={{
-              fontSize: 11,
-              fontWeight: isActive ? '700' : '500',
+              fontSize: 11 * fontScale,
+              fontWeight: (isActive || boldText) ? '700' : '500',
               color: iconColor,
               marginTop: 3,
             }}>

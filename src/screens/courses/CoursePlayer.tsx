@@ -1,9 +1,10 @@
-import React, { useState, useRef } from 'react';
+﻿import React, { useState, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
 
@@ -18,6 +19,7 @@ const LESSONS = [
 
 export default function CoursePlayer() {
   const navigation = useNavigation<any>();
+  const C = useColors();
   const route = useRoute<any>();
   const course = route.params?.course ?? { title: 'Maîtriser le Mbongo Tchobi', instructor: 'Chef Paul', instructorColor: '#E8591A' };
   const startId = route.params?.lessonId ?? 'l3';
@@ -106,25 +108,25 @@ export default function CoursePlayer() {
         </View>
       </View>
 
-      <View style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+      <View style={{ flex: 1, backgroundColor: C.cream }}>
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
 
           {/* Lesson info */}
-          <View style={{ backgroundColor: '#fff', padding: 16, borderBottomWidth: 1, borderColor: '#F5F0EB' }}>
-            <Text style={{ fontSize: 17, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', marginBottom: 4 }}>
+          <View style={{ backgroundColor: C.surface, padding: 16, borderBottomWidth: 1, borderColor: C.border }}>
+            <Text style={{ fontSize: 17, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 4 }}>
               {currentLesson?.title ?? ''}
             </Text>
-            <Text style={{ fontSize: 13, color: '#8C8278' }}>
+            <Text style={{ fontSize: 13, color: C.inkMute }}>
               {course.title} · Leçon {currentIndex + 1}/{lessons.length}
             </Text>
 
             {/* Overall progress */}
             <View style={{ marginTop: 12 }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 }}>
-                <Text style={{ fontSize: 12, color: '#6D4C41' }}>Progression globale</Text>
+                <Text style={{ fontSize: 12, color: C.inkSoft }}>Progression globale</Text>
                 <Text style={{ fontSize: 12, fontWeight: '700', color: '#E8591A' }}>{Math.round(overallProgress * 100)}%</Text>
               </View>
-              <View style={{ height: 5, backgroundColor: '#F5F0EB', borderRadius: 3, overflow: 'hidden' }}>
+              <View style={{ height: 5, backgroundColor: C.surface2, borderRadius: 3, overflow: 'hidden' }}>
                 <View style={{ height: '100%', width: `${overallProgress * 100}%`, backgroundColor: '#E8591A', borderRadius: 3 }} />
               </View>
             </View>
@@ -132,19 +134,19 @@ export default function CoursePlayer() {
 
           {/* Notes & resources */}
           <View style={{ padding: 16, gap: 10 }}>
-            <TouchableOpacity style={{ backgroundColor: '#fff', borderRadius: 14, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: '#E5E0D8', ...SHADOW_SM }}>
+            <TouchableOpacity style={{ backgroundColor: C.surface, borderRadius: 14, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
               <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#E8591A15', alignItems: 'center', justifyContent: 'center' }}>
                 <Icon name="Edit" size={16} color="#E8591A" />
               </View>
-              <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: '#2C1810' }}>Prendre des notes</Text>
+              <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: C.ink }}>Prendre des notes</Text>
               <Icon name="ChevronRight" size={16} color="#8C8278" />
             </TouchableOpacity>
 
-            <TouchableOpacity style={{ backgroundColor: '#fff', borderRadius: 14, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: '#E5E0D8', ...SHADOW_SM }}>
+            <TouchableOpacity style={{ backgroundColor: C.surface, borderRadius: 14, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
               <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#1A237E15', alignItems: 'center', justifyContent: 'center' }}>
                 <Icon name="FileText" size={16} color="#1A237E" />
               </View>
-              <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: '#2C1810' }}>Ressources de la leçon</Text>
+              <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: C.ink }}>Ressources de la leçon</Text>
               <Icon name="ChevronRight" size={16} color="#8C8278" />
             </TouchableOpacity>
           </View>
@@ -152,21 +154,21 @@ export default function CoursePlayer() {
           {/* Lesson list toggle */}
           <TouchableOpacity
             onPress={() => setShowList(s => !s)}
-            style={{ marginHorizontal: 16, backgroundColor: '#fff', borderRadius: 14, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderColor: '#E5E0D8', ...SHADOW_SM }}
+            style={{ marginHorizontal: 16, backgroundColor: C.surface, borderRadius: 14, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}
           >
             <Icon name="List" size={18} color="#2C1810" />
-            <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: '#2C1810' }}>Toutes les leçons</Text>
-            <Text style={{ fontSize: 12, color: '#8C8278' }}>{totalCompleted}/{lessons.length}</Text>
+            <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: C.ink }}>Toutes les leçons</Text>
+            <Text style={{ fontSize: 12, color: C.inkMute }}>{totalCompleted}/{lessons.length}</Text>
             <Icon name={showList ? 'ChevronUp' : 'ChevronDown'} size={16} color="#8C8278" />
           </TouchableOpacity>
 
           {showList && (
-            <View style={{ marginHorizontal: 16, marginTop: 8, backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: '#E5E0D8', overflow: 'hidden', ...SHADOW_SM }}>
+            <View style={{ marginHorizontal: 16, marginTop: 8, backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, overflow: 'hidden', ...SHADOW_SM }}>
               {lessons.map((lesson, i) => (
                 <TouchableOpacity
                   key={lesson.id}
                   onPress={() => { setCurrentLessonId(lesson.id); setProgress(0); setPlaying(false); }}
-                  style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 12, borderTopWidth: i > 0 ? 1 : 0, borderColor: '#F5F0EB', backgroundColor: lesson.id === currentLessonId ? '#FFF8F5' : '#fff', gap: 10 }}
+                  style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 12, borderTopWidth: i > 0 ? 1 : 0, borderColor: C.border, backgroundColor: lesson.id === currentLessonId ? '#FFF8F5' : '#fff', gap: 10 }}
                   activeOpacity={0.7}
                 >
                   <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: lesson.completed ? '#E3F0E4' : (lesson.id === currentLessonId ? '#E8591A15' : '#F5F0EB'), alignItems: 'center', justifyContent: 'center' }}>
@@ -175,7 +177,7 @@ export default function CoursePlayer() {
                   <Text style={{ flex: 1, fontSize: 13, color: lesson.id === currentLessonId ? '#E8591A' : '#2C1810', fontWeight: lesson.id === currentLessonId ? '700' : '400' }} numberOfLines={2}>
                     {lesson.title}
                   </Text>
-                  <Text style={{ fontSize: 11, color: '#8C8278' }}>{lesson.duration}</Text>
+                  <Text style={{ fontSize: 11, color: C.inkMute }}>{lesson.duration}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -183,10 +185,10 @@ export default function CoursePlayer() {
         </ScrollView>
 
         {/* Bottom nav */}
-        <View style={{ flexDirection: 'row', padding: 12, gap: 10, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#E5E0D8' }}>
+        <View style={{ flexDirection: 'row', padding: 12, gap: 10, backgroundColor: C.surface, borderTopWidth: 1, borderColor: C.border }}>
           <TouchableOpacity
             onPress={goPrev}
-            style={{ flex: 1, height: 46, borderRadius: 14, borderWidth: 1.5, borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 }}
+            style={{ flex: 1, height: 46, borderRadius: 14, borderWidth: 1.5, borderColor: C.border, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 }}
             disabled={currentIndex === 0}
           >
             <Icon name="SkipBack" size={16} color={currentIndex === 0 ? '#E5E0D8' : '#2C1810'} />

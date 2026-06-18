@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const TABS = ['En attente', 'Approuvés', 'Rejetés'];
 
@@ -12,10 +13,11 @@ const PENDING = [
 
 export default function AdminProList() {
   const navigation = useNavigation<any>();
+  const C = useColors();
   const [activeTab, setActiveTab] = useState(0);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
       <StatusBar barStyle="light-content" />
 
       {/* Header */}
@@ -30,7 +32,7 @@ export default function AdminProList() {
       </View>
 
       {/* Tabs */}
-      <View style={{ flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+      <View style={{ flexDirection: 'row', backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
         {TABS.map((tab, i) => (
           <TouchableOpacity
             key={i} onPress={() => setActiveTab(i)}
@@ -45,12 +47,12 @@ export default function AdminProList() {
         {activeTab === 0 ? (
           <View style={{ gap: 12 }}>
             {PENDING.map((pro, i) => (
-              <View key={i} style={{ padding: 16, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8' }}>
+              <View key={i} style={{ padding: 16, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border }}>
                 <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810' }}>{pro.name}</Text>
-                    <Text style={{ fontSize: 12, color: '#8C8278', marginTop: 2 }}>{pro.owner} · {pro.type}</Text>
-                    <Text style={{ fontSize: 11, color: '#8C8278', marginTop: 1 }}>Soumis le {pro.submitted}</Text>
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink }}>{pro.name}</Text>
+                    <Text style={{ fontSize: 12, color: C.inkMute, marginTop: 2 }}>{pro.owner} · {pro.type}</Text>
+                    <Text style={{ fontSize: 11, color: C.inkMute, marginTop: 1 }}>Soumis le {pro.submitted}</Text>
                   </View>
                   <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, backgroundColor: pro.docs ? '#E3F0E4' : '#FBDCDC', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                     <Icon name={pro.docs ? 'Check' : 'AlertTriangle'} size={10} color={pro.docs ? '#2E7D32' : '#C62828'} />
@@ -60,17 +62,17 @@ export default function AdminProList() {
                   </View>
                 </View>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <TouchableOpacity style={{ flex: 1, height: 36, backgroundColor: '#E3F0E4', borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}>
+                  <TouchableOpacity style={{ flex: 1, height: 36, backgroundColor: C.successSoft, borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}>
                     <Text style={{ color: '#2E7D32', fontSize: 12, fontWeight: '600' }}>Approuver</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={{ flex: 1, height: 36, backgroundColor: '#FBDCDC', borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}>
+                  <TouchableOpacity style={{ flex: 1, height: 36, backgroundColor: C.errorSoft, borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}>
                     <Text style={{ color: '#C62828', fontSize: 12, fontWeight: '600' }}>Rejeter</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => navigation.navigate('AdminProDetail', { restaurantId: pro.name })}
-                    style={{ height: 36, paddingHorizontal: 12, borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}
+                    style={{ height: 36, paddingHorizontal: 12, borderWidth: 1, borderColor: C.border, borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}
                   >
-                    <Text style={{ color: '#6D4C41', fontSize: 12 }}>Détails</Text>
+                    <Text style={{ color: C.inkSoft, fontSize: 12 }}>Détails</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -79,7 +81,7 @@ export default function AdminProList() {
         ) : (
           <View style={{ alignItems: 'center', justifyContent: 'center', paddingTop: 64 }}>
             <Icon name="Check" size={32} color="rgba(140,130,120,0.3)" />
-            <Text style={{ color: '#8C8278', fontSize: 14, marginTop: 12 }}>Aucun élément dans cet onglet.</Text>
+            <Text style={{ color: C.inkMute, fontSize: 14, marginTop: 12 }}>Aucun élément dans cet onglet.</Text>
           </View>
         )}
       </ScrollView>

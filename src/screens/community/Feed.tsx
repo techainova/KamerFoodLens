@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, SafeAreaView,
   StatusBar, TextInput,
@@ -6,6 +6,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
 
@@ -39,9 +40,9 @@ const POSTS = [
     user: 'Maman Pauline',
     initials: 'MP',
     badge: 'Novice · niv. 1',
-    badgeColor: '#8C8278',
+    badgecolor: '#8C8278',
     time: '4h',
-    text: "Ma recette de Ndolé du dimanche, transmise par ma grand-mère. Le secret c'est les écorces fraîches et beaucoup d'amour 🫶",
+    text: "Ma recette de Ndolé du dimanche, transmise par ma grand-mère. Le secret c'est les écorces fraîches et beaucoup d'amour.",
     imageCaption: 'Ndolé familial · Douala',
     tags: ['#Ndolé', '#Famille', '#Tradition'],
     likes: 312,
@@ -71,6 +72,7 @@ const TABS = ['Pour vous', 'Abonnements', 'Trending'];
 export default function Feed() {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
+  const C = useColors();
   const [activeTab, setActiveTab] = useState(0);
   const [posts, setPosts] = useState(POSTS);
 
@@ -85,29 +87,29 @@ export default function Feed() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
+      <StatusBar barStyle={C.statusBar} />
 
       {/* AppBar */}
-      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
           <Icon name="ArrowLeft" size={22} color="#2C1810" />
         </TouchableOpacity>
-        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: '#2C1810' }}>
+        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>
           {t('community.feed')}
         </Text>
         <View style={{ flexDirection: 'row', gap: 8 }}>
-          <TouchableOpacity style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+          <TouchableOpacity style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="Search" size={17} color="#6D4C41" />
           </TouchableOpacity>
-          <TouchableOpacity style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+          <TouchableOpacity style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="Bell" size={17} color="#6D4C41" />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Tabs */}
-      <View style={{ flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+      <View style={{ flexDirection: 'row', backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
         {TABS.map((tab, i) => (
           <TouchableOpacity
             key={i}
@@ -143,7 +145,7 @@ export default function Feed() {
                   )}
                 </View>
               </View>
-              <Text style={{ fontSize: 11, color: '#6D4C41', maxWidth: 56, textAlign: 'center' }} numberOfLines={1}>{s.name}</Text>
+              <Text style={{ fontSize: 11, color: C.inkSoft, maxWidth: 56, textAlign: 'center' }} numberOfLines={1}>{s.name}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -151,7 +153,7 @@ export default function Feed() {
         {/* Posts */}
         <View style={{ paddingHorizontal: 0 }}>
           {posts.map((post) => (
-            <View key={post.id} style={{ marginBottom: 2, borderTopWidth: 1, borderColor: '#F5F0EB', backgroundColor: '#fff', paddingVertical: 16 }}>
+            <View key={post.id} style={{ marginBottom: 2, borderTopWidth: 1, borderColor: C.border, backgroundColor: C.surface, paddingVertical: 16 }}>
 
               {/* Header */}
               <View style={{ paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
@@ -159,12 +161,12 @@ export default function Feed() {
                   <Text style={{ fontSize: 14, fontWeight: '700', color: post.badgeColor, fontFamily: 'Inter-Bold' }}>{post.initials[0]}</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810', fontFamily: 'Inter-Bold' }}>{post.user}</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink, fontFamily: 'Inter-Bold' }}>{post.user}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 1 }}>
                     <View style={{ paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8, backgroundColor: post.badgeColor + '15' }}>
                       <Text style={{ fontSize: 10, fontWeight: '700', color: post.badgeColor, fontFamily: 'Inter-Bold' }}>{post.badge}</Text>
                     </View>
-                    <Text style={{ fontSize: 11, color: '#8C8278' }}>· {post.time}</Text>
+                    <Text style={{ fontSize: 11, color: C.inkMute }}>· {post.time}</Text>
                   </View>
                 </View>
                 <TouchableOpacity style={{ padding: 6 }}>
@@ -173,21 +175,21 @@ export default function Feed() {
               </View>
 
               {/* Text */}
-              <Text style={{ paddingHorizontal: 16, fontSize: 14, color: '#2C1810', lineHeight: 22, marginBottom: 10 }}>
+              <Text style={{ paddingHorizontal: 16, fontSize: 14, color: C.ink, lineHeight: 22, marginBottom: 10 }}>
                 {post.text}
               </Text>
 
               {/* Image placeholder */}
-              <View style={{ marginHorizontal: 16, height: 200, borderRadius: 16, backgroundColor: '#F5F0EB', borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
+              <View style={{ marginHorizontal: 16, height: 200, borderRadius: 16, backgroundColor: C.surface2, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
                 <Icon name="Camera" size={32} color="rgba(140,130,120,0.3)" />
-                <Text style={{ color: '#8C8278', fontSize: 11, fontStyle: 'italic', marginTop: 6 }}>{post.imageCaption}</Text>
+                <Text style={{ color: C.inkMute, fontSize: 11, fontStyle: 'italic', marginTop: 6 }}>{post.imageCaption}</Text>
               </View>
 
               {/* Tags */}
               <View style={{ paddingHorizontal: 16, flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
                 {post.tags.map(tag => (
-                  <TouchableOpacity key={tag} style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#F5F0EB' }}>
-                    <Text style={{ fontSize: 12, color: '#6D4C41', fontWeight: '500' }}>{tag}</Text>
+                  <TouchableOpacity key={tag} style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface2 }}>
+                    <Text style={{ fontSize: 12, color: C.inkSoft, fontWeight: '500' }}>{tag}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -200,7 +202,7 @@ export default function Feed() {
                 </TouchableOpacity>
                 <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                   <Icon name="MessageCircle" size={20} color="#8C8278" />
-                  <Text style={{ fontSize: 13, color: '#8C8278', fontWeight: '500' }}>{post.comments}</Text>
+                  <Text style={{ fontSize: 13, color: C.inkMute, fontWeight: '500' }}>{post.comments}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                   <Icon name="Share2" size={18} color="#8C8278" />

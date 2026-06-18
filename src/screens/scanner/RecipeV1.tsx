@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, SafeAreaView, TextInput,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const INGREDIENTS = [
   { qty: '500g', name: 'Feuilles de ndolé fraîches', en: 'Fresh ndolé leaves' },
@@ -44,6 +45,7 @@ const TAB_KEYS = ['ingredients', 'steps', 'nutrition', 'reviews'] as const;
 type TabKey = typeof TAB_KEYS[number];
 
 export default function RecipeV1() {
+    const C = useColors();
   const { t } = useTranslation();
   const nav = useNavigation();
   const [activeTab, setActiveTab] = useState<TabKey>('ingredients');
@@ -66,23 +68,23 @@ export default function RecipeV1() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
 
       {/* AppBar */}
-      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}>
+      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderColor: C.border, backgroundColor: C.surface }}>
         <TouchableOpacity
-          style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}
+          style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}
           onPress={() => nav.goBack()}
         >
           <Icon name="ArrowLeft" size={17} color="#6D4C41" />
         </TouchableOpacity>
-        <Text style={{ flex: 1, fontSize: 16, fontWeight: '700', color: '#2C1810', fontFamily: 'Inter-Bold' }}>
+        <Text style={{ flex: 1, fontSize: 16, fontWeight: '700', color: C.ink, fontFamily: 'Inter-Bold' }}>
           {t('recipe.title')}
         </Text>
-        <TouchableOpacity style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+        <TouchableOpacity style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}>
           <Icon name="Share2" size={16} color="#6D4C41" />
         </TouchableOpacity>
-        <TouchableOpacity style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+        <TouchableOpacity style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}>
           <Icon name="Bookmark" size={16} color="#6D4C41" />
         </TouchableOpacity>
       </View>
@@ -91,9 +93,9 @@ export default function RecipeV1() {
 
         {/* Video / Hero */}
         <View style={{ margin: 16, borderRadius: 16, overflow: 'hidden', position: 'relative' }}>
-          <View style={{ height: 200, backgroundColor: '#F5F0EB', alignItems: 'center', justifyContent: 'center' }}>
+          <View style={{ height: 200, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="ChefHat" size={50} color="#E5E0D8" />
-            <Text style={{ color: '#8C8278', fontSize: 11, marginTop: 8, fontStyle: 'italic' }}>vidéo recette · 7:45</Text>
+            <Text style={{ color: C.inkMute, fontSize: 11, marginTop: 8, fontStyle: 'italic' }}>vidéo recette · 7:45</Text>
           </View>
           {/* Play button */}
           <TouchableOpacity style={{ position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center' }}>
@@ -113,33 +115,33 @@ export default function RecipeV1() {
 
         {/* Title + Meta */}
         <View style={{ paddingHorizontal: 16, marginBottom: 4 }}>
-          <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 26, color: '#2C1810', lineHeight: 30 }}>
+          <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 26, color: C.ink, lineHeight: 30 }}>
             Ndolé traditionnel
           </Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8, flexWrap: 'wrap' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <Icon name="Clock" size={13} color="#8C8278" />
-              <Text style={{ color: '#8C8278', fontSize: 12 }}>1h 30min</Text>
+              <Text style={{ color: C.inkMute, fontSize: 12 }}>1h 30min</Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <Icon name="BarChart2" size={13} color="#8C8278" />
-              <Text style={{ color: '#8C8278', fontSize: 12 }}>{t('recipe.medium')}</Text>
+              <Text style={{ color: C.inkMute, fontSize: 12 }}>{t('recipe.medium')}</Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
               {[1,2,3,4,5].map(s => (
-                <Text key={s} style={{ color: '#F9A825', fontSize: 12 }}>★</Text>
+                <Icon key={s} name="Star" size={12} color="#F9A825" fill="#F9A825" />
               ))}
-              <Text style={{ color: '#8C8278', fontSize: 12, marginLeft: 4 }}>(312)</Text>
+              <Text style={{ color: C.inkMute, fontSize: 12, marginLeft: 4 }}>(312)</Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <Icon name="MapPin" size={13} color="#8C8278" />
-              <Text style={{ color: '#8C8278', fontSize: 12 }}>Littoral</Text>
+              <Text style={{ color: C.inkMute, fontSize: 12 }}>Littoral</Text>
             </View>
           </View>
         </View>
 
         {/* Tabs */}
-        <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', marginTop: 12 }}>
+        <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: C.border, backgroundColor: C.surface, marginTop: 12 }}>
           {TAB_KEYS.map((key) => (
             <TouchableOpacity
               key={key}
@@ -159,19 +161,19 @@ export default function RecipeV1() {
           {activeTab === 'ingredients' && (
             <>
               {/* Portions stepper */}
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingBottom: 16, borderBottomWidth: 1, borderColor: '#F5F0EB' }}>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#2C1810', fontFamily: 'Inter-SemiBold' }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingBottom: 16, borderBottomWidth: 1, borderColor: C.border }}>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink, fontFamily: 'Inter-SemiBold' }}>
                   {t('recipe.servings')}
                 </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 24, overflow: 'hidden' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: C.border, borderRadius: 24, overflow: 'hidden' }}>
                   <TouchableOpacity
                     onPress={() => setPortions(Math.max(1, portions - 1))}
                     style={{ width: 38, height: 38, alignItems: 'center', justifyContent: 'center' }}
                   >
                     <Text style={{ color: '#E8591A', fontWeight: '700', fontSize: 20 }}>−</Text>
                   </TouchableOpacity>
-                  <View style={{ width: 44, height: 38, borderLeftWidth: 1, borderRightWidth: 1, borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ color: '#2C1810', fontWeight: '700', fontSize: 15 }}>{portions}</Text>
+                  <View style={{ width: 44, height: 38, borderLeftWidth: 1, borderRightWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ color: C.ink, fontWeight: '700', fontSize: 15 }}>{portions}</Text>
                   </View>
                   <TouchableOpacity
                     onPress={() => setPortions(portions + 1)}
@@ -190,10 +192,10 @@ export default function RecipeV1() {
                     <TouchableOpacity
                       key={i}
                       onPress={() => toggleCheck(i)}
-                      style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderColor: '#F5F0EB' }}
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderColor: C.border }}
                       activeOpacity={0.7}
                     >
-                      <View style={{ width: 24, height: 24, borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: isChecked ? '#2E7D32' : 'transparent', borderWidth: isChecked ? 0 : 1.5, borderColor: '#E5E0D8', flexShrink: 0 }}>
+                      <View style={{ width: 24, height: 24, borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: isChecked ? '#2E7D32' : 'transparent', borderWidth: isChecked ? 0 : 1.5, borderColor: C.border, flexShrink: 0 }}>
                         {isChecked && <Icon name="Check" size={14} color="#fff" strokeWidth={2.5} />}
                       </View>
                       <Text style={{ width: 48, fontSize: 13, fontWeight: '700', color: '#E8591A' }}>{item.qty}</Text>
@@ -201,7 +203,7 @@ export default function RecipeV1() {
                         <Text style={{ fontSize: 14, color: isChecked ? '#8C8278' : '#2C1810', textDecorationLine: isChecked ? 'line-through' : 'none' }}>
                           {item.name}
                         </Text>
-                        <Text style={{ fontSize: 11, color: '#8C8278', fontStyle: 'italic' }}>{item.en}</Text>
+                        <Text style={{ fontSize: 11, color: C.inkMute, fontStyle: 'italic' }}>{item.en}</Text>
                       </View>
                     </TouchableOpacity>
                   );
@@ -220,12 +222,12 @@ export default function RecipeV1() {
                     <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>{step.n}</Text>
                   </View>
                   {/* Content */}
-                  <View style={{ flex: 1, paddingBottom: 16, borderBottomWidth: step.n < STEPS.length ? 1 : 0, borderColor: '#F5F0EB' }}>
+                  <View style={{ flex: 1, paddingBottom: 16, borderBottomWidth: step.n < STEPS.length ? 1 : 0, borderColor: C.border }}>
                     {/* Step image slot */}
-                    <View style={{ height: 120, backgroundColor: '#F5F0EB', borderRadius: 12, marginBottom: 10, alignItems: 'center', justifyContent: 'center' }}>
+                    <View style={{ height: 120, backgroundColor: C.surface2, borderRadius: 12, marginBottom: 10, alignItems: 'center', justifyContent: 'center' }}>
                       <Icon name="ChefHat" size={30} color="#E5E0D8" />
                     </View>
-                    <Text style={{ fontSize: 14, color: '#2C1810', lineHeight: 22 }}>{step.text}</Text>
+                    <Text style={{ fontSize: 14, color: C.ink, lineHeight: 22 }}>{step.text}</Text>
                     {step.timer && (
                       <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: '#FEF0E8', borderWidth: 1, borderColor: '#E8591A' }}>
                         <Icon name="Clock" size={14} color="#E8591A" />
@@ -244,28 +246,31 @@ export default function RecipeV1() {
               {/* Calorie circle */}
               <View style={{ alignItems: 'center', paddingVertical: 16 }}>
                 <View style={{ width: 110, height: 110, borderRadius: 55, borderWidth: 8, borderColor: '#E8591A', alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 26, color: '#2C1810' }}>420</Text>
-                  <Text style={{ fontSize: 11, color: '#8C8278' }}>kcal</Text>
+                  <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 26, color: C.ink }}>420</Text>
+                  <Text style={{ fontSize: 11, color: C.inkMute }}>kcal</Text>
                 </View>
-                <Text style={{ color: '#8C8278', fontSize: 12, marginTop: 8 }}>par portion · {t('recipe.servings')}: {portions}</Text>
+                <Text style={{ color: C.inkMute, fontSize: 12, marginTop: 8 }}>par portion · {t('recipe.servings')}: {portions}</Text>
               </View>
 
               {/* Macros */}
               {NUTRITION.slice(1).map((n) => (
                 <View key={n.label}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-                    <Text style={{ fontSize: 14, color: '#2C1810', fontWeight: '500' }}>{n.label}</Text>
-                    <Text style={{ fontSize: 14, color: '#2C1810', fontWeight: '700' }}>{n.value}{n.unit}</Text>
+                    <Text style={{ fontSize: 14, color: C.ink, fontWeight: '500' }}>{n.label}</Text>
+                    <Text style={{ fontSize: 14, color: C.ink, fontWeight: '700' }}>{n.value}{n.unit}</Text>
                   </View>
-                  <View style={{ height: 8, backgroundColor: '#F5F0EB', borderRadius: 4, overflow: 'hidden' }}>
+                  <View style={{ height: 8, backgroundColor: C.surface2, borderRadius: 4, overflow: 'hidden' }}>
                     <View style={{ height: 8, width: `${n.pct}%`, backgroundColor: n.color, borderRadius: 4 }} />
                   </View>
                 </View>
               ))}
 
               {/* Vitamins note */}
-              <View style={{ backgroundColor: '#E3F0E4', padding: 14, borderRadius: 14, marginTop: 4 }}>
-                <Text style={{ color: '#2E7D32', fontSize: 13, fontWeight: '600' }}>✓ Riche en vitamines A, C, K</Text>
+              <View style={{ backgroundColor: C.successSoft, padding: 14, borderRadius: 14, marginTop: 4 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Icon name="Check" size={14} color="#2E7D32" strokeWidth={2.5} />
+                  <Text style={{ color: '#2E7D32', fontSize: 13, fontWeight: '600' }}>Riche en vitamines A, C, K</Text>
+                </View>
                 <Text style={{ color: '#2E7D32', fontSize: 12, marginTop: 2 }}>Source de protéines complètes · Faible en glucides</Text>
               </View>
             </View>
@@ -275,21 +280,21 @@ export default function RecipeV1() {
           {activeTab === 'reviews' && (
             <View style={{ gap: 16 }}>
               {/* Summary */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, paddingBottom: 16, borderBottomWidth: 1, borderColor: '#F5F0EB' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, paddingBottom: 16, borderBottomWidth: 1, borderColor: C.border }}>
                 <View style={{ alignItems: 'center' }}>
-                  <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 42, color: '#2C1810' }}>4.8</Text>
-                  <View style={{ flexDirection: 'row' }}>
+                  <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 42, color: C.ink }}>4.8</Text>
+                  <View style={{ flexDirection: 'row', gap: 2 }}>
                     {[1,2,3,4,5].map(s => (
-                      <Text key={s} style={{ color: '#F9A825', fontSize: 14 }}>★</Text>
+                      <Icon key={s} name="Star" size={14} color="#F9A825" fill="#F9A825" />
                     ))}
                   </View>
-                  <Text style={{ color: '#8C8278', fontSize: 11 }}>312 avis</Text>
+                  <Text style={{ color: C.inkMute, fontSize: 11 }}>312 avis</Text>
                 </View>
                 <View style={{ flex: 1, gap: 5 }}>
                   {[5,4,3,2,1].map((s) => (
                     <View key={s} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Text style={{ color: '#8C8278', fontSize: 11, width: 8 }}>{s}</Text>
-                      <View style={{ flex: 1, height: 6, backgroundColor: '#F5F0EB', borderRadius: 3, overflow: 'hidden' }}>
+                      <Text style={{ color: C.inkMute, fontSize: 11, width: 8 }}>{s}</Text>
+                      <View style={{ flex: 1, height: 6, backgroundColor: C.surface2, borderRadius: 3, overflow: 'hidden' }}>
                         <View style={{ height: 6, width: `${s === 5 ? 75 : s === 4 ? 18 : s === 3 ? 5 : 2}%`, backgroundColor: '#F9A825', borderRadius: 3 }} />
                       </View>
                     </View>
@@ -299,16 +304,16 @@ export default function RecipeV1() {
 
               {/* Write review */}
               <View style={{ gap: 10 }}>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#2C1810' }}>Votre avis</Text>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink }}>Votre avis</Text>
                 <View style={{ flexDirection: 'row', gap: 4 }}>
                   {[1,2,3,4,5].map(s => (
                     <TouchableOpacity key={s} onPress={() => setMyRating(s)}>
-                      <Text style={{ fontSize: 24, color: s <= myRating ? '#F9A825' : '#E5E0D8' }}>★</Text>
+                      <Icon name="Star" size={28} color={s <= myRating ? '#F9A825' : '#E5E0D8'} fill={s <= myRating ? '#F9A825' : 'none'} />
                     </TouchableOpacity>
                   ))}
                 </View>
                 <TextInput
-                  style={{ height: 80, borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 12, padding: 12, fontSize: 13, color: '#2C1810', textAlignVertical: 'top' }}
+                  style={{ height: 80, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 12, fontSize: 13, color: C.ink, textAlignVertical: 'top' }}
                   placeholder="Partagez votre expérience..."
                   placeholderTextColor="#8C8278"
                   value={reviewText}
@@ -322,25 +327,25 @@ export default function RecipeV1() {
 
               {/* Reviews list */}
               {REVIEWS.map((r, i) => (
-                <View key={i} style={{ gap: 10, paddingTop: 14, borderTopWidth: 1, borderColor: '#F5F0EB' }}>
+                <View key={i} style={{ gap: 10, paddingTop: 14, borderTopWidth: 1, borderColor: C.border }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                     <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center' }}>
                       <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>{r.avatar}</Text>
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 13, fontWeight: '700', color: '#2C1810' }}>{r.author}</Text>
+                      <Text style={{ fontSize: 13, fontWeight: '700', color: C.ink }}>{r.author}</Text>
                       <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
                         {[1,2,3,4,5].map(s => (
-                          <Text key={s} style={{ color: s <= r.rating ? '#F9A825' : '#E5E0D8', fontSize: 11 }}>★</Text>
+                          <Icon key={s} name="Star" size={11} color={s <= r.rating ? '#F9A825' : '#E5E0D8'} fill={s <= r.rating ? '#F9A825' : 'none'} />
                         ))}
-                        <Text style={{ color: '#8C8278', fontSize: 11 }}> · {r.date}</Text>
+                        <Text style={{ color: C.inkMute, fontSize: 11 }}> · {r.date}</Text>
                       </View>
                     </View>
                     <TouchableOpacity>
                       <Icon name="ThumbsUp" size={16} color="#8C8278" />
                     </TouchableOpacity>
                   </View>
-                  <Text style={{ fontSize: 13, color: '#6D4C41', lineHeight: 20 }}>{r.text}</Text>
+                  <Text style={{ fontSize: 13, color: C.inkSoft, lineHeight: 20 }}>{r.text}</Text>
                 </View>
               ))}
             </View>
@@ -350,7 +355,7 @@ export default function RecipeV1() {
       </ScrollView>
 
       {/* Bottom CTA */}
-      <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, paddingBottom: 24, backgroundColor: '#FFFAF5', borderTopWidth: 1, borderColor: '#E5E0D8' }}>
+      <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, paddingBottom: 24, backgroundColor: C.cream, borderTopWidth: 1, borderColor: C.border }}>
         <TouchableOpacity
           style={{ height: 52, backgroundColor: '#E8591A', borderRadius: 26, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 }}
           activeOpacity={0.85}

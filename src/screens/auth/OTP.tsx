@@ -1,21 +1,24 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/types';
 import { useAuthStore } from '@/store/auth.store';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'OTP'>;
 
 const DEMO_DIGITS = ['2', '4', '8', '', '', ''];
 
 export default function OTP({ navigation, route }: Props) {
+    const C = useColors();
   const { t } = useTranslation();
   const [digits] = useState(DEMO_DIGITS);
   const [seconds, setSeconds] = useState(59);
   const setUser = useAuthStore((s) => s.setUser);
   const email = route.params?.email ?? 'am***@gmail.com';
+  const isBusiness = route.params?.isBusiness ?? false;
 
   useEffect(() => {
     if (seconds <= 0) return;
@@ -24,7 +27,7 @@ export default function OTP({ navigation, route }: Props) {
   }, [seconds]);
 
   function handleVerify() {
-    setUser({ id: '1', email, firstName: 'Amah', lastName: 'Ndzié', username: 'amah.n', role: 'standard', xpPoints: 1250, level: 2 });
+    setUser({ id: '1', email, firstName: 'Amah', lastName: 'Ndzié', username: 'amah.n', role: isBusiness ? 'pro' : 'standard', xpPoints: 1250, level: 2 });
   }
 
   const maskedEmail = email.includes('@')
@@ -32,15 +35,15 @@ export default function OTP({ navigation, route }: Props) {
     : 'am***@gmail.com';
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
 
       {/* Back button */}
       <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
         <TouchableOpacity
-          style={{ width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}
+          style={{ width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}
           onPress={() => navigation.goBack()}
         >
-          <Text style={{ color: '#6D4C41', fontSize: 20, lineHeight: 24 }}>‹</Text>
+          <Text style={{ color: C.inkSoft, fontSize: 20, lineHeight: 24 }}>‹</Text>
         </TouchableOpacity>
       </View>
 
@@ -50,33 +53,33 @@ export default function OTP({ navigation, route }: Props) {
         <View style={{ width: 120, height: 120, position: 'relative' }}>
           <View style={{
             width: 120, height: 120, borderRadius: 16,
-            borderWidth: 2, borderColor: '#E5E0D8',
-            backgroundColor: '#F5F0EB',
+            borderWidth: 2, borderColor: C.border,
+            backgroundColor: C.surface2,
             alignItems: 'center', justifyContent: 'center',
           }}>
-            <Text style={{ fontSize: 48, color: '#6D4C41' }}>✉</Text>
+            <Icon name="Mail" size={48} color="#6D4C41" />
           </View>
           {/* Check badge */}
           <View style={{
             position: 'absolute', bottom: -8, right: -8,
             width: 36, height: 36, borderRadius: 18,
-            backgroundColor: '#2E7D32',
+            backgroundColor: C.success,
             alignItems: 'center', justifyContent: 'center',
-            borderWidth: 2, borderColor: '#FFFAF5',
+            borderWidth: 2, borderColor: C.cream,
           }}>
-            <Text style={{ color: '#fff', fontSize: 18, lineHeight: 22, fontWeight: '700' }}>✓</Text>
+            <Icon name="Check" size={18} color="#fff" strokeWidth={2.5} />
           </View>
         </View>
 
         {/* Title */}
-        <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontWeight: '700', fontSize: 24, color: '#2C1810', marginTop: 24, textAlign: 'center' }}>
+        <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontWeight: '700', fontSize: 24, color: C.ink, marginTop: 24, textAlign: 'center' }}>
           {t('auth.verifyEmail')}
         </Text>
 
         {/* Description */}
-        <Text style={{ fontSize: 13, color: '#6D4C41', marginTop: 14, textAlign: 'center', lineHeight: 22 }}>
+        <Text style={{ fontSize: 13, color: C.inkSoft, marginTop: 14, textAlign: 'center', lineHeight: 22 }}>
           {t('auth.codeSentTo')}{' '}
-          <Text style={{ fontWeight: '600', color: '#2C1810' }}>{maskedEmail}</Text>
+          <Text style={{ fontWeight: '600', color: C.ink }}>{maskedEmail}</Text>
         </Text>
 
         {/* OTP boxes */}
@@ -87,26 +90,26 @@ export default function OTP({ navigation, route }: Props) {
               style={{
                 width: 44, height: 56, borderRadius: 10,
                 borderWidth: 1.5,
-                borderColor: i === 3 ? '#E8591A' : '#E5E0D8',
-                backgroundColor: '#fff',
+                borderColor: i === 3 ? C.primary : C.border,
+                backgroundColor: C.surface,
                 alignItems: 'center', justifyContent: 'center',
-                shadowColor: i === 3 ? '#E8591A' : 'transparent',
+                shadowColor: i === 3 ? C.primary : "transparent",
                 shadowOffset: { width: 0, height: 0 },
                 shadowOpacity: i === 3 ? 0.2 : 0,
                 shadowRadius: 6,
                 elevation: i === 3 ? 2 : 0,
               }}
             >
-              <Text style={{ fontSize: 22, fontWeight: '600', color: '#2C1810' }}>{d}</Text>
+              <Text style={{ fontSize: 22, fontWeight: '600', color: C.ink }}>{d}</Text>
             </View>
           ))}
         </View>
 
         {/* Resend timer */}
-        <Text style={{ fontSize: 12, color: '#8C8278', marginTop: 22, textAlign: 'center' }}>
+        <Text style={{ fontSize: 12, color: C.inkMute, marginTop: 22, textAlign: 'center' }}>
           {seconds > 0
             ? t('auth.resendIn', { time: `0:${seconds.toString().padStart(2, '0')}` })
-            : <Text style={{ color: '#E8591A', fontWeight: '600' }}>{t('auth.resendCode')}</Text>
+            : <Text style={{ color: C.primary, fontWeight: "600" }}>{t("auth.resendCode")}</Text>
           }
         </Text>
 
@@ -115,7 +118,7 @@ export default function OTP({ navigation, route }: Props) {
       {/* Bottom actions */}
       <View style={{ position: 'absolute', bottom: 28, left: 24, right: 24 }}>
         <TouchableOpacity
-          style={{ height: 56, backgroundColor: '#E8591A', borderRadius: 28, alignItems: 'center', justifyContent: 'center' }}
+          style={{ height: 56, backgroundColor: C.primary, borderRadius: 28, alignItems: 'center', justifyContent: 'center' }}
           onPress={handleVerify}
           activeOpacity={0.85}
         >
@@ -124,7 +127,7 @@ export default function OTP({ navigation, route }: Props) {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity style={{ marginTop: 14, alignItems: 'center' }} onPress={() => navigation.goBack()}>
-          <Text style={{ color: '#8C8278', fontSize: 12 }}>
+          <Text style={{ color: C.inkMute, fontSize: 12 }}>
             {t('auth.changeEmail')}
           </Text>
         </TouchableOpacity>

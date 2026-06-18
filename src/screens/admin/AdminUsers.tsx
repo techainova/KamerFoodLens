@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const USERS = [
   { name: 'Sami Nguimfack', email: 'sami@kfl.cm',    role: 'Standard', status: 'active',    joined: '3 Jan' },
@@ -14,6 +15,7 @@ const FILTERS = ['Tous', 'Standard', 'Pro', 'Suspendus'];
 
 export default function AdminUsers() {
   const navigation = useNavigation<any>();
+  const C = useColors();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState(0);
 
@@ -28,7 +30,7 @@ export default function AdminUsers() {
   });
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
       <StatusBar barStyle="light-content" />
 
       {/* Header */}
@@ -40,13 +42,13 @@ export default function AdminUsers() {
       </View>
 
       {/* Search + filters */}
-      <View style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8', gap: 8 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', height: 40, backgroundColor: '#F5F0EB', borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 12, paddingHorizontal: 12, gap: 8 }}>
+      <View style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border, gap: 8 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', height: 40, backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingHorizontal: 12, gap: 8 }}>
           <Icon name="Search" size={15} color="#8C8278" />
           <TextInput
             value={search} onChangeText={setSearch}
             placeholder="Rechercher..." placeholderTextColor="#8C8278"
-            style={{ flex: 1, fontSize: 14, color: '#2C1810' }}
+            style={{ flex: 1, fontSize: 14, color: C.ink }}
           />
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -64,19 +66,19 @@ export default function AdminUsers() {
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-        <View style={{ borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', overflow: 'hidden' }}>
+        <View style={{ borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, overflow: 'hidden' }}>
           {filtered.map((user, i) => (
             <TouchableOpacity
               key={i}
               onPress={() => navigation.navigate('AdminUserDetail', { userId: user.email })}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: i < filtered.length - 1 ? 1 : 0, borderColor: '#F5F0EB' }}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: i < filtered.length - 1 ? 1 : 0, borderColor: C.border }}
             >
-              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#F5F0EB', borderWidth: 1, borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ color: '#6D4C41', fontSize: 13, fontWeight: '600' }}>{user.name[0]}</Text>
+              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ color: C.inkSoft, fontSize: 13, fontWeight: '600' }}>{user.name[0]}</Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#2C1810' }}>{user.name}</Text>
-                <Text style={{ fontSize: 11, color: '#8C8278' }}>{user.email} · {user.joined}</Text>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink }}>{user.name}</Text>
+                <Text style={{ fontSize: 11, color: C.inkMute }}>{user.email} · {user.joined}</Text>
               </View>
               <View style={{ alignItems: 'flex-end', gap: 4 }}>
                 <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, backgroundColor: user.role === 'Pro' ? '#FBF3DC' : '#F5F0EB' }}>

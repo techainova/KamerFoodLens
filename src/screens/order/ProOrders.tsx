@@ -1,100 +1,220 @@
+// src/screens/order/ProOrders.tsx
+// Gestion des commandes Pro — v2.0
+
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
+import {
+  ScrollView,
+  StatusBar,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useColors } from '@/hooks/useAppTheme';
 import Icon from '@/components/ui/Icon';
+import { fontFamily, fontSize, radius, spacing } from '@/constants/theme';
 
-const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
+const SHADOW_SM = {
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.07,
+  shadowRadius: 4,
+  elevation: 2,
+};
 
-const TABS = ['Nouvelles', 'En préparation', 'Prêtes', 'Livrées'];
+type OrderStatus = 'Nouvelle' | 'En préparation' | 'Prête' | 'Livrée' | 'Annulée';
 
-const ORDERS = [
-  { id: '#KFL-4825', client: 'Sami N.',   items: 'Ndolé x2, Miondo, Jus x2',    total: 13000, time: '14:38', status: 'new',       elapsed: '2 min'  },
-  { id: '#KFL-4822', client: 'Adèle B.',  items: 'Poulet DG x1, Eau',             total: 6500,  time: '14:21', status: 'preparing', elapsed: '17 min' },
-  { id: '#KFL-4818', client: 'Chef Joël', items: 'Eru Fufu x2, Bissap x1',        total: 9800,  time: '13:55', status: 'ready',     elapsed: '43 min' },
+interface Order {
+  id: string;
+  ref: string;
+  client: string;
+  initials: string;
+  avatarColor: string;
+  time: string;
+  items: string;
+  total: number;
+  status: OrderStatus;
+}
+
+const ORDERS: Order[] = [
+  { id: 'KFL-4825', ref: '#KFL-4825', client: 'Sami N.',  initials: 'SN', avatarColor: '#E8591A', time: '14:38', items: 'Ndolé + Jus',          total: 13000, status: 'Nouvelle' },
+  { id: 'KFL-4822', ref: '#KFL-4822', client: 'Adèle B.', initials: 'AB', avatarColor: '#1565C0', time: '14:21', items: 'Poulet DG',            total: 6500,  status: 'En préparation' },
+  { id: 'KFL-4819', ref: '#KFL-4819', client: 'Marc T.',  initials: 'MT', avatarColor: '#2E7D32', time: '13:45', items: 'Eru + Plantain',       total: 8200,  status: 'Prête' },
+  { id: 'KFL-4815', ref: '#KFL-4815', client: 'Fatou K.', initials: 'FK', avatarColor: '#6D4C41', time: '13:10', items: 'Tombola menu',         total: 4500,  status: 'Livrée' },
+  { id: 'KFL-4810', ref: '#KFL-4810', client: 'Jean P.',  initials: 'JP', avatarColor: '#1A237E', time: '12:30', items: 'Koki + Ndolé',         total: 11000, status: 'Livrée' },
+  { id: 'KFL-4805', ref: '#KFL-4805', client: 'Rose N.',  initials: 'RN', avatarColor: '#C62828', time: '11:15', items: 'Beignets haricots',    total: 3500,  status: 'Annulée' },
 ];
 
-const STATUS_CONF: Record<string, { label: string; color: string; bg: string; next: string; nextColor: string }> = {
-  new:       { label: 'Nouvelle',       color: '#E8591A', bg: '#FEF3EC', next: 'Accepter',      nextColor: '#2E7D32' },
-  preparing: { label: 'En préparation', color: '#F9A825', bg: '#FBF3DC', next: 'Marquer prête',  nextColor: '#E8591A' },
-  ready:     { label: 'Prête',          color: '#2E7D32', bg: '#E3F0E4', next: 'Livraison',      nextColor: '#1A237E' },
-};
+type FilterTab = 'Toutes' | OrderStatus;
+
+const FILTER_TABS: FilterTab[] = ['Toutes', 'Nouvelle', 'En préparation', 'Prête', 'Livrée', 'Annulée'];
+
+function statusBadgeColors(status: OrderStatus, C: ReturnType<typeof useColors>): { bg: string; text: string } {
+  switch (status) {
+    case 'Nouvelle':       return { bg: C.goldSoft,    text: C.primary };
+    case 'En préparation': return { bg: C.navySoft,    text: C.navy };
+    case 'Prête':          return { bg: C.successSoft, text: C.success };
+    case 'Livrée':         return { bg: C.surface2,    text: C.inkMute };
+    case 'Annulée':        return { bg: C.errorSoft,   text: C.error };
+    default:                return { bg: C.surface2,    text: C.inkMute };
+  }
+}
+
+function newOrderCount(orders: Order[]): number {
+  return orders.filter((o) => o.status === 'Nouvelle').length;
+}
 
 export default function ProOrders() {
   const navigation = useNavigation<any>();
-  const [activeTab, setActiveTab] = useState(0);
+  const C = useColors();
+  const [activeFilter, setActiveFilter] = useState<FilterTab>('Toutes');
+
+  const filtered = activeFilter === 'Toutes' ? ORDERS : ORDERS.filter((o) => o.status === activeFilter);
+  const dayTotal = ORDERS.reduce((sum, o) => sum + o.total, 0);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }} edges={['top']}>
+      <StatusBar barStyle={C.statusBar} />
 
       {/* AppBar */}
-      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
-          <Icon name="ArrowLeft" size={22} color="#2C1810" />
+      <View
+        style={{
+          flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+          paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
+          backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border,
+          ...SHADOW_SM,
+        }}
+      >
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: spacing.xs }} accessibilityLabel="Retour">
+          <Icon name="ArrowLeft" size={22} color={C.ink} />
         </TouchableOpacity>
-        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: '#2C1810' }}>Commandes</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FEF3EC', borderWidth: 1, borderColor: 'rgba(232,89,26,0.3)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 }}>
-          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#E8591A' }} />
-          <Text style={{ fontSize: 11, fontWeight: '600', color: '#E8591A' }}>3 nouvelles</Text>
-        </View>
+
+        <Text style={{ fontFamily: fontFamily.bold, fontSize: fontSize.lg, color: C.ink }}>
+          Commandes
+        </Text>
+
+        <TouchableOpacity style={{ padding: spacing.xs }} accessibilityLabel="Filtrer les commandes">
+          <Icon name="SlidersHorizontal" size={20} color={C.ink} />
+        </TouchableOpacity>
       </View>
 
-      {/* Tabs */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, borderBottomWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}>
-        <View style={{ flexDirection: 'row' }}>
-          {TABS.map((tab, i) => (
-            <TouchableOpacity key={i} onPress={() => setActiveTab(i)}
-              style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 2, borderColor: i === activeTab ? '#E8591A' : 'transparent' }}>
-              <Text style={{ fontSize: 14, fontWeight: i === activeTab ? '600' : '500', color: i === activeTab ? '#E8591A' : '#8C8278' }}>{tab}</Text>
+      {/* Filter chips */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border }}
+        contentContainerStyle={{ paddingHorizontal: spacing.md, paddingVertical: spacing.sm, gap: spacing.sm }}
+      >
+        {FILTER_TABS.map((tab) => {
+          const isActive = activeFilter === tab;
+          const badgeCount = tab === 'Nouvelle' ? newOrderCount(ORDERS) : 0;
+          return (
+            <TouchableOpacity
+              key={tab}
+              onPress={() => setActiveFilter(tab)}
+              style={{
+                flexDirection: 'row', alignItems: 'center', gap: 5,
+                paddingHorizontal: spacing.md, paddingVertical: spacing.xs + 2,
+                borderRadius: radius.full,
+                backgroundColor: isActive ? C.primary : C.surface2,
+                borderWidth: 1, borderColor: isActive ? C.primary : C.border,
+              }}
+              accessibilityLabel={`Filtre ${tab}`}
+            >
+              <Text style={{ fontFamily: isActive ? fontFamily.bold : fontFamily.medium, fontSize: fontSize.sm, color: isActive ? C.surface : C.inkSoft }}>
+                {tab}
+              </Text>
+              {badgeCount > 0 && (
+                <View
+                  style={{
+                    backgroundColor: isActive ? C.surface : C.primary,
+                    borderRadius: radius.full, minWidth: 18, height: 18,
+                    alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4,
+                  }}
+                >
+                  <Text style={{ fontFamily: fontFamily.bold, fontSize: 10, color: isActive ? C.primary : C.surface }}>
+                    {badgeCount}
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
-          ))}
-        </View>
+          );
+        })}
       </ScrollView>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-
-        {/* Stats */}
-        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
-          {[
-            { v: '3',  l: 'Nouvelles',  color: '#E8591A' },
-            { v: '1',  l: 'En prépa.',  color: '#F9A825' },
-            { v: '47', l: 'Auj. total', color: '#2E7D32' },
-          ].map((s, i) => (
-            <View key={i} style={{ flex: 1, padding: 12, borderRadius: 14, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', alignItems: 'center', ...SHADOW_SM }}>
-              <Text style={{ fontSize: 18, fontWeight: '700', color: s.color }}>{s.v}</Text>
-              <Text style={{ fontSize: 11, color: '#8C8278', marginTop: 2 }}>{s.l}</Text>
-            </View>
-          ))}
-        </View>
-
-        <View style={{ gap: 12 }}>
-          {ORDERS.map((order, i) => {
-            const s = STATUS_CONF[order.status];
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={{ paddingTop: spacing.sm }}>
+          {filtered.map((order) => {
+            const badge = statusBadgeColors(order.status, C);
             return (
-              <View key={i} style={{ padding: 16, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', ...SHADOW_SM }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810' }}>{order.id}</Text>
-                  <View style={{ height: 24, paddingHorizontal: 10, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: s.bg }}>
-                    <Text style={{ fontSize: 11, fontWeight: '600', color: s.color }}>{s.label}</Text>
+              <TouchableOpacity
+                key={order.id}
+                onPress={() => navigation.navigate('ProOrderDetail', { orderId: order.id })}
+                style={{
+                  flexDirection: 'row', alignItems: 'center',
+                  marginHorizontal: spacing.md, marginBottom: spacing.sm,
+                  backgroundColor: C.surface, borderRadius: radius.md,
+                  borderWidth: 1, borderColor: order.status === 'Nouvelle' ? C.primary : C.border,
+                  padding: spacing.md, gap: spacing.sm,
+                  ...SHADOW_SM,
+                }}
+                accessibilityLabel={`Commande ${order.ref}`}
+              >
+                <View style={{ width: 44, height: 44, borderRadius: radius.full, backgroundColor: order.avatarColor, alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Text style={{ fontFamily: fontFamily.bold, fontSize: fontSize.sm, color: C.surface }}>
+                    {order.initials}
+                  </Text>
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
+                    <Text style={{ fontFamily: fontFamily.bold, fontSize: fontSize.sm, color: C.ink }}>
+                      {order.client}
+                    </Text>
+                    <View style={{ backgroundColor: badge.bg, borderRadius: radius.full, paddingHorizontal: spacing.sm, paddingVertical: 2 }}>
+                      <Text style={{ fontFamily: fontFamily.bold, fontSize: fontSize.xs, color: badge.text }}>
+                        {order.status}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={{ fontFamily: fontFamily.mono, fontSize: fontSize.xs, color: C.inkMute, marginBottom: 2 }}>
+                    {order.ref}
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Text style={{ fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: C.inkSoft }}>
+                      {order.items} · {order.time}
+                    </Text>
+                    <Text style={{ fontFamily: fontFamily.bold, fontSize: fontSize.sm, color: C.ink }}>
+                      {order.total.toLocaleString('fr-FR')} XAF
+                    </Text>
                   </View>
                 </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                  <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#F5F0EB', borderWidth: 1, borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ fontSize: 11, color: '#6D4C41' }}>{order.client[0]}</Text>
-                  </View>
-                  <Text style={{ fontSize: 14, color: '#2C1810' }}>{order.client}</Text>
-                  <Text style={{ flex: 1, textAlign: 'right', fontSize: 12, color: '#8C8278' }}>{order.time} · {order.elapsed}</Text>
-                </View>
-                <Text style={{ fontSize: 12, color: '#8C8278', marginBottom: 10 }}>{order.items}</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810' }}>{order.total.toLocaleString()} XAF</Text>
-                  <TouchableOpacity style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, borderWidth: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: s.nextColor + '15', borderColor: s.nextColor }}>
-                    <Text style={{ fontSize: 12, fontWeight: '600', color: s.nextColor }}>{s.next}</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
+
+                <Icon name="ChevronRight" size={18} color={C.inkMute} />
+              </TouchableOpacity>
             );
           })}
+        </View>
+
+        {/* Résumé du jour */}
+        <View
+          style={{
+            marginHorizontal: spacing.md, marginTop: spacing.sm, marginBottom: spacing.xxl,
+            backgroundColor: C.surface, borderRadius: radius.md, borderWidth: 1, borderColor: C.border,
+            padding: spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.md,
+            ...SHADOW_SM,
+          }}
+        >
+          <Text style={{ fontFamily: fontFamily.bold, fontSize: fontSize.sm, color: C.ink }}>
+            Total du jour :
+          </Text>
+          <Text style={{ fontFamily: fontFamily.serifBold, fontSize: fontSize.md, color: C.primary }}>
+            {dayTotal.toLocaleString('fr-FR')} XAF
+          </Text>
+          <Text style={{ fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: C.inkMute }}>
+            · {ORDERS.length} commandes
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>

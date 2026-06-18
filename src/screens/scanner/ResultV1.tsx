@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StatusBar,
   SafeAreaView, Animated,
@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ScannerStackParams } from '@/navigation/types';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 type ResultNav = NativeStackNavigationProp<ScannerStackParams, 'Result'>;
 
@@ -35,6 +36,7 @@ function ConfidenceBadge({ value }: { value: number }) {
 
 export default function ResultV1() {
   const navigation = useNavigation<ResultNav>();
+    const C = useColors();
   const { t } = useTranslation();
   const [savedToJournal, setSavedToJournal] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
@@ -100,7 +102,7 @@ export default function ResultV1() {
         scrollEnabled
       >
         <View style={{ marginTop: 390 }}>
-          <View style={{ backgroundColor: '#FFFAF5', borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 12, paddingHorizontal: 20 }}>
+          <View style={{ backgroundColor: C.cream, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 12, paddingHorizontal: 20 }}>
             {/* Handle */}
             <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: '#E5E0D8', alignSelf: 'center', marginBottom: 20 }} />
 
@@ -110,14 +112,14 @@ export default function ResultV1() {
             {/* Story section */}
             <View style={{ marginTop: 18 }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                <Text style={{ fontSize: 15, fontWeight: '700', color: '#2C1810', fontFamily: 'Inter-Bold' }}>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: C.ink, fontFamily: 'Inter-Bold' }}>
                   {t('scanner.storyTitle')}
                 </Text>
-                <TouchableOpacity style={{ width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+                <TouchableOpacity style={{ width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}>
                   <Icon name="Volume2" size={16} color="#6D4C41" />
                 </TouchableOpacity>
               </View>
-              <Text style={{ fontSize: 13, color: '#6D4C41', lineHeight: 21 }}>
+              <Text style={{ fontSize: 13, color: C.inkSoft, lineHeight: 21 }}>
                 {DISH.story}
               </Text>
             </View>
@@ -148,29 +150,29 @@ export default function ResultV1() {
 
             {/* Secondary action */}
             <TouchableOpacity
-              style={{ marginTop: 10, height: 46, borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 23, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#fff' }}
+              style={{ marginTop: 10, height: 46, borderWidth: 1, borderColor: C.border, borderRadius: 23, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.surface }}
               onPress={() => setSavedToJournal(true)}
               activeOpacity={0.8}
             >
               <Icon name="Bookmark" size={16} color={savedToJournal ? '#2E7D32' : '#6D4C41'} fill={savedToJournal ? '#2E7D32' : 'none'} />
               <Text style={{ color: savedToJournal ? '#2E7D32' : '#6D4C41', fontSize: 13, fontWeight: '600' }}>
-                {savedToJournal ? '✓ Ajouté au journal' : t('scanner.addToJournal')}
+                {savedToJournal ? t('scanner.addedToJournal', 'Ajouté au journal') : t('scanner.addToJournal')}
               </Text>
             </TouchableOpacity>
 
             {/* Similar dishes */}
             <View style={{ marginTop: 20 }}>
-              <Text style={{ fontSize: 13, fontWeight: '700', color: '#2C1810', marginBottom: 10 }}>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: C.ink, marginBottom: 10 }}>
                 {t('scanner.similar')}
               </Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
                 {SIMILAR.map((s) => (
                   <TouchableOpacity
                     key={s}
-                    style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                    style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, flexDirection: 'row', alignItems: 'center', gap: 6 }}
                   >
-                    <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#F5F0EB' }} />
-                    <Text style={{ fontSize: 13, color: '#6D4C41', fontWeight: '500' }}>{s}</Text>
+                    <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: C.surface2 }} />
+                    <Text style={{ fontSize: 13, color: C.inkSoft, fontWeight: '500' }}>{s}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>

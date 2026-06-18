@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const CATEGORIES = ['Tout', 'Entrées', 'Plats', 'Desserts', 'Boissons'];
 const ITEMS = [
@@ -14,6 +15,7 @@ const ITEMS = [
 
 export default function OrderMenu() {
   const navigation = useNavigation<any>();
+  const C = useColors();
   const [activeCat, setActiveCat] = useState(0);
   const [cart, setCart] = useState<Record<string, number>>({});
   const [search, setSearch] = useState('');
@@ -29,30 +31,30 @@ export default function OrderMenu() {
   const filtered = ITEMS.filter(item => !search || item.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
+      <StatusBar barStyle={C.statusBar} />
 
       {/* AppBar */}
-      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
           <Icon name="ArrowLeft" size={22} color="#2C1810" />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
-          <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 18, color: '#2C1810', lineHeight: 22 }}>Chez Mama Pauline</Text>
-          <Text style={{ fontSize: 12, color: '#8C8278' }}>Commander</Text>
+          <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 18, color: C.ink, lineHeight: 22 }}>Chez Mama Pauline</Text>
+          <Text style={{ fontSize: 12, color: C.inkMute }}>Commander</Text>
         </View>
       </View>
 
       {/* Search */}
-      <View style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', height: 40, backgroundColor: '#F5F0EB', borderRadius: 12, paddingHorizontal: 12, gap: 8 }}>
+      <View style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', height: 40, backgroundColor: C.surface2, borderRadius: 12, paddingHorizontal: 12, gap: 8 }}>
           <Icon name="Search" size={14} color="#8C8278" />
-          <TextInput value={search} onChangeText={setSearch} placeholder="Rechercher un plat..." placeholderTextColor="#8C8278" style={{ flex: 1, fontSize: 14, color: '#2C1810' }} />
+          <TextInput value={search} onChangeText={setSearch} placeholder="Rechercher un plat..." placeholderTextColor="#8C8278" style={{ flex: 1, fontSize: 14, color: C.ink }} />
         </View>
       </View>
 
       {/* Categories */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, borderBottomWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, borderBottomWidth: 1, borderColor: C.border, backgroundColor: C.surface }}>
         <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: 16, paddingVertical: 8 }}>
           {CATEGORIES.map((cat, i) => (
             <TouchableOpacity key={i} onPress={() => setActiveCat(i)}
@@ -65,9 +67,9 @@ export default function OrderMenu() {
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
         {filtered.map((item, i) => (
-          <View key={i} style={{ flexDirection: 'row', gap: 12, paddingVertical: 14, borderBottomWidth: i < filtered.length - 1 ? 1 : 0, borderColor: '#F5F0EB' }}>
+          <View key={i} style={{ flexDirection: 'row', gap: 12, paddingVertical: 14, borderBottomWidth: i < filtered.length - 1 ? 1 : 0, borderColor: C.border }}>
             {/* Dish placeholder */}
-            <View style={{ width: 64, height: 64, borderRadius: 12, backgroundColor: '#F5F0EB', borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <View style={{ width: 64, height: 64, borderRadius: 12, backgroundColor: C.surface2, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <Icon name="ChefHat" size={24} color="rgba(140,130,120,0.35)" />
               {item.popular && (
                 <View style={{ position: 'absolute', top: -4, right: -4, width: 16, height: 16, borderRadius: 8, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center' }}>
@@ -76,19 +78,19 @@ export default function OrderMenu() {
               )}
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 14, fontWeight: '600', color: '#2C1810' }}>{item.name}</Text>
-              <Text style={{ fontSize: 12, color: '#8C8278', marginTop: 2 }}>{item.desc}</Text>
-              <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810', marginTop: 4 }}>{item.price.toLocaleString()} XAF</Text>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink }}>{item.name}</Text>
+              <Text style={{ fontSize: 12, color: C.inkMute, marginTop: 2 }}>{item.desc}</Text>
+              <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink, marginTop: 4 }}>{item.price.toLocaleString()} XAF</Text>
             </View>
             {/* Cart controls */}
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'center' }}>
               {cart[item.name] ? (
                 <>
                   <TouchableOpacity onPress={() => removeFromCart(item.name)}
-                    style={{ width: 28, height: 28, borderRadius: 14, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+                    style={{ width: 28, height: 28, borderRadius: 14, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}>
                     <Icon name="Minus" size={14} color="#E8591A" />
                   </TouchableOpacity>
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810', minWidth: 18, textAlign: 'center' }}>{cart[item.name]}</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink, minWidth: 18, textAlign: 'center' }}>{cart[item.name]}</Text>
                 </>
               ) : null}
               <TouchableOpacity onPress={() => addToCart(item.name)}
@@ -102,9 +104,9 @@ export default function OrderMenu() {
 
       {/* Cart CTA */}
       {cartCount > 0 && (
-        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#E5E0D8' }}>
+        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 16, paddingVertical: 14, backgroundColor: C.surface, borderTopWidth: 1, borderColor: C.border }}>
           <TouchableOpacity style={{ height: 48, backgroundColor: '#E8591A', borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 }} activeOpacity={0.85}>
-            <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}>
               <Text style={{ color: '#E8591A', fontSize: 11, fontWeight: '700' }}>{cartCount}</Text>
             </View>
             <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>Voir le panier</Text>

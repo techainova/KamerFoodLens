@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
 
@@ -19,25 +20,26 @@ const CONSUMED  = MEALS.reduce((s, m) => s + m.cal, 0);
 
 export default function FoodJournal() {
   const navigation = useNavigation<any>();
+  const C = useColors();
   const [activeDay, setActiveDay] = useState(TODAY);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
+      <StatusBar barStyle={C.statusBar} />
 
       {/* AppBar */}
-      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
           <Icon name="ArrowLeft" size={22} color="#2C1810" />
         </TouchableOpacity>
-        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: '#2C1810' }}>Journal alimentaire</Text>
-        <TouchableOpacity style={{ width: 36, height: 36, borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 18, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>Journal alimentaire</Text>
+        <TouchableOpacity style={{ width: 36, height: 36, borderWidth: 1, borderColor: C.border, borderRadius: 18, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}>
           <Icon name="BarChart2" size={16} color="#6D4C41" />
         </TouchableOpacity>
       </View>
 
       {/* Week selector */}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: 16, paddingVertical: 10, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
         {DAYS.map((day, i) => (
           <TouchableOpacity key={i} onPress={() => setActiveDay(i)}
             style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: i === activeDay ? '#E8591A' : 'transparent' }}>
@@ -49,10 +51,10 @@ export default function FoodJournal() {
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 90 }} showsVerticalScrollIndicator={false}>
 
         {/* Calories summary */}
-        <View style={{ padding: 16, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', marginBottom: 16, ...SHADOW_SM }}>
+        <View style={{ padding: 16, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, marginBottom: 16, ...SHADOW_SM }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <Text style={{ fontSize: 11, fontWeight: '600', color: '#8C8278', textTransform: 'uppercase', letterSpacing: 1 }}>Calories</Text>
-            <Text style={{ fontSize: 12, color: '#8C8278' }}>{CONSUMED} / {GOAL_KCAL} kcal</Text>
+            <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, textTransform: 'uppercase', letterSpacing: 1 }}>Calories</Text>
+            <Text style={{ fontSize: 12, color: C.inkMute }}>{CONSUMED} / {GOAL_KCAL} kcal</Text>
           </View>
           <View style={{ height: 10, backgroundColor: '#E5E0D8', borderRadius: 5, overflow: 'hidden', marginBottom: 10 }}>
             <View style={{ height: '100%', borderRadius: 5, backgroundColor: '#E8591A', width: `${Math.min(100, (CONSUMED / GOAL_KCAL) * 100)}%` }} />
@@ -65,7 +67,7 @@ export default function FoodJournal() {
             ].map((s, i) => (
               <View key={i} style={{ alignItems: 'center' }}>
                 <Text style={{ fontSize: 16, fontWeight: '700', color: s.color }}>{s.v}</Text>
-                <Text style={{ fontSize: 12, color: '#8C8278' }}>{s.l}</Text>
+                <Text style={{ fontSize: 12, color: C.inkMute }}>{s.l}</Text>
               </View>
             ))}
           </View>
@@ -78,9 +80,9 @@ export default function FoodJournal() {
             { v: '145g', l: 'Glucides',  color: '#E8591A', pct: 58 },
             { v: '32g',  l: 'Lipides',   color: '#F9A825', pct: 40 },
           ].map((m, i) => (
-            <View key={i} style={{ flex: 1, padding: 12, borderRadius: 14, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', alignItems: 'center' }}>
+            <View key={i} style={{ flex: 1, padding: 12, borderRadius: 14, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center' }}>
               <Text style={{ fontSize: 14, fontWeight: '700', color: m.color }}>{m.v}</Text>
-              <Text style={{ fontSize: 11, color: '#8C8278', marginBottom: 6 }}>{m.l}</Text>
+              <Text style={{ fontSize: 11, color: C.inkMute, marginBottom: 6 }}>{m.l}</Text>
               <View style={{ width: '100%', height: 4, backgroundColor: '#E5E0D8', borderRadius: 2, overflow: 'hidden' }}>
                 <View style={{ height: '100%', borderRadius: 2, width: `${m.pct}%`, backgroundColor: m.color }} />
               </View>
@@ -89,16 +91,16 @@ export default function FoodJournal() {
         </View>
 
         {/* Meals */}
-        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', marginBottom: 12 }}>Repas du jour</Text>
+        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 12 }}>Repas du jour</Text>
         <View style={{ gap: 12 }}>
           {MEALS.map((meal, i) => (
-            <View key={i} style={{ flexDirection: 'row', gap: 12, alignItems: 'center', padding: 14, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', ...SHADOW_SM }}>
+            <View key={i} style={{ flexDirection: 'row', gap: 12, alignItems: 'center', padding: 14, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
               <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: '#FEF3EC', borderWidth: 1, borderColor: 'rgba(232,89,26,0.2)', alignItems: 'center', justifyContent: 'center' }}>
                 <Icon name="ChefHat" size={20} color="#E8591A" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#2C1810' }}>{meal.dish}</Text>
-                <Text style={{ fontSize: 12, color: '#8C8278', marginTop: 1 }}>{meal.time}</Text>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink }}>{meal.dish}</Text>
+                <Text style={{ fontSize: 12, color: C.inkMute, marginTop: 1 }}>{meal.time}</Text>
                 {meal.note ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
                     <Icon name="FileText" size={11} color="#E8591A" />
@@ -106,7 +108,7 @@ export default function FoodJournal() {
                   </View>
                 ) : null}
               </View>
-              <Text style={{ fontSize: 13, fontWeight: '700', color: '#6D4C41' }}>{meal.cal} kcal</Text>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: C.inkSoft }}>{meal.cal} kcal</Text>
             </View>
           ))}
         </View>

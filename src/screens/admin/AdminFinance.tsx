@@ -1,7 +1,8 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
 
@@ -19,9 +20,10 @@ const SUMMARY = [
 
 export default function AdminFinance() {
   const navigation = useNavigation<any>();
+  const C = useColors();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
       <StatusBar barStyle="light-content" />
 
       {/* Header */}
@@ -37,28 +39,28 @@ export default function AdminFinance() {
         {/* Summary cards */}
         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
           {SUMMARY.map((s, i) => (
-            <View key={i} style={{ flex: 1, padding: 12, borderRadius: 16, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', alignItems: 'center', ...SHADOW_SM }}>
+            <View key={i} style={{ flex: 1, padding: 12, borderRadius: 16, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', ...SHADOW_SM }}>
               <View style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: s.color + '15', alignItems: 'center', justifyContent: 'center', marginBottom: 6 }}>
                 <Icon name={s.icon} size={13} color={s.color} />
               </View>
               <Text style={{ fontSize: 14, fontWeight: '700', color: s.color }}>{s.v}</Text>
-              <Text style={{ fontSize: 10, color: '#8C8278', textAlign: 'center', marginTop: 2 }}>{s.l}</Text>
+              <Text style={{ fontSize: 10, color: C.inkMute, textAlign: 'center', marginTop: 2 }}>{s.l}</Text>
             </View>
           ))}
         </View>
 
         {/* Transactions */}
-        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', marginBottom: 12 }}>Transactions récentes</Text>
-        <View style={{ borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', overflow: 'hidden', ...SHADOW_SM }}>
+        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 12 }}>Transactions récentes</Text>
+        <View style={{ borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, overflow: 'hidden', ...SHADOW_SM }}>
           {TRANSACTIONS.map((tx, i) => (
-            <View key={i} style={{ paddingHorizontal: 16, paddingVertical: 13, borderBottomWidth: i < TRANSACTIONS.length - 1 ? 1 : 0, borderColor: '#F5F0EB' }}>
+            <View key={i} style={{ paddingHorizontal: 16, paddingVertical: 13, borderBottomWidth: i < TRANSACTIONS.length - 1 ? 1 : 0, borderColor: C.border }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#2C1810' }}>{tx.id} · {tx.user}</Text>
-                  <Text style={{ fontSize: 12, color: '#8C8278', marginTop: 2 }}>{tx.type} · {tx.date}</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink }}>{tx.id} · {tx.user}</Text>
+                  <Text style={{ fontSize: 12, color: C.inkMute, marginTop: 2 }}>{tx.type} · {tx.date}</Text>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810' }}>{tx.amount.toLocaleString()} XAF</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink }}>{tx.amount.toLocaleString()} XAF</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 }}>
                     <Icon name="TrendingUp" size={10} color="#F9A825" />
                     <Text style={{ fontSize: 11, color: '#F9A825' }}>+{tx.commission.toLocaleString()} comm.</Text>
@@ -70,9 +72,9 @@ export default function AdminFinance() {
         </View>
 
         {/* Export */}
-        <TouchableOpacity style={{ marginTop: 16, height: 44, borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 22, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}>
+        <TouchableOpacity style={{ marginTop: 16, height: 44, borderWidth: 1, borderColor: C.border, borderRadius: 22, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}>
           <Icon name="FileText" size={15} color="#6D4C41" />
-          <Text style={{ fontSize: 14, color: '#6D4C41' }}>Exporter rapport</Text>
+          <Text style={{ fontSize: 14, color: C.inkSoft }}>Exporter rapport</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

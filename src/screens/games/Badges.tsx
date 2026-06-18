@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon, { type IconName } from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
 
@@ -33,6 +34,7 @@ const BADGES: { id: string; name: string; desc: string; icon: IconName; color: s
 
 export default function Badges() {
   const navigation = useNavigation<any>();
+  const C = useColors();
   const [activeCategory, setActiveCategory] = useState('Tous');
   const [selectedBadge, setSelectedBadge] = useState<(typeof BADGES)[0] | null>(null);
 
@@ -40,33 +42,33 @@ export default function Badges() {
   const unlocked = BADGES.filter(b => b.unlocked).length;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
+      <StatusBar barStyle={C.statusBar} />
 
       {/* AppBar */}
-      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
           <Icon name="ArrowLeft" size={22} color="#2C1810" />
         </TouchableOpacity>
-        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: '#2C1810' }}>Badges</Text>
+        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>Badges</Text>
         <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, backgroundColor: '#E8591A15' }}>
           <Text style={{ fontSize: 12, fontWeight: '700', color: '#E8591A' }}>{unlocked}/{BADGES.length}</Text>
         </View>
       </View>
 
       {/* Progress banner */}
-      <View style={{ paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#F5F0EB' }}>
+      <View style={{ paddingHorizontal: 16, paddingVertical: 12, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-          <Text style={{ fontSize: 13, color: '#6D4C41' }}>{unlocked} badges débloqués sur {BADGES.length}</Text>
+          <Text style={{ fontSize: 13, color: C.inkSoft }}>{unlocked} badges débloqués sur {BADGES.length}</Text>
           <Text style={{ fontSize: 13, fontWeight: '700', color: '#E8591A' }}>{Math.round((unlocked / BADGES.length) * 100)}%</Text>
         </View>
-        <View style={{ height: 6, backgroundColor: '#F5F0EB', borderRadius: 3, overflow: 'hidden' }}>
+        <View style={{ height: 6, backgroundColor: C.surface2, borderRadius: 3, overflow: 'hidden' }}>
           <View style={{ height: '100%', width: `${(unlocked / BADGES.length) * 100}%`, backgroundColor: '#E8591A', borderRadius: 3 }} />
         </View>
       </View>
 
       {/* Category chips */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }} style={{ backgroundColor: '#fff', maxHeight: 52, borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }} style={{ backgroundColor: C.surface, maxHeight: 52, borderBottomWidth: 1, borderColor: C.border }}>
         {CATEGORIES.map(cat => (
           <TouchableOpacity
             key={cat}
@@ -114,7 +116,7 @@ export default function Badges() {
       <Modal visible={!!selectedBadge} transparent animationType="fade" onRequestClose={() => setSelectedBadge(null)}>
         <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' }} activeOpacity={1} onPress={() => setSelectedBadge(null)}>
           {selectedBadge && (
-            <TouchableOpacity activeOpacity={1} style={{ width: '80%', backgroundColor: '#fff', borderRadius: 24, padding: 28, alignItems: 'center', ...SHADOW_SM }}>
+            <TouchableOpacity activeOpacity={1} style={{ width: '80%', backgroundColor: C.surface, borderRadius: 24, padding: 28, alignItems: 'center', ...SHADOW_SM }}>
               <View style={{ width: 88, height: 88, borderRadius: 44, backgroundColor: selectedBadge.unlocked ? selectedBadge.color + '15' : '#F5F0EB', borderWidth: 3, borderColor: selectedBadge.unlocked ? selectedBadge.color + '50' : '#E5E0D8', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
                 <Icon name={selectedBadge.icon} size={36} color={selectedBadge.unlocked ? selectedBadge.color : '#C4BDB7'} />
               </View>
@@ -123,8 +125,8 @@ export default function Badges() {
                   {selectedBadge.unlocked ? 'Débloqué' : 'Non débloqué'} · {selectedBadge.category}
                 </Text>
               </View>
-              <Text style={{ fontSize: 18, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', marginBottom: 8, textAlign: 'center' }}>{selectedBadge.name}</Text>
-              <Text style={{ fontSize: 13, color: '#6D4C41', textAlign: 'center', lineHeight: 20, marginBottom: 16 }}>{selectedBadge.desc}</Text>
+              <Text style={{ fontSize: 18, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 8, textAlign: 'center' }}>{selectedBadge.name}</Text>
+              <Text style={{ fontSize: 13, color: C.inkSoft, textAlign: 'center', lineHeight: 20, marginBottom: 16 }}>{selectedBadge.desc}</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Icon name="Zap" size={14} color="#F9A825" fill="#F9A825" />
                 <Text style={{ fontSize: 14, fontWeight: '700', color: '#F9A825' }}>+{selectedBadge.xp} XP</Text>

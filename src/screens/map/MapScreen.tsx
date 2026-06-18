@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TextInput, TouchableOpacity,
   SafeAreaView, StatusBar, Dimensions,
@@ -6,6 +6,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 
@@ -51,6 +52,7 @@ const FILTERS = [
 export default function MapScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
+  const C = useColors();
   const [activeFilter, setActiveFilter] = useState(0);
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [search, setSearch] = useState('');
@@ -68,16 +70,16 @@ export default function MapScreen() {
   // ── LIST VIEW ──────────────────────────────────────────────────────────────
   if (viewMode === 'list') {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
-        <StatusBar barStyle="dark-content" />
-        <View style={{ paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
+        <StatusBar barStyle={C.statusBar} />
+        <View style={{ paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderColor: C.border, backgroundColor: C.surface, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <TouchableOpacity
             onPress={() => setViewMode('map')}
-            style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center' }}
+            style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}
           >
             <Icon name="ArrowLeft" size={17} color="#6D4C41" />
           </TouchableOpacity>
-          <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 18, color: '#2C1810' }}>
+          <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 18, color: C.ink }}>
             {t('map.nearby', 'À proximité')}
           </Text>
           <TouchableOpacity
@@ -88,15 +90,15 @@ export default function MapScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8', gap: 10 }}>
-          <View style={{ height: 44, borderRadius: 12, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#F5F0EB', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, gap: 8 }}>
+        <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border, gap: 10 }}>
+          <View style={{ height: 44, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface2, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, gap: 8 }}>
             <Icon name="Search" size={16} color="#8C8278" />
             <TextInput
               value={search}
               onChangeText={setSearch}
               placeholder={t('map.searchPlaceholder', 'Restaurant, plat...')}
               placeholderTextColor="#8C8278"
-              style={{ flex: 1, fontSize: 14, color: '#2C1810' }}
+              style={{ flex: 1, fontSize: 14, color: C.ink }}
             />
             {search.length > 0 && (
               <TouchableOpacity onPress={() => setSearch('')}>
@@ -118,8 +120,8 @@ export default function MapScreen() {
         </View>
 
         <View style={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 4 }}>
-          <Text style={{ fontSize: 13, color: '#8C8278' }}>
-            <Text style={{ fontWeight: '700', color: '#2C1810' }}>{filtered.length}</Text>{' '}
+          <Text style={{ fontSize: 13, color: C.inkMute }}>
+            <Text style={{ fontWeight: '700', color: C.ink }}>{filtered.length}</Text>{' '}
             {t('map.results', 'résultats')} · Douala
           </Text>
         </View>
@@ -129,20 +131,23 @@ export default function MapScreen() {
             <TouchableOpacity
               key={r.id}
               onPress={() => navigation.navigate('Restaurant')}
-              style={{ backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#E5E0D8', flexDirection: 'row', overflow: 'hidden', ...SHADOW_SM }}
+              style={{ backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, flexDirection: 'row', overflow: 'hidden', ...SHADOW_SM }}
               activeOpacity={0.85}
             >
-              <View style={{ width: 100, backgroundColor: '#F5F0EB', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+              <View style={{ width: 100, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                 {r.kflVerified && (
                   <View style={{ position: 'absolute', top: 6, left: 6, backgroundColor: '#E8591A', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
-                    <Text style={{ color: '#fff', fontSize: 9, fontWeight: '700', fontFamily: 'JetBrainsMono-Regular' }}>KFL ✓</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                      <Text style={{ color: '#fff', fontSize: 9, fontWeight: '700', fontFamily: 'JetBrainsMono-Regular' }}>KFL</Text>
+                      <Icon name="Check" size={8} color="#fff" strokeWidth={3} />
+                    </View>
                   </View>
                 )}
                 <Icon name="ChefHat" size={32} color="rgba(140,130,120,0.4)" />
               </View>
               <View style={{ flex: 1, padding: 14 }}>
-                <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810', marginBottom: 2, fontFamily: 'Inter-Bold' }}>{r.name}</Text>
-                <Text style={{ fontSize: 12, color: '#8C8278', marginBottom: 8 }}>{r.type}</Text>
+                <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 2, fontFamily: 'Inter-Bold' }}>{r.name}</Text>
+                <Text style={{ fontSize: 12, color: C.inkMute, marginBottom: 8 }}>{r.type}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 6 }}>
                   <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: r.open ? '#2E7D32' : '#C62828' }} />
                   <Text style={{ fontSize: 11, color: r.open ? '#2E7D32' : '#C62828', fontWeight: '600' }}>
@@ -152,11 +157,14 @@ export default function MapScreen() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
                     <Icon name="MapPin" size={11} color="#8C8278" />
-                    <Text style={{ fontSize: 11, color: '#8C8278' }}>{r.dist}</Text>
+                    <Text style={{ fontSize: 11, color: C.inkMute }}>{r.dist}</Text>
                   </View>
-                  <Text style={{ fontSize: 11, color: '#F9A825', fontWeight: '700' }}>★ {r.rating}</Text>
-                  <Text style={{ fontSize: 11, color: '#8C8278' }}>({r.reviews})</Text>
-                  <Text style={{ fontSize: 11, color: '#6D4C41' }}>{r.price}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+                    <Icon name="Star" size={10} color="#F9A825" fill="#F9A825" />
+                    <Text style={{ fontSize: 11, color: '#F9A825', fontWeight: '700' }}>{r.rating}</Text>
+                  </View>
+                  <Text style={{ fontSize: 11, color: C.inkMute }}>({r.reviews})</Text>
+                  <Text style={{ fontSize: 11, color: C.inkSoft }}>{r.price}</Text>
                 </View>
               </View>
               <View style={{ paddingRight: 14, alignItems: 'center', justifyContent: 'center' }}>
@@ -171,8 +179,8 @@ export default function MapScreen() {
 
   // ── MAP VIEW ───────────────────────────────────────────────────────────────
   return (
-    <View style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
-      <StatusBar barStyle="dark-content" />
+    <View style={{ flex: 1, backgroundColor: C.cream }}>
+      <StatusBar barStyle={C.statusBar} />
 
       {/* Map canvas */}
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: MAP_H, backgroundColor: '#DDE3F0', overflow: 'hidden' }}>
@@ -202,13 +210,14 @@ export default function MapScreen() {
           >
             <View style={{
               backgroundColor: r.kflVerified ? '#E8591A' : '#fff',
-              borderWidth: r.kflVerified ? 0 : 1.5, borderColor: '#E5E0D8',
+              borderWidth: r.kflVerified ? 0 : 1.5, borderColor: C.border,
               paddingHorizontal: 10, paddingVertical: 5, borderRadius: 14,
               flexDirection: 'row', alignItems: 'center', gap: 4,
               ...SHADOW_MD,
             }}>
+              <Icon name="Star" size={10} color={r.kflVerified ? '#fff' : '#F9A825'} fill={r.kflVerified ? '#fff' : '#F9A825'} />
               <Text style={{ fontSize: 12, fontWeight: '700', color: r.kflVerified ? '#fff' : '#2C1810', fontFamily: 'Inter-Bold' }}>
-                ★ {r.rating}
+                {r.rating}
               </Text>
             </View>
             <View style={{ width: 8, height: 8, backgroundColor: r.kflVerified ? '#E8591A' : '#8C8278', borderRadius: 4, alignSelf: 'center', marginTop: -3 }} />
@@ -223,14 +232,14 @@ export default function MapScreen() {
       {/* Search overlay */}
       <SafeAreaView style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
         <View style={{ paddingHorizontal: 16, paddingTop: 10, gap: 8 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 16, paddingHorizontal: 14, gap: 10, ...SHADOW_MD, height: 52 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderRadius: 16, paddingHorizontal: 14, gap: 10, ...SHADOW_MD, height: 52 }}>
             <Icon name="MapPin" size={18} color="#E8591A" />
             <TextInput
               value={search}
               onChangeText={setSearch}
               placeholder={t('map.searchPlaceholder', 'Restaurant, plat...')}
               placeholderTextColor="#8C8278"
-              style={{ flex: 1, fontSize: 14, color: '#2C1810' }}
+              style={{ flex: 1, fontSize: 14, color: C.ink }}
             />
             {search.length > 0 && (
               <TouchableOpacity onPress={() => setSearch('')}>
@@ -239,7 +248,7 @@ export default function MapScreen() {
             )}
             <TouchableOpacity
               onPress={() => setViewMode('list')}
-              style={{ width: 34, height: 34, borderRadius: 9, backgroundColor: '#F5F0EB', alignItems: 'center', justifyContent: 'center' }}
+              style={{ width: 34, height: 34, borderRadius: 9, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center' }}
             >
               <Icon name="Grid" size={16} color="#6D4C41" />
             </TouchableOpacity>
@@ -262,7 +271,7 @@ export default function MapScreen() {
       {/* Bottom sheet */}
       <View style={{
         position: 'absolute', bottom: 0, left: 0, right: 0, top: MAP_H - 22,
-        backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+        backgroundColor: C.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24,
         ...SHADOW_LG,
       }}>
         <View style={{ alignItems: 'center', paddingTop: 10, paddingBottom: 2 }}>
@@ -271,19 +280,19 @@ export default function MapScreen() {
 
         <View style={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View>
-            <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 17, color: '#2C1810' }}>
+            <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 17, color: C.ink }}>
               {t('map.nearby', 'À proximité')}
             </Text>
-            <Text style={{ fontSize: 12, color: '#8C8278', marginTop: 1 }}>
+            <Text style={{ fontSize: 12, color: C.inkMute, marginTop: 1 }}>
               {filtered.length} {t('map.results', 'résultats')} · Douala
             </Text>
           </View>
           <TouchableOpacity
             onPress={() => setViewMode('list')}
-            style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: 14, borderWidth: 1, borderColor: '#E5E0D8', flexDirection: 'row', alignItems: 'center', gap: 6 }}
+            style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: 14, borderWidth: 1, borderColor: C.border, flexDirection: 'row', alignItems: 'center', gap: 6 }}
           >
             <Icon name="Grid" size={14} color="#6D4C41" />
-            <Text style={{ fontSize: 12, color: '#6D4C41', fontWeight: '600' }}>Liste</Text>
+            <Text style={{ fontSize: 12, color: C.inkSoft, fontWeight: '600' }}>Liste</Text>
           </TouchableOpacity>
         </View>
 
@@ -292,20 +301,23 @@ export default function MapScreen() {
             <TouchableOpacity
               key={r.id}
               onPress={() => navigation.navigate('Restaurant')}
-              style={{ width: 190, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#E5E0D8', overflow: 'hidden', ...SHADOW_SM }}
+              style={{ width: 190, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, overflow: 'hidden', ...SHADOW_SM }}
               activeOpacity={0.85}
             >
-              <View style={{ height: 94, backgroundColor: '#F5F0EB', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+              <View style={{ height: 94, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                 {r.kflVerified && (
                   <View style={{ position: 'absolute', top: 8, right: 8, backgroundColor: '#E8591A', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
-                    <Text style={{ color: '#fff', fontSize: 9, fontWeight: '700', fontFamily: 'JetBrainsMono-Regular' }}>KFL ✓</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                      <Text style={{ color: '#fff', fontSize: 9, fontWeight: '700', fontFamily: 'JetBrainsMono-Regular' }}>KFL</Text>
+                      <Icon name="Check" size={8} color="#fff" strokeWidth={3} />
+                    </View>
                   </View>
                 )}
                 <Icon name="ChefHat" size={34} color="rgba(140,130,120,0.35)" />
               </View>
               <View style={{ padding: 12 }}>
-                <Text style={{ fontSize: 13, fontWeight: '700', color: '#2C1810', marginBottom: 2, fontFamily: 'Inter-Bold' }} numberOfLines={1}>{r.name}</Text>
-                <Text style={{ fontSize: 11, color: '#8C8278', marginBottom: 6 }} numberOfLines={1}>{r.type}</Text>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: C.ink, marginBottom: 2, fontFamily: 'Inter-Bold' }} numberOfLines={1}>{r.name}</Text>
+                <Text style={{ fontSize: 11, color: C.inkMute, marginBottom: 6 }} numberOfLines={1}>{r.type}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
                     <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: r.open ? '#2E7D32' : '#C62828' }} />
@@ -313,8 +325,11 @@ export default function MapScreen() {
                       {r.open ? 'Ouvert' : 'Fermé'}
                     </Text>
                   </View>
-                  <Text style={{ fontSize: 10, color: '#8C8278' }}>· {r.dist}</Text>
-                  <Text style={{ fontSize: 10, color: '#F9A825', fontWeight: '700' }}>★ {r.rating}</Text>
+                  <Text style={{ fontSize: 10, color: C.inkMute }}>· {r.dist}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+                    <Icon name="Star" size={9} color="#F9A825" fill="#F9A825" />
+                    <Text style={{ fontSize: 10, color: '#F9A825', fontWeight: '700' }}>{r.rating}</Text>
+                  </View>
                 </View>
               </View>
             </TouchableOpacity>

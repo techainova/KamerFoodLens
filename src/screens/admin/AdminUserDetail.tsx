@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
 
@@ -15,12 +16,13 @@ const STATUS_OPTS: { key: UserStatus; label: string; color: string; bg: string }
 
 export default function AdminUserDetail() {
   const navigation = useNavigation<any>();
+  const C = useColors();
   const [status, setStatus] = useState<UserStatus>('active');
 
   const current = STATUS_OPTS.find(s => s.key === status)!;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
       <StatusBar barStyle="light-content" />
 
       {/* Header */}
@@ -34,17 +36,17 @@ export default function AdminUserDetail() {
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 110 }} showsVerticalScrollIndicator={false}>
 
         {/* User info card */}
-        <View style={{ padding: 16, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', marginBottom: 16, ...SHADOW_SM }}>
+        <View style={{ padding: 16, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, marginBottom: 16, ...SHADOW_SM }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 }}>
             <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: '#E8591A20', borderWidth: 2, borderColor: '#E8591A', alignItems: 'center', justifyContent: 'center' }}>
               <Text style={{ fontSize: 22, fontWeight: '700', color: '#E8591A', fontFamily: 'Inter-Bold' }}>S</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 15, fontWeight: '700', color: '#2C1810' }}>Sami Nguimfack</Text>
-              <Text style={{ fontSize: 12, color: '#8C8278', marginTop: 2 }}>@sami_nguimfack</Text>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: C.ink }}>Sami Nguimfack</Text>
+              <Text style={{ fontSize: 12, color: C.inkMute, marginTop: 2 }}>@sami_nguimfack</Text>
               <View style={{ flexDirection: 'row', gap: 6, marginTop: 4 }}>
-                <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, backgroundColor: '#F5F0EB' }}>
-                  <Text style={{ fontSize: 11, color: '#6D4C41' }}>Standard</Text>
+                <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, backgroundColor: C.surface2 }}>
+                  <Text style={{ fontSize: 11, color: C.inkSoft }}>Standard</Text>
                 </View>
                 <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, backgroundColor: current.bg }}>
                   <Text style={{ fontSize: 11, fontWeight: '600', color: current.color }}>{current.label}</Text>
@@ -60,9 +62,9 @@ export default function AdminUserDetail() {
             { l: 'Inscrit',          v: '3 Jan 2026' },
             { l: 'Dernière connexion',v: '15 Jun 2026 14:38' },
           ].map((row, i) => (
-            <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, borderBottomWidth: i < 4 ? 1 : 0, borderColor: '#F5F0EB' }}>
-              <Text style={{ fontSize: 13, color: '#8C8278' }}>{row.l}</Text>
-              <Text style={{ fontSize: 13, fontWeight: '500', color: '#2C1810' }}>{row.v}</Text>
+            <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, borderBottomWidth: i < 4 ? 1 : 0, borderColor: C.border }}>
+              <Text style={{ fontSize: 13, color: C.inkMute }}>{row.l}</Text>
+              <Text style={{ fontSize: 13, fontWeight: '500', color: C.ink }}>{row.v}</Text>
             </View>
           ))}
         </View>
@@ -70,16 +72,16 @@ export default function AdminUserDetail() {
         {/* Activity */}
         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
           {[{ v: '312', l: 'Scans' }, { v: '48', l: 'Posts' }, { v: '4 250', l: 'XP' }].map((s, i) => (
-            <View key={i} style={{ flex: 1, padding: 12, borderRadius: 14, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', alignItems: 'center', ...SHADOW_SM }}>
-              <Text style={{ fontSize: 15, fontWeight: '700', color: '#2C1810' }}>{s.v}</Text>
-              <Text style={{ fontSize: 11, color: '#8C8278', marginTop: 2 }}>{s.l}</Text>
+            <View key={i} style={{ flex: 1, padding: 12, borderRadius: 14, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', ...SHADOW_SM }}>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: C.ink }}>{s.v}</Text>
+              <Text style={{ fontSize: 11, color: C.inkMute, marginTop: 2 }}>{s.l}</Text>
             </View>
           ))}
         </View>
 
         {/* Status control */}
-        <View style={{ padding: 16, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', ...SHADOW_SM }}>
-          <Text style={{ fontSize: 11, fontWeight: '600', color: '#8C8278', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>Modifier le statut</Text>
+        <View style={{ padding: 16, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
+          <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>Modifier le statut</Text>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             {STATUS_OPTS.map(opt => (
               <TouchableOpacity
@@ -95,9 +97,9 @@ export default function AdminUserDetail() {
       </ScrollView>
 
       {/* Bottom actions */}
-      <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingVertical: 14, borderTopWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}>
-        <TouchableOpacity style={{ flex: 1, height: 44, borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontSize: 14, color: '#6D4C41' }}>Impersonifier</Text>
+      <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingVertical: 14, borderTopWidth: 1, borderColor: C.border, backgroundColor: C.surface }}>
+        <TouchableOpacity style={{ flex: 1, height: 44, borderWidth: 1, borderColor: C.border, borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontSize: 14, color: C.inkSoft }}>Impersonifier</Text>
         </TouchableOpacity>
         <TouchableOpacity style={{ flex: 1, height: 44, backgroundColor: '#1A237E', borderRadius: 22, alignItems: 'center', justifyContent: 'center' }} activeOpacity={0.85}>
           <Text style={{ fontSize: 14, fontWeight: '600', color: '#fff' }}>Enregistrer</Text>

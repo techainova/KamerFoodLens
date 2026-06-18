@@ -1,7 +1,8 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
 
@@ -31,9 +32,10 @@ const NAV_ITEMS = [
 
 export default function AdminDashboard() {
   const navigation = useNavigation<any>();
+  const C = useColors();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
       <StatusBar barStyle="light-content" />
 
       {/* Header */}
@@ -66,37 +68,37 @@ export default function AdminDashboard() {
         </View>
 
         {/* Metrics */}
-        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', marginBottom: 12 }}>Métriques clés</Text>
+        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 12 }}>Métriques clés</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
           {METRICS.map((m, i) => (
-            <View key={i} style={{ padding: 16, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', width: '47%', ...SHADOW_SM }}>
+            <View key={i} style={{ padding: 16, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, width: '47%', ...SHADOW_SM }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: m.color + '15', alignItems: 'center', justifyContent: 'center' }}>
                   <Icon name={m.icon} size={16} color={m.color} />
                 </View>
-                <View style={{ backgroundColor: '#E3F0E4', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 20 }}>
+                <View style={{ backgroundColor: C.successSoft, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 20 }}>
                   <Text style={{ color: '#2E7D32', fontSize: 11, fontWeight: '600' }}>{m.delta}</Text>
                 </View>
               </View>
               <Text style={{ fontSize: 20, fontWeight: '700', color: m.color }}>{m.v}</Text>
-              <Text style={{ color: '#8C8278', fontSize: 11, marginTop: 2 }}>{m.l}</Text>
+              <Text style={{ color: C.inkMute, fontSize: 11, marginTop: 2 }}>{m.l}</Text>
             </View>
           ))}
         </View>
 
         {/* Navigation */}
-        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', marginBottom: 12 }}>Navigation</Text>
-        <View style={{ borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', overflow: 'hidden', ...SHADOW_SM }}>
+        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 12 }}>Navigation</Text>
+        <View style={{ borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, overflow: 'hidden', ...SHADOW_SM }}>
           {NAV_ITEMS.map((item, i) => (
             <TouchableOpacity
               key={i}
               onPress={() => navigation.navigate(item.route)}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 13, borderBottomWidth: i < NAV_ITEMS.length - 1 ? 1 : 0, borderColor: '#F5F0EB' }}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 13, borderBottomWidth: i < NAV_ITEMS.length - 1 ? 1 : 0, borderColor: C.border }}
             >
-              <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: '#E8EAF6', alignItems: 'center', justifyContent: 'center' }}>
+              <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: C.navySoft, alignItems: 'center', justifyContent: 'center' }}>
                 <Icon name={item.icon} size={15} color="#1A237E" />
               </View>
-              <Text style={{ flex: 1, fontSize: 14, color: '#2C1810' }}>{item.l}</Text>
+              <Text style={{ flex: 1, fontSize: 14, color: C.ink }}>{item.l}</Text>
               <Icon name="ChevronRight" size={16} color="#8C8278" />
             </TouchableOpacity>
           ))}

@@ -1,7 +1,8 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const STEPS = [
   'Lavez les feuilles de ndolé.',
@@ -19,16 +20,17 @@ const INGREDIENTS = [
 
 export default function RecipeV2() {
   const navigation = useNavigation<any>();
+  const C = useColors();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
       <StatusBar barStyle="light-content" />
 
       {/* Sticky hero image */}
       <View style={{ height: 240, position: 'relative' }}>
-        <View style={{ flex: 1, backgroundColor: '#F5F0EB', alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ flex: 1, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center' }}>
           <Icon name="ChefHat" size={56} color="rgba(140,130,120,0.25)" />
-          <Text style={{ fontSize: 12, color: '#8C8278', fontStyle: 'italic', marginTop: 8 }}>Ndolé éditorial</Text>
+          <Text style={{ fontSize: 12, color: C.inkMute, fontStyle: 'italic', marginTop: 8 }}>Ndolé éditorial</Text>
         </View>
         <View style={{ position: 'absolute', top: 14, left: 16, right: 16, flexDirection: 'row', justifyContent: 'space-between' }}>
           <TouchableOpacity onPress={() => navigation.goBack()}
@@ -48,35 +50,35 @@ export default function RecipeV2() {
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: 80 }} showsVerticalScrollIndicator={false}>
         <Text style={{ fontSize: 11, color: '#E8591A', textTransform: 'uppercase', fontWeight: '700', letterSpacing: 1.2 }}>Recette du Littoral</Text>
-        <Text style={{ fontSize: 28, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', marginTop: 6, marginBottom: 14, lineHeight: 34 }}>Ndolé traditionnel</Text>
+        <Text style={{ fontSize: 28, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginTop: 6, marginBottom: 14, lineHeight: 34 }}>Ndolé traditionnel</Text>
 
         {/* Meta row */}
-        <View style={{ flexDirection: 'row', borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#E5E0D8', paddingVertical: 10, marginBottom: 20 }}>
+        <View style={{ flexDirection: 'row', borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.border, paddingVertical: 10, marginBottom: 20 }}>
           {[{ v: '1h30', l: 'Durée' }, { v: '4', l: 'Pers.' }, { v: '480', l: 'Kcal' }, { v: '4.6', l: '(312)' }].map((m, i) => (
-            <View key={i} style={{ flex: 1, alignItems: 'center', borderLeftWidth: i > 0 ? 1 : 0, borderColor: '#E5E0D8' }}>
-              <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810' }}>{m.v}</Text>
-              <Text style={{ fontSize: 11, color: '#8C8278' }}>{m.l}</Text>
+            <View key={i} style={{ flex: 1, alignItems: 'center', borderLeftWidth: i > 0 ? 1 : 0, borderColor: C.border }}>
+              <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink }}>{m.v}</Text>
+              <Text style={{ fontSize: 11, color: C.inkMute }}>{m.l}</Text>
             </View>
           ))}
         </View>
 
         {/* Ingredients */}
-        <Text style={{ fontSize: 20, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', marginBottom: 8 }}>Ingrédients <Text style={{ fontSize: 14, fontWeight: '400', fontStyle: 'italic', color: '#8C8278' }}>/ Ingredients</Text></Text>
+        <Text style={{ fontSize: 20, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 8 }}>Ingrédients <Text style={{ fontSize: 14, fontWeight: '400', fontStyle: 'italic', color: C.inkMute }}>/ Ingredients</Text></Text>
         <View style={{ marginBottom: 20, paddingLeft: 16 }}>
           {INGREDIENTS.map((item, i) => (
-            <Text key={i} style={{ fontSize: 14, color: '#6D4C41', marginBottom: 4, lineHeight: 22 }}>• {item}</Text>
+            <Text key={i} style={{ fontSize: 14, color: C.inkSoft, marginBottom: 4, lineHeight: 22 }}>• {item}</Text>
           ))}
         </View>
 
         {/* Steps */}
-        <Text style={{ fontSize: 20, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', marginBottom: 8 }}>Étapes <Text style={{ fontSize: 14, fontWeight: '400', fontStyle: 'italic', color: '#8C8278' }}>/ Steps</Text></Text>
+        <Text style={{ fontSize: 20, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 8 }}>Étapes <Text style={{ fontSize: 14, fontWeight: '400', fontStyle: 'italic', color: C.inkMute }}>/ Steps</Text></Text>
         <View style={{ gap: 10 }}>
           {STEPS.map((step, i) => (
             <View key={i} style={{ flexDirection: 'row', gap: 12 }}>
               <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: '#2E7D32', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
                 <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>{i + 1}</Text>
               </View>
-              <Text style={{ flex: 1, fontSize: 14, color: '#6D4C41', lineHeight: 21 }}>{step}</Text>
+              <Text style={{ flex: 1, fontSize: 14, color: C.inkSoft, lineHeight: 21 }}>{step}</Text>
             </View>
           ))}
         </View>

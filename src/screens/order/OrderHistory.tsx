@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
 
@@ -21,22 +22,23 @@ const STATUS: Record<string, { label: string; color: string; bg: string }> = {
 
 export default function OrderHistory() {
   const navigation = useNavigation<any>();
+  const C = useColors();
   const [activeTab, setActiveTab] = useState(0);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
+      <StatusBar barStyle={C.statusBar} />
 
       {/* AppBar */}
-      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
           <Icon name="ArrowLeft" size={22} color="#2C1810" />
         </TouchableOpacity>
-        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: '#2C1810' }}>Mes commandes</Text>
+        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>Mes commandes</Text>
       </View>
 
       {/* Tabs */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, borderBottomWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, borderBottomWidth: 1, borderColor: C.border, backgroundColor: C.surface }}>
         <View style={{ flexDirection: 'row' }}>
           {TABS.map((tab, i) => (
             <TouchableOpacity key={i} onPress={() => setActiveTab(i)}
@@ -51,27 +53,27 @@ export default function OrderHistory() {
         {ORDERS.map((order, i) => {
           const s = STATUS[order.status];
           return (
-            <TouchableOpacity key={i} style={{ padding: 16, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', ...SHADOW_SM }}>
+            <TouchableOpacity key={i} style={{ padding: 16, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
                 <View>
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810' }}>{order.restaurant}</Text>
-                  <Text style={{ fontSize: 11, color: '#8C8278', marginTop: 1 }}>{order.id} · {order.date}</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink }}>{order.restaurant}</Text>
+                  <Text style={{ fontSize: 11, color: C.inkMute, marginTop: 1 }}>{order.id} · {order.date}</Text>
                 </View>
                 <View style={{ height: 24, paddingHorizontal: 10, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: s.bg }}>
                   <Text style={{ fontSize: 11, fontWeight: '600', color: s.color }}>{s.label}</Text>
                 </View>
               </View>
-              <Text style={{ fontSize: 12, color: '#6D4C41', marginBottom: 10 }}>{order.items}</Text>
+              <Text style={{ fontSize: 12, color: C.inkSoft, marginBottom: 10 }}>{order.items}</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810' }}>{order.total.toLocaleString()} XAF</Text>
+                <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink }}>{order.total.toLocaleString()} XAF</Text>
                 <View style={{ flexDirection: 'row', gap: 6 }}>
                   {order.status === 'delivered' && (
                     <TouchableOpacity style={{ height: 30, paddingHorizontal: 12, backgroundColor: '#E8591A', borderRadius: 15, alignItems: 'center', justifyContent: 'center' }}>
                       <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>Recommander</Text>
                     </TouchableOpacity>
                   )}
-                  <TouchableOpacity style={{ height: 30, paddingHorizontal: 12, borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 15, alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ fontSize: 12, color: '#6D4C41' }}>Détails</Text>
+                  <TouchableOpacity style={{ height: 30, paddingHorizontal: 12, borderWidth: 1, borderColor: C.border, borderRadius: 15, alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ fontSize: 12, color: C.inkSoft }}>Détails</Text>
                   </TouchableOpacity>
                 </View>
               </View>

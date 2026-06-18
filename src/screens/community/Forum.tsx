@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, SafeAreaView,
   StatusBar, TextInput,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
 
@@ -56,7 +57,7 @@ const THREADS = [
   {
     id: '4',
     category: 'Restaurants',
-    catColor: '#8C8278',
+    catcolor: '#8C8278',
     title: 'Meilleurs restaurants de Poulet DG à Douala en 2024 ?',
     user: 'Ngo Beatrice',
     initials: 'NB',
@@ -85,6 +86,7 @@ const THREADS = [
 
 export default function Forum() {
   const navigation = useNavigation<any>();
+  const C = useColors();
   const [activeCategory, setActiveCategory] = useState('Tout');
   const [search, setSearch] = useState('');
 
@@ -95,36 +97,36 @@ export default function Forum() {
   });
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
+      <StatusBar barStyle={C.statusBar} />
 
       {/* AppBar */}
-      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
           <Icon name="ArrowLeft" size={22} color="#2C1810" />
         </TouchableOpacity>
-        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: '#2C1810' }}>Forum</Text>
-        <TouchableOpacity style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>Forum</Text>
+        <TouchableOpacity style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
           <Icon name="Bell" size={17} color="#6D4C41" />
         </TouchableOpacity>
       </View>
 
       {/* Search */}
-      <View style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F5F0EB', borderRadius: 12, paddingHorizontal: 12, height: 40 }}>
+      <View style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface2, borderRadius: 12, paddingHorizontal: 12, height: 40 }}>
           <Icon name="Search" size={15} color="#8C8278" />
           <TextInput
             value={search}
             onChangeText={setSearch}
             placeholder="Chercher un sujet..."
             placeholderTextColor="#8C8278"
-            style={{ flex: 1, marginLeft: 8, fontSize: 14, color: '#2C1810' }}
+            style={{ flex: 1, marginLeft: 8, fontSize: 14, color: C.ink }}
           />
         </View>
       </View>
 
       {/* Category chips */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }} style={{ backgroundColor: '#fff', maxHeight: 52, borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }} style={{ backgroundColor: C.surface, maxHeight: 52, borderBottomWidth: 1, borderColor: C.border }}>
         {CATEGORIES.map(cat => (
           <TouchableOpacity
             key={cat}
@@ -142,7 +144,7 @@ export default function Forum() {
             key={thread.id}
             onPress={() => navigation.navigate('ForumDetail', { thread })}
             activeOpacity={0.85}
-            style={{ backgroundColor: '#fff', borderRadius: 16, padding: 16, borderWidth: thread.pinned ? 1.5 : 1, borderColor: thread.pinned ? '#F9A825' + '60' : '#E5E0D8', ...SHADOW_SM }}
+            style={{ backgroundColor: C.surface, borderRadius: 16, padding: 16, borderWidth: thread.pinned ? 1.5 : 1, borderColor: thread.pinned ? '#F9A825' + '60' : '#E5E0D8', ...SHADOW_SM }}
           >
             {thread.pinned && (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 }}>
@@ -156,13 +158,13 @@ export default function Forum() {
                 <Text style={{ fontSize: 10, fontWeight: '700', color: thread.catColor }}>{thread.category}</Text>
               </View>
               {thread.hot && (
-                <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: '#FBDCDC' }}>
+                <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: C.errorSoft }}>
                   <Text style={{ fontSize: 10, fontWeight: '700', color: '#C62828' }}>HOT</Text>
                 </View>
               )}
             </View>
 
-            <Text style={{ fontSize: 15, fontWeight: '700', color: '#2C1810', lineHeight: 22, marginTop: 8, marginBottom: 10 }} numberOfLines={2}>
+            <Text style={{ fontSize: 15, fontWeight: '700', color: C.ink, lineHeight: 22, marginTop: 8, marginBottom: 10 }} numberOfLines={2}>
               {thread.title}
             </Text>
 
@@ -170,15 +172,15 @@ export default function Forum() {
               <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: thread.initColor + '20', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: thread.initColor + '40' }}>
                 <Text style={{ fontSize: 10, fontWeight: '700', color: thread.initColor }}>{thread.initials[0]}</Text>
               </View>
-              <Text style={{ flex: 1, fontSize: 12, color: '#6D4C41' }}>{thread.user} · {thread.time}</Text>
+              <Text style={{ flex: 1, fontSize: 12, color: C.inkSoft }}>{thread.user} · {thread.time}</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                   <Icon name="MessageCircle" size={13} color="#8C8278" />
-                  <Text style={{ fontSize: 12, color: '#8C8278' }}>{thread.replies}</Text>
+                  <Text style={{ fontSize: 12, color: C.inkMute }}>{thread.replies}</Text>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                   <Icon name="Eye" size={13} color="#8C8278" />
-                  <Text style={{ fontSize: 12, color: '#8C8278' }}>{thread.views}</Text>
+                  <Text style={{ fontSize: 12, color: C.inkMute }}>{thread.views}</Text>
                 </View>
               </View>
             </View>

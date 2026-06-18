@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 import type { IconName } from '@/components/ui/Icon';
 
 const CHAT = [
@@ -22,6 +23,7 @@ const REACTIONS: { icon: IconName; color: string }[] = [
 
 export default function Live() {
   const navigation = useNavigation<any>();
+  const C = useColors();
   const [msg, setMsg] = useState('');
 
   return (
@@ -35,7 +37,7 @@ export default function Live() {
             <Icon name="ArrowLeft" size={18} color="#fff" />
           </TouchableOpacity>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#C62828', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 }}>
-            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#fff' }} />
+            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: C.surface }} />
             <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700', letterSpacing: 1 }}>LIVE</Text>
           </View>
           <TouchableOpacity style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' }}>

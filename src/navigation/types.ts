@@ -7,7 +7,7 @@ export type AuthStackParams = {
   Login:           undefined;
   Signup:          undefined;
   SignupProAware:  undefined;
-  OTP:             { email: string };
+  OTP:             { email: string; isBusiness?: boolean };
 };
 
 export type AppTabParams = {
@@ -61,8 +61,18 @@ export type HomeStackParams = {
   UpgradePro:         undefined;
   ProDashboard:       undefined;
   AdminLogin:         undefined;
-  FoodJournal:        undefined;
-  SearchByIngredients: undefined;
+  FoodJournal:          undefined;
+  SearchByIngredients:  undefined;
+  SpeedChallenge:       undefined;
+  LeaderboardFull:      undefined;
+  WalletScreen:         undefined;
+  TransactionHistory:   undefined;
+  MobileMoneyConfirm:   { provider: string; amount: number; phone: string };
+  ChangePassword:       undefined;
+  PrivacySettings:      undefined;
+  LanguagePicker:       undefined;
+  ThemePicker:          undefined;
+  AboutKFL:             undefined;
 };
 
 export type HomeStackParamList = HomeStackParams;
@@ -145,6 +155,6 @@ export type RootStackParamList = {
   Login:           undefined;
   Signup:          undefined;
   SignupProAware:  undefined;
-  OTP:             { email: string };
+  OTP:             { email: string; isBusiness?: boolean };
   App:             undefined;
 };

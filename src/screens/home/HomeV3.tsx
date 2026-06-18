@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
@@ -7,6 +7,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { HomeStackParamList } from '@/navigation/types';
 import KFLLogo from '@/components/ui/KFLLogo';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const EXPLORE_ITEMS = [
   { titleKey: 'home.exploreItem1', descKey: 'home.exploreItem1Desc', kind: 'Recettes' },
@@ -21,13 +22,14 @@ const KIND_COLORS: Record<string, { bg: string; text: string }> = {
 };
 
 export default function HomeV3() {
+    const C = useColors();
   const { t } = useTranslation();
   const nav = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
       {/* Top bar */}
-      <View style={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+      <View style={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
         <KFLLogo size={30} />
         <View style={{ flexDirection: 'row', gap: 8 }}>
           {/* Layout switcher 6c → 6a */}
@@ -38,13 +40,13 @@ export default function HomeV3() {
             <Icon name="Grid" size={16} color="#E8591A" />
           </TouchableOpacity>
           <TouchableOpacity
-            style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}
+            style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}
             onPress={() => nav.navigate('Search')}
           >
             <Icon name="Search" size={17} color="#6D4C41" />
           </TouchableOpacity>
           <TouchableOpacity
-            style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}
+            style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}
             onPress={() => nav.navigate('Notifications')}
           >
             <Icon name="Bell" size={17} color="#6D4C41" />
@@ -57,21 +59,21 @@ export default function HomeV3() {
 
         {/* Editorial hero */}
         <View style={{ paddingHorizontal: 20, paddingTop: 18 }}>
-          <Text style={{ fontFamily: 'JetBrainsMono-Regular', fontSize: 10, color: '#8C8278', letterSpacing: 1.5, textTransform: 'uppercase' }}>
+          <Text style={{ fontFamily: 'JetBrainsMono-Regular', fontSize: 10, color: C.inkMute, letterSpacing: 1.5, textTransform: 'uppercase' }}>
             {t('home.dishOfTheDay')}
           </Text>
-          <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 32, color: '#2C1810', marginTop: 6, marginBottom: 14, lineHeight: 38 }}>
+          <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 32, color: C.ink, marginTop: 6, marginBottom: 14, lineHeight: 38 }}>
             Le Mbongo,{'\n'}trésor du Sud
           </Text>
 
           {/* Hero image slot */}
-          <View style={{ height: 268, backgroundColor: '#F5F0EB', borderRadius: 18, borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+          <View style={{ height: 268, backgroundColor: C.surface2, borderRadius: 18, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
             <Icon name="ChefHat" size={54} color="#E5E0D8" />
-            <Text style={{ fontFamily: 'JetBrainsMono-Regular', color: '#8C8278', fontSize: 11, marginTop: 10 }}>Mbongo Tchobi · plat héros</Text>
+            <Text style={{ fontFamily: 'JetBrainsMono-Regular', color: C.inkMute, fontSize: 11, marginTop: 10 }}>Mbongo Tchobi · plat héros</Text>
           </View>
 
           {/* Body */}
-          <Text style={{ fontSize: 13, color: '#6D4C41', lineHeight: 22, marginTop: 16 }}>
+          <Text style={{ fontSize: 13, color: C.inkSoft, lineHeight: 22, marginTop: 16 }}>
             {t('home.mbongoDesc')}
           </Text>
 
@@ -82,12 +84,12 @@ export default function HomeV3() {
                 <Text style={{ color: '#fff', fontSize: 10, fontWeight: '700' }}>JK</Text>
               </View>
               <View>
-                <Text style={{ fontSize: 11, fontWeight: '600', color: '#2C1810', fontFamily: 'Inter-SemiBold' }}>par Chef Joëlle K.</Text>
-                <Text style={{ fontSize: 11, color: '#8C8278' }}>· lecture 4 min</Text>
+                <Text style={{ fontSize: 11, fontWeight: '600', color: C.ink, fontFamily: 'Inter-SemiBold' }}>par Chef Joëlle K.</Text>
+                <Text style={{ fontSize: 11, color: C.inkMute }}>· lecture 4 min</Text>
               </View>
             </View>
             <View style={{ flexDirection: 'row', gap: 8 }}>
-              <TouchableOpacity style={{ width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' }}>
+              <TouchableOpacity style={{ width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', backgroundColor: C.surface }}>
                 <Icon name="Share2" size={16} color="#6D4C41" />
               </TouchableOpacity>
               <TouchableOpacity style={{ height: 36, paddingHorizontal: 16, borderRadius: 18, backgroundColor: '#2C1810', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
@@ -101,7 +103,7 @@ export default function HomeV3() {
         {/* Quick scan CTA */}
         <View style={{ paddingHorizontal: 20, paddingTop: 22 }}>
           <TouchableOpacity
-            style={{ borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#E8591A', borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: '#FBF3DC' }}
+            style={{ borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#E8591A', borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: C.goldSoft }}
             onPress={() => nav.navigate('Camera')}
             activeOpacity={0.85}
           >
@@ -110,7 +112,7 @@ export default function HomeV3() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontWeight: '700', color: '#E8591A', fontSize: 13, fontFamily: 'Inter-Bold' }}>{t('home.scanCTA')}</Text>
-              <Text style={{ color: '#6D4C41', fontSize: 11, marginTop: 2 }}>
+              <Text style={{ color: C.inkSoft, fontSize: 11, marginTop: 2 }}>
                 {t('scanner.photo')} · {t('scanner.audio')} · {t('scanner.text')}
               </Text>
             </View>
@@ -121,7 +123,7 @@ export default function HomeV3() {
         {/* À explorer */}
         <View style={{ paddingHorizontal: 20, marginTop: 22 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-            <Text style={{ color: '#2C1810', fontSize: 15, fontWeight: '700', fontFamily: 'Inter-Bold' }}>
+            <Text style={{ color: C.ink, fontSize: 15, fontWeight: '700', fontFamily: 'Inter-Bold' }}>
               {t('home.toExplore')}
             </Text>
             <TouchableOpacity>
@@ -134,20 +136,20 @@ export default function HomeV3() {
             return (
               <TouchableOpacity
                 key={i}
-                style={{ flexDirection: 'row', gap: 14, paddingVertical: 12, borderBottomWidth: i < 2 ? 1 : 0, borderColor: '#F5F0EB' }}
+                style={{ flexDirection: 'row', gap: 14, paddingVertical: 12, borderBottomWidth: i < 2 ? 1 : 0, borderColor: C.border }}
                 activeOpacity={0.75}
               >
-                <View style={{ width: 70, height: 70, backgroundColor: '#F5F0EB', borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center' }}>
+                <View style={{ width: 70, height: 70, backgroundColor: C.surface2, borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
                   <Icon name="ChefHat" size={28} color="#E5E0D8" />
                 </View>
                 <View style={{ flex: 1, justifyContent: 'center' }}>
                   <View style={{ alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: colors.bg, marginBottom: 6 }}>
                     <Text style={{ fontSize: 10, color: colors.text, fontWeight: '700', letterSpacing: 0.5 }}>{item.kind.toUpperCase()}</Text>
                   </View>
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#2C1810', fontFamily: 'Inter-SemiBold' }}>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink, fontFamily: 'Inter-SemiBold' }}>
                     {t(item.titleKey)}
                   </Text>
-                  <Text style={{ fontSize: 11, color: '#8C8278', marginTop: 2 }}>
+                  <Text style={{ fontSize: 11, color: C.inkMute, marginTop: 2 }}>
                     {t(item.descKey)}
                   </Text>
                 </View>

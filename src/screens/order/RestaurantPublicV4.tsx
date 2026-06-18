@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const TABS = ['Menu', 'Avis', 'Infos'];
 
@@ -25,6 +26,7 @@ const MENU_SECTIONS = [
 
 export default function RestaurantPublicV4() {
   const navigation = useNavigation<any>();
+  const C = useColors();
   const [activeTab, setActiveTab] = useState(0);
   const [cart, setCart] = useState<Record<string, number>>({});
 
@@ -33,12 +35,12 @@ export default function RestaurantPublicV4() {
   const cartTotal = MENU_SECTIONS.flatMap(s => s.items).reduce((s, item) => s + (cart[item.name] || 0) * item.price, 0);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
       {/* Hero */}
       <View style={{ height: 208, position: 'relative' }}>
-        <View style={{ flex: 1, backgroundColor: '#F5F0EB', alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ flex: 1, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center' }}>
           <Icon name="ChefHat" size={56} color="rgba(140,130,120,0.25)" />
-          <Text style={{ fontSize: 11, color: '#8C8278', fontStyle: 'italic', marginTop: 6 }}>Chez Mama Pauline · cover</Text>
+          <Text style={{ fontSize: 11, color: C.inkMute, fontStyle: 'italic', marginTop: 6 }}>Chez Mama Pauline · cover</Text>
         </View>
         <View style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.18)' }} />
         <View style={{ position: 'absolute', top: 16, left: 16, right: 16, flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -68,23 +70,23 @@ export default function RestaurantPublicV4() {
       </View>
 
       {/* Status chips */}
-      <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
-        <View style={{ height: 28, paddingHorizontal: 10, borderRadius: 14, backgroundColor: '#E3F0E4', borderWidth: 1, borderColor: 'rgba(46,125,50,0.3)', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+      <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: 16, paddingVertical: 10, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
+        <View style={{ height: 28, paddingHorizontal: 10, borderRadius: 14, backgroundColor: C.successSoft, borderWidth: 1, borderColor: 'rgba(46,125,50,0.3)', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
           <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#2E7D32' }} />
           <Text style={{ fontSize: 11, color: '#2E7D32', fontWeight: '600' }}>Ouvert</Text>
         </View>
-        <View style={{ height: 28, paddingHorizontal: 10, borderRadius: 14, backgroundColor: '#F5F0EB', borderWidth: 1, borderColor: '#E5E0D8', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+        <View style={{ height: 28, paddingHorizontal: 10, borderRadius: 14, backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
           <Icon name="Clock" size={11} color="#6D4C41" />
-          <Text style={{ fontSize: 11, color: '#6D4C41' }}>Livraison ~35min</Text>
+          <Text style={{ fontSize: 11, color: C.inkSoft }}>Livraison ~35min</Text>
         </View>
-        <View style={{ height: 28, paddingHorizontal: 10, borderRadius: 14, backgroundColor: '#F5F0EB', borderWidth: 1, borderColor: '#E5E0D8', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+        <View style={{ height: 28, paddingHorizontal: 10, borderRadius: 14, backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
           <Icon name="Truck" size={11} color="#6D4C41" />
-          <Text style={{ fontSize: 11, color: '#6D4C41' }}>Gratuite dès 5 000 XAF</Text>
+          <Text style={{ fontSize: 11, color: C.inkSoft }}>Gratuite dès 5 000 XAF</Text>
         </View>
       </View>
 
       {/* Tabs */}
-      <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}>
+      <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: C.border, backgroundColor: C.surface }}>
         {TABS.map((tab, i) => (
           <TouchableOpacity key={i} onPress={() => setActiveTab(i)}
             style={{ flex: 1, paddingVertical: 12, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: i === activeTab ? '#E8591A' : 'transparent' }}>
@@ -96,23 +98,23 @@ export default function RestaurantPublicV4() {
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
         {MENU_SECTIONS.map((section, si) => (
           <View key={si} style={{ marginBottom: 16 }}>
-            <Text style={{ fontSize: 16, fontFamily: 'PlayfairDisplay-Bold', color: '#2C1810', marginBottom: 12 }}>{section.title}</Text>
+            <Text style={{ fontSize: 16, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 12 }}>{section.title}</Text>
             {section.items.map((item, ii) => (
               <View key={ii} style={{ flexDirection: 'row', gap: 12, paddingVertical: 12, borderBottomWidth: ii < section.items.length - 1 ? 1 : 0, borderBottomColor: '#F5F0EB' }}>
-                <View style={{ width: 56, height: 56, borderRadius: 12, backgroundColor: '#F5F0EB', borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <View style={{ width: 56, height: 56, borderRadius: 12, backgroundColor: C.surface2, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Icon name="ChefHat" size={24} color="rgba(140,130,120,0.35)" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={{ fontSize: 13, fontWeight: '600', color: '#2C1810' }}>{item.name}</Text>
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: C.ink }}>{item.name}</Text>
                     {item.popular && (
                       <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, backgroundColor: '#FEF3EC', borderWidth: 1, borderColor: 'rgba(232,89,26,0.3)' }}>
                         <Icon name="Star" size={10} color="#E8591A" fill="#E8591A" />
                       </View>
                     )}
                   </View>
-                  <Text style={{ fontSize: 11, color: '#8C8278', marginTop: 2 }}>{item.desc}</Text>
-                  <Text style={{ fontSize: 13, fontWeight: '700', color: '#2C1810', marginTop: 4 }}>{item.price.toLocaleString()} XAF</Text>
+                  <Text style={{ fontSize: 11, color: C.inkMute, marginTop: 2 }}>{item.desc}</Text>
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: C.ink, marginTop: 4 }}>{item.price.toLocaleString()} XAF</Text>
                 </View>
                 <TouchableOpacity onPress={() => addToCart(item.name)}
                   style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center', flexShrink: 0, alignSelf: 'center' }}>
@@ -126,9 +128,9 @@ export default function RestaurantPublicV4() {
 
       {/* Cart CTA */}
       {cartCount > 0 && (
-        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#E5E0D8' }}>
+        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 16, paddingVertical: 14, backgroundColor: C.surface, borderTopWidth: 1, borderColor: C.border }}>
           <TouchableOpacity style={{ height: 48, backgroundColor: '#E8591A', borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 }} activeOpacity={0.85}>
-            <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}>
               <Text style={{ fontSize: 11, fontWeight: '700', color: '#E8591A' }}>{cartCount}</Text>
             </View>
             <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>Voir le panier</Text>

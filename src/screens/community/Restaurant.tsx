@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, SafeAreaView,
   StatusBar, TextInput,
@@ -6,6 +6,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3, elevation: 2 };
 
@@ -66,7 +67,7 @@ function Stars({ rating, size = 13 }: { rating: number; size?: number }) {
   return (
     <View style={{ flexDirection: 'row', gap: 1 }}>
       {[1, 2, 3, 4, 5].map(i => (
-        <Text key={i} style={{ color: i <= rating ? '#F9A825' : '#E5E0D8', fontSize: size }}>★</Text>
+        <Icon key={i} name="Star" size={size} color={i <= rating ? '#F9A825' : '#E5E0D8'} fill={i <= rating ? '#F9A825' : 'none'} />
       ))}
     </View>
   );
@@ -75,6 +76,7 @@ function Stars({ rating, size = 13 }: { rating: number; size?: number }) {
 export default function Restaurant() {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
+  const C = useColors();
   const [activeTab, setActiveTab] = useState<TabKey>('menu');
   const [bookmarked, setBookmarked] = useState(false);
   const [reviewText, setReviewText] = useState('');
@@ -85,7 +87,7 @@ export default function Restaurant() {
   const totalCart = Object.values(cartCount).reduce((s, v) => s + v, 0);
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <View style={{ flex: 1, backgroundColor: C.cream }}>
       <StatusBar barStyle="light-content" />
 
       {/* Hero */}
@@ -131,18 +133,18 @@ export default function Restaurant() {
       </View>
 
       {/* Info chips */}
-      <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8', flexWrap: 'wrap' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, height: 30, paddingHorizontal: 12, borderRadius: 15, backgroundColor: '#E3F0E4', borderWidth: 1, borderColor: 'rgba(46,125,50,0.25)' }}>
+      <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border, flexWrap: 'wrap' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, height: 30, paddingHorizontal: 12, borderRadius: 15, backgroundColor: C.successSoft, borderWidth: 1, borderColor: 'rgba(46,125,50,0.25)' }}>
           <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: '#2E7D32' }} />
           <Text style={{ color: '#2E7D32', fontSize: 12, fontWeight: '600' }}>Ouvert</Text>
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, height: 30, paddingHorizontal: 12, borderRadius: 15, backgroundColor: '#F5F0EB', borderWidth: 1, borderColor: '#E5E0D8' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, height: 30, paddingHorizontal: 12, borderRadius: 15, backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border }}>
           <Icon name="Clock" size={12} color="#6D4C41" />
-          <Text style={{ color: '#6D4C41', fontSize: 12 }}>11h–22h</Text>
+          <Text style={{ color: C.inkSoft, fontSize: 12 }}>11h–22h</Text>
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, height: 30, paddingHorizontal: 12, borderRadius: 15, backgroundColor: '#F5F0EB', borderWidth: 1, borderColor: '#E5E0D8' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, height: 30, paddingHorizontal: 12, borderRadius: 15, backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border }}>
           <Icon name="MapPin" size={12} color="#6D4C41" />
-          <Text style={{ color: '#6D4C41', fontSize: 12 }}>1.4 km</Text>
+          <Text style={{ color: C.inkSoft, fontSize: 12 }}>1.4 km</Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, height: 30, paddingHorizontal: 12, borderRadius: 15, backgroundColor: '#FEF0E8', borderWidth: 1, borderColor: 'rgba(232,89,26,0.3)' }}>
           <Icon name="Check" size={12} color="#E8591A" />
@@ -151,7 +153,7 @@ export default function Restaurant() {
       </View>
 
       {/* Tabs */}
-      <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}>
+      <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: C.border, backgroundColor: C.surface }}>
         {TABS.map(tab => (
           <TouchableOpacity
             key={tab.key}
@@ -172,12 +174,12 @@ export default function Restaurant() {
           <View style={{ padding: 20 }}>
             {MENU_SECTIONS.map((section, si) => (
               <View key={si} style={{ marginBottom: 24 }}>
-                <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 17, color: '#2C1810', marginBottom: 12 }}>
+                <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 17, color: C.ink, marginBottom: 12 }}>
                   {section.title}
                 </Text>
                 {section.items.map((item, ii) => (
-                  <View key={ii} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderColor: '#F5F0EB' }}>
-                    <View style={{ width: 56, height: 56, borderRadius: 12, backgroundColor: '#F5F0EB', borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                  <View key={ii} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderColor: C.border }}>
+                    <View style={{ width: 56, height: 56, borderRadius: 12, backgroundColor: C.surface2, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                       {item.popular && (
                         <View style={{ position: 'absolute', top: -5, right: -5, backgroundColor: '#F9A825', width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' }}>
                           <Icon name="Flame" size={10} color="#fff" />
@@ -185,11 +187,11 @@ export default function Restaurant() {
                       )}
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 14, fontWeight: '600', color: '#2C1810', fontFamily: 'Inter-SemiBold', marginBottom: 2 }}>{item.name}</Text>
-                      {item.desc ? <Text style={{ fontSize: 11, color: '#8C8278' }}>{item.desc}</Text> : null}
+                      <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink, fontFamily: 'Inter-SemiBold', marginBottom: 2 }}>{item.name}</Text>
+                      {item.desc ? <Text style={{ fontSize: 11, color: C.inkMute }}>{item.desc}</Text> : null}
                     </View>
                     <View style={{ alignItems: 'flex-end', gap: 6 }}>
-                      <Text style={{ fontSize: 13, fontWeight: '700', color: '#2C1810', fontFamily: 'Inter-Bold' }}>
+                      <Text style={{ fontSize: 13, fontWeight: '700', color: C.ink, fontFamily: 'Inter-Bold' }}>
                         {Number(item.price).toLocaleString()} XAF
                       </Text>
                       <TouchableOpacity
@@ -210,18 +212,18 @@ export default function Restaurant() {
         {activeTab === 'reviews' && (
           <View style={{ padding: 20, gap: 16 }}>
             {/* Summary card */}
-            <View style={{ backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#E5E0D8', padding: 20, flexDirection: 'row', alignItems: 'center', gap: 20, ...SHADOW_SM }}>
+            <View style={{ backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 20, flexDirection: 'row', alignItems: 'center', gap: 20, ...SHADOW_SM }}>
               <View style={{ alignItems: 'center' }}>
-                <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 48, color: '#2C1810', lineHeight: 52 }}>4.8</Text>
+                <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 48, color: C.ink, lineHeight: 52 }}>4.8</Text>
                 <Stars rating={5} />
-                <Text style={{ fontSize: 11, color: '#8C8278', marginTop: 4 }}>127 avis</Text>
+                <Text style={{ fontSize: 11, color: C.inkMute, marginTop: 4 }}>127 avis</Text>
               </View>
               <View style={{ flex: 1, gap: 5 }}>
                 {[5, 4, 3, 2, 1].map(s => (
                   <View key={s} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={{ fontSize: 11, color: '#8C8278', width: 8 }}>{s}</Text>
-                    <Text style={{ color: '#F9A825', fontSize: 11 }}>★</Text>
-                    <View style={{ flex: 1, height: 6, backgroundColor: '#F5F0EB', borderRadius: 3, overflow: 'hidden' }}>
+                    <Text style={{ fontSize: 11, color: C.inkMute, width: 8 }}>{s}</Text>
+                    <Icon name="Star" size={11} color="#F9A825" fill="#F9A825" />
+                    <View style={{ flex: 1, height: 6, backgroundColor: C.surface2, borderRadius: 3, overflow: 'hidden' }}>
                       <View style={{ height: 6, borderRadius: 3, backgroundColor: '#F9A825', width: s === 5 ? '75%' : s === 4 ? '18%' : s === 3 ? '5%' : '2%' }} />
                     </View>
                   </View>
@@ -230,12 +232,12 @@ export default function Restaurant() {
             </View>
 
             {/* Write review */}
-            <View style={{ backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#E5E0D8', padding: 16, gap: 12, ...SHADOW_SM }}>
-              <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810', fontFamily: 'Inter-Bold' }}>Votre avis</Text>
+            <View style={{ backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 16, gap: 12, ...SHADOW_SM }}>
+              <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink, fontFamily: 'Inter-Bold' }}>Votre avis</Text>
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 {[1, 2, 3, 4, 5].map(s => (
                   <TouchableOpacity key={s} onPress={() => setMyRating(s)}>
-                    <Text style={{ fontSize: 30, color: s <= myRating ? '#F9A825' : '#E5E0D8' }}>★</Text>
+                    <Icon name="Star" size={32} color={s <= myRating ? '#F9A825' : '#E5E0D8'} fill={s <= myRating ? '#F9A825' : 'none'} />
                   </TouchableOpacity>
                 ))}
               </View>
@@ -245,7 +247,7 @@ export default function Restaurant() {
                 placeholder="Partagez votre expérience..."
                 placeholderTextColor="#8C8278"
                 multiline
-                style={{ minHeight: 80, backgroundColor: '#F5F0EB', borderRadius: 12, padding: 12, fontSize: 13, color: '#2C1810', textAlignVertical: 'top', lineHeight: 20 }}
+                style={{ minHeight: 80, backgroundColor: C.surface2, borderRadius: 12, padding: 12, fontSize: 13, color: C.ink, textAlignVertical: 'top', lineHeight: 20 }}
               />
               <TouchableOpacity
                 style={{ height: 44, borderRadius: 22, backgroundColor: myRating > 0 && reviewText.length > 5 ? '#E8591A' : '#E5E0D8', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
@@ -257,18 +259,18 @@ export default function Restaurant() {
             </View>
 
             {REVIEWS.map((r, i) => (
-              <View key={i} style={{ backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#E5E0D8', padding: 16, gap: 10, ...SHADOW_SM }}>
+              <View key={i} style={{ backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 16, gap: 10, ...SHADOW_SM }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center' }}>
                     <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700', fontFamily: 'Inter-Bold' }}>{r.avatar}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#2C1810', fontFamily: 'Inter-Bold' }}>{r.author}</Text>
-                    <Text style={{ fontSize: 11, color: '#8C8278' }}>{r.date}</Text>
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: C.ink, fontFamily: 'Inter-Bold' }}>{r.author}</Text>
+                    <Text style={{ fontSize: 11, color: C.inkMute }}>{r.date}</Text>
                   </View>
                   <Stars rating={r.rating} />
                 </View>
-                <Text style={{ fontSize: 13, color: '#6D4C41', lineHeight: 20 }}>{r.text}</Text>
+                <Text style={{ fontSize: 13, color: C.inkSoft, lineHeight: 20 }}>{r.text}</Text>
               </View>
             ))}
           </View>
@@ -277,34 +279,34 @@ export default function Restaurant() {
         {/* ── INFOS ── */}
         {activeTab === 'info' && (
           <View style={{ padding: 20, gap: 12 }}>
-            <View style={{ backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#E5E0D8', overflow: 'hidden', ...SHADOW_SM }}>
+            <View style={{ backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, overflow: 'hidden', ...SHADOW_SM }}>
               {([
                 { icon: 'MapPin' as const, label: 'Adresse',    value: 'Rue Joffre, Akwa · Douala, Cameroun' },
                 { icon: 'Phone'  as const, label: 'Téléphone',  value: '+237 6 99 88 77 66' },
                 { icon: 'Globe'  as const, label: 'Site web',   value: 'www.chezmamapauline.cm' },
               ]).map((item, i) => (
-                <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 18, paddingVertical: 14, borderBottomWidth: i < 2 ? 1 : 0, borderColor: '#F5F0EB' }}>
+                <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 18, paddingVertical: 14, borderBottomWidth: i < 2 ? 1 : 0, borderColor: C.border }}>
                   <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#FEF0E8', alignItems: 'center', justifyContent: 'center' }}>
                     <Icon name={item.icon} size={17} color="#E8591A" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 11, color: '#8C8278', marginBottom: 1 }}>{item.label}</Text>
-                    <Text style={{ fontSize: 13, color: '#2C1810', fontWeight: '500' }}>{item.value}</Text>
+                    <Text style={{ fontSize: 11, color: C.inkMute, marginBottom: 1 }}>{item.label}</Text>
+                    <Text style={{ fontSize: 13, color: C.ink, fontWeight: '500' }}>{item.value}</Text>
                   </View>
                   <Icon name="ChevronRight" size={16} color="#8C8278" />
                 </View>
               ))}
             </View>
 
-            <View style={{ backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#E5E0D8', padding: 18, ...SHADOW_SM }}>
+            <View style={{ backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 18, ...SHADOW_SM }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 }}>
                 <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#FEF0E8', alignItems: 'center', justifyContent: 'center' }}>
                   <Icon name="Clock" size={17} color="#E8591A" />
                 </View>
-                <Text style={{ fontSize: 15, fontWeight: '700', color: '#2C1810', fontFamily: 'Inter-Bold' }}>Horaires</Text>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: C.ink, fontFamily: 'Inter-Bold' }}>Horaires</Text>
               </View>
               {HOURS.map((h, i) => (
-                <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 7, borderBottomWidth: i < HOURS.length - 1 ? 1 : 0, borderColor: '#F5F0EB' }}>
+                <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 7, borderBottomWidth: i < HOURS.length - 1 ? 1 : 0, borderColor: C.border }}>
                   <Text style={{ fontSize: 13, color: h.today ? '#E8591A' : '#6D4C41', fontWeight: h.today ? '700' : '400' }}>{h.day}</Text>
                   <Text style={{ fontSize: 13, color: h.h === 'Fermé' ? '#C62828' : '#2C1810', fontWeight: h.today ? '700' : '400' }}>{h.h}</Text>
                 </View>
@@ -317,7 +319,7 @@ export default function Restaurant() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 14, fontWeight: '700', color: '#E8591A', fontFamily: 'Inter-Bold', marginBottom: 2 }}>Restaurant KFL Vérifié</Text>
-                <Text style={{ fontSize: 12, color: '#6D4C41', lineHeight: 18 }}>
+                <Text style={{ fontSize: 12, color: C.inkSoft, lineHeight: 18 }}>
                   Cuisine authentiquement camerounaise, évaluée et certifiée par l'équipe KFL.
                 </Text>
               </View>
@@ -329,7 +331,7 @@ export default function Restaurant() {
         {activeTab === 'photos' && (
           <View style={{ padding: 20 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <Text style={{ fontSize: 14, color: '#8C8278' }}>24 photos</Text>
+              <Text style={{ fontSize: 14, color: C.inkMute }}>24 photos</Text>
               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12, backgroundColor: '#E8591A' }}>
                 <Icon name="Plus" size={14} color="#fff" />
                 <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700', fontFamily: 'Inter-Bold' }}>Ajouter</Text>
@@ -337,7 +339,7 @@ export default function Restaurant() {
             </View>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
               {Array.from({ length: 9 }).map((_, i) => (
-                <View key={i} style={{ width: '31%', aspectRatio: 1, backgroundColor: '#F5F0EB', borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center' }}>
+                <View key={i} style={{ width: '31%', aspectRatio: 1, backgroundColor: C.surface2, borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
                   <Icon name="Camera" size={20} color="rgba(140,130,120,0.4)" />
                 </View>
               ))}
@@ -348,7 +350,7 @@ export default function Restaurant() {
       </ScrollView>
 
       {/* Bottom CTA */}
-      <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 16, paddingVertical: 14, paddingBottom: 28, backgroundColor: '#fff', borderTopWidth: 1, borderColor: '#E5E0D8', flexDirection: 'row', gap: 10 }}>
+      <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 16, paddingVertical: 14, paddingBottom: 28, backgroundColor: C.surface, borderTopWidth: 1, borderColor: C.border, flexDirection: 'row', gap: 10 }}>
         <TouchableOpacity
           style={{ flex: 1, height: 52, borderWidth: 2, borderColor: '#E8591A', borderRadius: 26, alignItems: 'center', justifyContent: 'center' }}
           activeOpacity={0.85}

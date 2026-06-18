@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, TextInput } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const DISHES = [
   { name: 'Ndolé', region: 'Littoral', match: 96, time: '45 min' },
@@ -14,6 +15,7 @@ const DISHES = [
 ];
 
 export default function Search() {
+    const C = useColors();
   const { t } = useTranslation();
   const nav = useNavigation();
   const [query, setQuery] = useState('ndolé');
@@ -36,21 +38,21 @@ export default function Search() {
   ];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
 
       {/* Search bar */}
-      <View style={{ paddingHorizontal: 16, paddingVertical: 12, flexDirection: 'row', gap: 10, alignItems: 'center', backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+      <View style={{ paddingHorizontal: 16, paddingVertical: 12, flexDirection: 'row', gap: 10, alignItems: 'center', backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
         <TouchableOpacity
-          style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}
+          style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}
           onPress={() => nav.goBack()}
         >
           <Icon name="ArrowLeft" size={17} color="#6D4C41" />
         </TouchableOpacity>
 
-        <View style={{ flex: 1, height: 44, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E8591A', borderRadius: 14, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
+        <View style={{ flex: 1, height: 44, backgroundColor: C.surface, borderWidth: 1, borderColor: '#E8591A', borderRadius: 14, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
           <Icon name="Search" size={16} color="#8C8278" />
           <TextInput
-            style={{ flex: 1, fontSize: 13, color: '#2C1810', fontFamily: 'Inter-Regular' }}
+            style={{ flex: 1, fontSize: 13, color: C.ink, fontFamily: 'Inter-Regular' }}
             value={query}
             onChangeText={setQuery}
             placeholder={t('home.search')}
@@ -70,7 +72,7 @@ export default function Search() {
       </View>
 
       {/* Tabs */}
-      <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}>
+      <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: C.border, backgroundColor: C.surface }}>
         {TABS.map((tab, i) => (
           <TouchableOpacity
             key={i}
@@ -85,7 +87,7 @@ export default function Search() {
       </View>
 
       {/* Filter chips */}
-      <View style={{ borderBottomWidth: 1, borderColor: '#F5F0EB', backgroundColor: '#fff' }}>
+      <View style={{ borderBottomWidth: 1, borderColor: C.border, backgroundColor: C.surface }}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingVertical: 10 }}>
           {FILTERS.map((f, i) => {
             const active = activeFilter === i;
@@ -114,10 +116,10 @@ export default function Search() {
 
         {/* Result count */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 14 }}>
-          <Text style={{ fontSize: 13, color: '#2C1810', fontWeight: '600', fontFamily: 'Inter-SemiBold' }}>24</Text>
-          <Text style={{ fontSize: 12, color: '#8C8278' }}>{t('search.results')}</Text>
+          <Text style={{ fontSize: 13, color: C.ink, fontWeight: '600', fontFamily: 'Inter-SemiBold' }}>24</Text>
+          <Text style={{ fontSize: 12, color: C.inkMute }}>{t('search.results')}</Text>
           {query.length > 0 && (
-            <Text style={{ fontSize: 12, color: '#8C8278' }}>pour « {query} »</Text>
+            <Text style={{ fontSize: 12, color: C.inkMute }}>pour « {query} »</Text>
           )}
         </View>
 
@@ -130,7 +132,7 @@ export default function Search() {
               activeOpacity={0.8}
             >
               {/* Image slot */}
-              <View style={{ height: 126, backgroundColor: '#F5F0EB', borderRadius: 14, borderWidth: 1, borderStyle: 'dashed', borderColor: '#E5E0D8', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+              <View style={{ height: 126, backgroundColor: C.surface2, borderRadius: 14, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                 <Icon name="ChefHat" size={34} color="#E5E0D8" />
                 {/* Match % badge */}
                 <View style={{ position: 'absolute', top: 8, right: 8, backgroundColor: '#2E7D32', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 }}>
@@ -144,16 +146,16 @@ export default function Search() {
 
               {/* Info */}
               <View style={{ paddingTop: 8 }}>
-                <Text style={{ color: '#2C1810', fontSize: 13, fontWeight: '600', fontFamily: 'Inter-SemiBold' }}>{d.name}</Text>
+                <Text style={{ color: C.ink, fontSize: 13, fontWeight: '600', fontFamily: 'Inter-SemiBold' }}>{d.name}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
                   <Icon name="MapPin" size={10} color="#8C8278" />
-                  <Text style={{ color: '#8C8278', fontSize: 11 }}>{d.region}</Text>
+                  <Text style={{ color: C.inkMute, fontSize: 11 }}>{d.region}</Text>
                   <Text style={{ color: '#E5E0D8' }}>·</Text>
                   <Icon name="Clock" size={10} color="#8C8278" />
-                  <Text style={{ color: '#8C8278', fontSize: 11 }}>{d.time}</Text>
+                  <Text style={{ color: C.inkMute, fontSize: 11 }}>{d.time}</Text>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 5 }}>
-                  <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, backgroundColor: '#E3F0E4' }}>
+                  <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, backgroundColor: C.successSoft }}>
                     <Text style={{ color: '#2E7D32', fontSize: 10, fontWeight: '700' }}>{t('search.match')}</Text>
                   </View>
                 </View>

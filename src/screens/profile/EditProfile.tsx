@@ -1,29 +1,62 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, TextInput, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
+import i18n from '@/i18n';
 
 export default function EditProfile() {
   const navigation = useNavigation<any>();
+  const C = useColors();
+  const { t } = useTranslation();
+
   const [firstName, setFirstName] = useState('Sami');
   const [lastName, setLastName]   = useState('Nguimfack');
   const [bio, setBio]             = useState('Passionné de cuisine camerounaise. Amateur de Ndolé et de Poulet DG.');
   const [email, setEmail]         = useState('sami@kfl.cm');
   const [phone, setPhone]         = useState('+237 6 90 00 00 00');
-  const [lang, setLang]           = useState(0);
+  const [lang, setLang]           = useState<'fr' | 'en'>(i18n.language === 'en' ? 'en' : 'fr');
+  const [saving, setSaving]       = useState(false);
+
+  const handleSave = () => {
+    setSaving(true);
+    i18n.changeLanguage(lang);
+    setTimeout(() => {
+      setSaving(false);
+      Alert.alert(t('editProfile.savedTitle'), t('editProfile.savedMsg'), [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
+    }, 600);
+  };
+
+  const handleChangePhoto = () => {
+    Alert.alert(t('editProfile.changePhoto'), undefined);
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      t('editProfile.deleteConfirmTitle'),
+      t('editProfile.deleteConfirmMsg'),
+      [
+        { text: t('editProfile.deleteConfirmCancel'), style: 'cancel' },
+        { text: t('editProfile.deleteConfirmAction'), style: 'destructive', onPress: () => navigation.navigate('Login') },
+      ],
+    );
+  };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
+      <StatusBar barStyle={C.statusBar} />
 
       {/* AppBar */}
-      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#E5E0D8' }}>
+      <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
-          <Icon name="ArrowLeft" size={22} color="#2C1810" />
+          <Icon name="ArrowLeft" size={22} color={C.ink} />
         </TouchableOpacity>
-        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: '#2C1810' }}>Modifier le profil</Text>
-        <TouchableOpacity style={{ height: 32, paddingHorizontal: 14, backgroundColor: '#E8591A', borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>Enregistrer</Text>
+        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>{t('editProfile.title')}</Text>
+        <TouchableOpacity onPress={handleSave} disabled={saving} style={{ height: 32, paddingHorizontal: 14, backgroundColor: C.primary, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>{saving ? t('editProfile.saving') : t('editProfile.save')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -32,26 +65,28 @@ export default function EditProfile() {
         {/* Avatar */}
         <View style={{ alignItems: 'center', marginBottom: 24 }}>
           <View style={{ position: 'relative' }}>
-            <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: '#F5F0EB', borderWidth: 2, borderColor: '#E8591A', alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: 28, fontWeight: '700', color: '#E8591A' }}>S</Text>
+            <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: C.surface2, borderWidth: 2, borderColor: C.primary, alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ fontSize: 28, fontWeight: '700', color: C.primary }}>{firstName.charAt(0)}</Text>
             </View>
-            <TouchableOpacity style={{ position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, backgroundColor: '#E8591A', borderRadius: 14, borderWidth: 2, borderColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+            <TouchableOpacity onPress={handleChangePhoto} style={{ position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, backgroundColor: C.primary, borderRadius: 14, borderWidth: 2, borderColor: C.surface, alignItems: 'center', justifyContent: 'center' }}>
               <Icon name="Camera" size={13} color="#fff" />
             </TouchableOpacity>
           </View>
-          <Text style={{ fontSize: 14, fontWeight: '500', color: '#E8591A', marginTop: 8 }}>Changer la photo</Text>
+          <TouchableOpacity onPress={handleChangePhoto}>
+            <Text style={{ fontSize: 14, fontWeight: '500', color: C.primary, marginTop: 8 }}>{t('editProfile.changePhoto')}</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Name row */}
         <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
           {[
-            { label: 'Prénom', val: firstName, set: setFirstName },
-            { label: 'Nom',    val: lastName,  set: setLastName  },
+            { label: t('editProfile.firstName'), val: firstName, set: setFirstName },
+            { label: t('editProfile.lastName'),  val: lastName,  set: setLastName  },
           ].map((f, i) => (
             <View key={i} style={{ flex: 1 }}>
-              <Text style={{ fontSize: 11, fontWeight: '600', color: '#8C8278', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>{f.label}</Text>
-              <View style={{ height: 48, borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 16, backgroundColor: '#fff', paddingHorizontal: 14, justifyContent: 'center' }}>
-                <TextInput value={f.val} onChangeText={f.set} style={{ fontSize: 14, color: '#2C1810' }} />
+              <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>{f.label}</Text>
+              <View style={{ height: 48, borderWidth: 1, borderColor: C.border, borderRadius: 16, backgroundColor: C.surface, paddingHorizontal: 14, justifyContent: 'center' }}>
+                <TextInput value={f.val} onChangeText={f.set} style={{ fontSize: 14, color: C.ink }} />
               </View>
             </View>
           ))}
@@ -59,49 +94,49 @@ export default function EditProfile() {
 
         {/* Bio */}
         <View style={{ marginBottom: 16 }}>
-          <Text style={{ fontSize: 11, fontWeight: '600', color: '#8C8278', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>Bio</Text>
-          <View style={{ borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 16, backgroundColor: '#fff', paddingHorizontal: 14, paddingVertical: 12, minHeight: 80 }}>
-            <TextInput value={bio} onChangeText={setBio} multiline numberOfLines={3} style={{ fontSize: 14, color: '#2C1810', lineHeight: 20 }} />
+          <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>{t('editProfile.bio')}</Text>
+          <View style={{ borderWidth: 1, borderColor: C.border, borderRadius: 16, backgroundColor: C.surface, paddingHorizontal: 14, paddingVertical: 12, minHeight: 80 }}>
+            <TextInput value={bio} onChangeText={setBio} multiline numberOfLines={3} maxLength={150} style={{ fontSize: 14, color: C.ink, lineHeight: 20 }} />
           </View>
-          <Text style={{ fontSize: 12, color: '#8C8278', marginTop: 4, textAlign: 'right' }}>{bio.length}/150</Text>
+          <Text style={{ fontSize: 12, color: C.inkMute, marginTop: 4, textAlign: 'right' }}>{bio.length}/150</Text>
         </View>
 
         {/* Email */}
         <View style={{ marginBottom: 16 }}>
-          <Text style={{ fontSize: 11, fontWeight: '600', color: '#8C8278', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>Email</Text>
-          <View style={{ height: 48, borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 16, backgroundColor: '#fff', paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <Icon name="Mail" size={16} color="#8C8278" />
-            <TextInput value={email} onChangeText={setEmail} style={{ flex: 1, fontSize: 14, color: '#2C1810' }} keyboardType="email-address" />
+          <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>{t('editProfile.email')}</Text>
+          <View style={{ height: 48, borderWidth: 1, borderColor: C.border, borderRadius: 16, backgroundColor: C.surface, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Icon name="Mail" size={16} color={C.inkMute} />
+            <TextInput value={email} onChangeText={setEmail} style={{ flex: 1, fontSize: 14, color: C.ink }} keyboardType="email-address" />
           </View>
         </View>
 
         {/* Phone */}
         <View style={{ marginBottom: 16 }}>
-          <Text style={{ fontSize: 11, fontWeight: '600', color: '#8C8278', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>Téléphone</Text>
-          <View style={{ height: 48, borderWidth: 1, borderColor: '#E5E0D8', borderRadius: 16, backgroundColor: '#fff', paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <Icon name="Phone" size={16} color="#8C8278" />
-            <TextInput value={phone} onChangeText={setPhone} style={{ flex: 1, fontSize: 14, color: '#2C1810' }} keyboardType="phone-pad" />
+          <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>{t('editProfile.phone')}</Text>
+          <View style={{ height: 48, borderWidth: 1, borderColor: C.border, borderRadius: 16, backgroundColor: C.surface, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Icon name="Phone" size={16} color={C.inkMute} />
+            <TextInput value={phone} onChangeText={setPhone} style={{ flex: 1, fontSize: 14, color: C.ink }} keyboardType="phone-pad" />
           </View>
         </View>
 
         {/* Language */}
         <View style={{ marginBottom: 20 }}>
-          <Text style={{ fontSize: 11, fontWeight: '600', color: '#8C8278', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>Langue / Language</Text>
+          <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>{t('editProfile.language')}</Text>
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            {['Français', 'English'].map((l, i) => (
-              <TouchableOpacity key={i} onPress={() => setLang(i)}
-                style={{ flex: 1, height: 48, borderRadius: 16, borderWidth: 2, alignItems: 'center', justifyContent: 'center', backgroundColor: lang === i ? '#FEF3EC' : '#fff', borderColor: lang === i ? '#E8591A' : '#E5E0D8' }}>
-                <Text style={{ fontSize: 14, fontWeight: '500', color: lang === i ? '#E8591A' : '#6D4C41' }}>{l}</Text>
+            {([{ code: 'fr' as const, label: t('editProfile.french') }, { code: 'en' as const, label: t('editProfile.english') }]).map((l) => (
+              <TouchableOpacity key={l.code} onPress={() => setLang(l.code)}
+                style={{ flex: 1, height: 48, borderRadius: 16, borderWidth: 2, alignItems: 'center', justifyContent: 'center', backgroundColor: lang === l.code ? C.goldSoft : C.surface, borderColor: lang === l.code ? C.primary : C.border }}>
+                <Text style={{ fontSize: 14, fontWeight: '500', color: lang === l.code ? C.primary : C.inkSoft }}>{l.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
         </View>
 
         {/* Danger zone */}
-        <View style={{ padding: 16, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(198,40,40,0.2)', backgroundColor: 'rgba(251,220,220,0.3)' }}>
-          <Text style={{ fontSize: 14, fontWeight: '600', color: '#C62828', marginBottom: 8 }}>Zone dangereuse</Text>
-          <TouchableOpacity style={{ height: 40, borderWidth: 1, borderColor: 'rgba(198,40,40,0.4)', borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ fontSize: 14, color: '#C62828' }}>Supprimer mon compte</Text>
+        <View style={{ padding: 16, borderRadius: 18, borderWidth: 1, borderColor: C.error, backgroundColor: C.errorSoft }}>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: C.error, marginBottom: 8 }}>{t('editProfile.dangerZone')}</Text>
+          <TouchableOpacity onPress={handleDeleteAccount} style={{ height: 40, borderWidth: 1, borderColor: C.error, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={{ fontSize: 14, color: C.error }}>{t('editProfile.deleteAccount')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

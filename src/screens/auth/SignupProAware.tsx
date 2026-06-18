@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, TextInput, Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/types';
 import LangSwitch from '@/components/auth/LangSwitch';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SignupProAware'>;
 
 export default function SignupProAware({ navigation }: Props) {
+  const C = useColors();
   const { t } = useTranslation();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -19,18 +21,30 @@ export default function SignupProAware({ navigation }: Props) {
   const [accepted, setAccepted] = useState(true);
   const [isBusiness, setIsBusiness] = useState(false);
 
+  const handleSignup = () => {
+    if (!firstName.trim() || !lastName.trim() || !email.trim() || !password.trim()) {
+      Alert.alert(t('auth.missingFieldsTitle'), t('auth.missingFieldsMsg'));
+      return;
+    }
+    if (!accepted) {
+      Alert.alert(t('auth.acceptTermsRequired'));
+      return;
+    }
+    navigation.navigate('OTP', { email, isBusiness });
+  };
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
       {/* AppBar */}
-      <View style={{ height: 52, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, borderBottomWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff' }}>
+      <View style={{ height: 52, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, borderBottomWidth: 1, borderColor: C.border, backgroundColor: C.surface }}>
         <TouchableOpacity
-          style={{ width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}
+          style={{ width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}
           onPress={() => navigation.goBack()}
         >
-          <Text style={{ color: '#6D4C41', fontSize: 18, lineHeight: 22 }}>‹</Text>
+          <Text style={{ color: C.inkSoft, fontSize: 18, lineHeight: 22 }}>‹</Text>
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 15, fontWeight: '600', color: '#2C1810', fontFamily: 'Inter-SemiBold' }}>
+          <Text style={{ fontSize: 15, fontWeight: '600', color: C.ink, fontFamily: 'Inter-SemiBold' }}>
             {t('auth.createAccount')}
           </Text>
         </View>
@@ -41,94 +55,94 @@ export default function SignupProAware({ navigation }: Props) {
 
         {/* Progress 1/2 */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 18 }}>
-          <View style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: '#E8591A' }} />
-          <View style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: '#E5E0D8' }} />
-          <Text style={{ fontSize: 11, color: '#8C8278', fontWeight: '600' }}>1/2</Text>
+          <View style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: C.primary }} />
+          <View style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: C.border }} />
+          <Text style={{ fontSize: 11, color: C.inkMute, fontWeight: '600' }}>1/2</Text>
         </View>
 
         <View style={{ gap: 14 }}>
           {/* First + Last */}
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <View style={{ flex: 1, gap: 6 }}>
-              <Text style={{ fontSize: 11, fontWeight: '600', color: '#6D4C41', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkSoft, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 {t('auth.firstName')}
               </Text>
               <TextInput
-                style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', paddingHorizontal: 14, fontSize: 14, color: '#2C1810' }}
+                style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, paddingHorizontal: 14, fontSize: 14, color: C.ink }}
                 value={firstName}
                 onChangeText={setFirstName}
                 placeholder="Amah"
-                placeholderTextColor="#8C8278"
+                placeholderTextColor={C.inkMute}
               />
             </View>
             <View style={{ flex: 1, gap: 6 }}>
-              <Text style={{ fontSize: 11, fontWeight: '600', color: '#6D4C41', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkSoft, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 {t('auth.lastName')}
               </Text>
               <TextInput
-                style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', paddingHorizontal: 14, fontSize: 14, color: '#2C1810' }}
+                style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, paddingHorizontal: 14, fontSize: 14, color: C.ink }}
                 value={lastName}
                 onChangeText={setLastName}
                 placeholder="Ndongo"
-                placeholderTextColor="#8C8278"
+                placeholderTextColor={C.inkMute}
               />
             </View>
           </View>
 
           {/* Email */}
           <View style={{ gap: 6 }}>
-            <Text style={{ fontSize: 11, fontWeight: '600', color: '#6D4C41', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkSoft, textTransform: 'uppercase', letterSpacing: 0.5 }}>
               {t('auth.email')}
             </Text>
-            <View style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
-              <Text style={{ color: '#8C8278', fontSize: 16 }}>✉</Text>
+            <View style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
+              <Icon name="Mail" size={16} color={C.inkMute} />
               <TextInput
-                style={{ flex: 1, fontSize: 14, color: '#2C1810' }}
+                style={{ flex: 1, fontSize: 14, color: C.ink }}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 placeholder="amah@example.com"
-                placeholderTextColor="#8C8278"
+                placeholderTextColor={C.inkMute}
               />
             </View>
           </View>
 
           {/* Phone */}
           <View style={{ gap: 6 }}>
-            <Text style={{ fontSize: 11, fontWeight: '600', color: '#6D4C41', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkSoft, textTransform: 'uppercase', letterSpacing: 0.5 }}>
               {t('auth.phone')}
             </Text>
-            <View style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
-              <Text style={{ color: '#8C8278', fontSize: 14 }}>📱</Text>
+            <View style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
+              <Icon name="Smartphone" size={16} color={C.inkMute} />
               <TextInput
-                style={{ flex: 1, fontSize: 14, color: '#2C1810' }}
+                style={{ flex: 1, fontSize: 14, color: C.ink }}
                 value={phone}
                 onChangeText={setPhone}
                 keyboardType="phone-pad"
                 placeholder="+237 6XX XX XX XX"
-                placeholderTextColor="#8C8278"
+                placeholderTextColor={C.inkMute}
               />
             </View>
           </View>
 
           {/* Password */}
           <View style={{ gap: 6 }}>
-            <Text style={{ fontSize: 11, fontWeight: '600', color: '#6D4C41', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkSoft, textTransform: 'uppercase', letterSpacing: 0.5 }}>
               {t('auth.password')}
             </Text>
-            <View style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#E5E0D8', backgroundColor: '#fff', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
-              <Text style={{ color: '#8C8278', fontSize: 16 }}>🔒</Text>
+            <View style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
+              <Icon name="Lock" size={16} color={C.inkMute} />
               <TextInput
-                style={{ flex: 1, fontSize: 14, color: '#2C1810' }}
+                style={{ flex: 1, fontSize: 14, color: C.ink }}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPw}
                 placeholder="••••••••"
-                placeholderTextColor="#8C8278"
+                placeholderTextColor={C.inkMute}
               />
               <TouchableOpacity onPress={() => setShowPw(!showPw)}>
-                <Text style={{ color: '#8C8278', fontSize: 16 }}>{showPw ? '🙈' : '👁'}</Text>
+                <Icon name={showPw ? 'EyeOff' : 'Eye'} size={18} color={C.inkMute} />
               </TouchableOpacity>
             </View>
           </View>
@@ -140,15 +154,15 @@ export default function SignupProAware({ navigation }: Props) {
           >
             <View style={{
               width: 18, height: 18, borderRadius: 4, flexShrink: 0, marginTop: 1,
-              backgroundColor: accepted ? '#E8591A' : 'transparent',
-              borderWidth: accepted ? 0 : 1, borderColor: '#E5E0D8',
+              backgroundColor: accepted ? C.primary : 'transparent',
+              borderWidth: accepted ? 0 : 1, borderColor: C.border,
               alignItems: 'center', justifyContent: 'center',
             }}>
-              {accepted && <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>✓</Text>}
+              {accepted && <Icon name="Check" size={11} color="#fff" strokeWidth={3} />}
             </View>
-            <Text style={{ flex: 1, fontSize: 12, color: '#6D4C41', lineHeight: 18 }}>
+            <Text style={{ flex: 1, fontSize: 12, color: C.inkSoft, lineHeight: 18 }}>
               {t('auth.acceptTerms')}{' '}
-              <Text style={{ color: '#E8591A', fontWeight: '600' }}>{t('auth.terms')}</Text>
+              <Text onPress={() => Alert.alert(t('auth.terms'), t('settingsProEntry.terms'))} style={{ color: C.primary, fontWeight: '600' }}>{t('auth.terms')}</Text>
             </Text>
           </TouchableOpacity>
 
@@ -157,25 +171,26 @@ export default function SignupProAware({ navigation }: Props) {
             style={{
               flexDirection: 'row', gap: 10, alignItems: 'flex-start',
               padding: 12, borderRadius: 12,
-              borderWidth: 1, borderColor: '#E8591A',
-              backgroundColor: '#FDF1EC',
+              borderWidth: 1, borderColor: C.primary,
+              backgroundColor: C.goldSoft,
             }}
             onPress={() => setIsBusiness(!isBusiness)}
             activeOpacity={0.85}
           >
             <View style={{
               width: 20, height: 20, borderRadius: 4, flexShrink: 0,
-              borderWidth: 1.5, borderColor: '#E8591A',
-              backgroundColor: isBusiness ? '#E8591A' : '#fff',
+              borderWidth: 1.5, borderColor: C.primary,
+              backgroundColor: isBusiness ? C.primary : C.surface,
               alignItems: 'center', justifyContent: 'center',
             }}>
-              {isBusiness && <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>✓</Text>}
+              {isBusiness && <Icon name="Check" size={12} color="#fff" strokeWidth={3} />}
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 13, fontWeight: '700', color: '#E8591A' }}>
-                ⭐ {t('auth.isBusiness')}
-              </Text>
-              <Text style={{ fontSize: 11, color: '#6D4C41', marginTop: 2, lineHeight: 17 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Icon name="Star" size={13} color={C.gold} fill={C.gold} />
+                <Text style={{ fontSize: 13, fontWeight: '700', color: C.primary }}>{t('auth.isBusiness')}</Text>
+              </View>
+              <Text style={{ fontSize: 11, color: C.inkSoft, marginTop: 2, lineHeight: 17 }}>
                 {t('auth.businessDesc')}
               </Text>
             </View>
@@ -183,8 +198,8 @@ export default function SignupProAware({ navigation }: Props) {
 
           {/* CTA */}
           <TouchableOpacity
-            style={{ height: 56, backgroundColor: '#E8591A', borderRadius: 28, alignItems: 'center', justifyContent: 'center', marginTop: 6 }}
-            onPress={() => navigation.navigate('OTP', { email })}
+            style={{ height: 56, backgroundColor: C.primary, borderRadius: 28, alignItems: 'center', justifyContent: 'center', marginTop: 6 }}
+            onPress={handleSignup}
             activeOpacity={0.85}
           >
             <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600', fontFamily: 'Inter-SemiBold' }}>

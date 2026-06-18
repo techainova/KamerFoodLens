@@ -1,7 +1,8 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
+import { useColors } from '@/hooks/useAppTheme';
 
 const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
 
@@ -13,10 +14,11 @@ const PAYOUTS = [
 
 export default function AdminPayouts() {
   const navigation = useNavigation<any>();
+  const C = useColors();
   const pendingTotal = PAYOUTS.filter(p => p.status === 'pending').reduce((s, p) => s + p.amount, 0);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFAF5' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
       <StatusBar barStyle="light-content" />
 
       {/* Header */}
@@ -42,18 +44,18 @@ export default function AdminPayouts() {
 
         <View style={{ gap: 12 }}>
           {PAYOUTS.map((payout, i) => (
-            <View key={i} style={{ padding: 16, borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: '#E5E0D8', ...SHADOW_SM }}>
+            <View key={i} style={{ padding: 16, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#2C1810' }}>{payout.pro}</Text>
-                  <Text style={{ fontSize: 12, color: '#8C8278', marginTop: 2 }}>{payout.owner} · {payout.date}</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink }}>{payout.pro}</Text>
+                  <Text style={{ fontSize: 12, color: C.inkMute, marginTop: 2 }}>{payout.owner} · {payout.date}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
                     <Icon name="Smartphone" size={11} color="#8C8278" />
-                    <Text style={{ fontSize: 11, color: '#8C8278' }}>{payout.method}</Text>
+                    <Text style={{ fontSize: 11, color: C.inkMute }}>{payout.method}</Text>
                   </View>
                 </View>
                 <View style={{ alignItems: 'flex-end', gap: 6 }}>
-                  <Text style={{ fontSize: 16, fontWeight: '700', color: '#2C1810' }}>{payout.amount.toLocaleString()} XAF</Text>
+                  <Text style={{ fontSize: 16, fontWeight: '700', color: C.ink }}>{payout.amount.toLocaleString()} XAF</Text>
                   <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, backgroundColor: payout.status === 'pending' ? '#FBF3DC' : '#E3F0E4' }}>
                     <Text style={{ fontSize: 11, fontWeight: '600', color: payout.status === 'pending' ? '#F9A825' : '#2E7D32' }}>
                       {payout.status === 'pending' ? 'En attente' : 'Versé'}
@@ -63,10 +65,10 @@ export default function AdminPayouts() {
               </View>
               {payout.status === 'pending' && (
                 <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <TouchableOpacity style={{ flex: 1, height: 34, backgroundColor: '#E3F0E4', borderRadius: 17, alignItems: 'center', justifyContent: 'center' }}>
+                  <TouchableOpacity style={{ flex: 1, height: 34, backgroundColor: C.successSoft, borderRadius: 17, alignItems: 'center', justifyContent: 'center' }}>
                     <Text style={{ color: '#2E7D32', fontSize: 12, fontWeight: '600' }}>Approuver</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={{ flex: 1, height: 34, backgroundColor: '#FBDCDC', borderRadius: 17, alignItems: 'center', justifyContent: 'center' }}>
+                  <TouchableOpacity style={{ flex: 1, height: 34, backgroundColor: C.errorSoft, borderRadius: 17, alignItems: 'center', justifyContent: 'center' }}>
                     <Text style={{ color: '#C62828', fontSize: 12, fontWeight: '600' }}>Rejeter</Text>
                   </TouchableOpacity>
                 </View>
