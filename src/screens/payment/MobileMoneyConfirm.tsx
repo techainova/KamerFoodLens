@@ -5,6 +5,7 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
+import { useAuthStore } from '@/store/auth.store';
 
 const COUNTDOWN = 120;
 
@@ -12,10 +13,13 @@ export default function MobileMoneyConfirm() {
   const navigation = useNavigation<any>();
   const C = useColors();
   const route      = useRoute<any>();
+  const user       = useAuthStore((s) => s.user);
+  const setUser    = useAuthStore((s) => s.setUser);
 
   const provider = (route.params?.provider as string) ?? 'mtn';
   const amount   = (route.params?.amount   as number) ?? 14000;
   const phone    = (route.params?.phone    as string) ?? '+237 6XX XXX XXX';
+  const purpose  = (route.params?.purpose  as string) ?? 'order';
 
   const isMTN  = provider === 'mtn';
   const color  = isMTN ? '#F9A825' : '#E8591A';
@@ -51,6 +55,11 @@ export default function MobileMoneyConfirm() {
     setConf(true);
     setTimeout(() => {
       setConf(false);
+      if (purpose === 'pro-upgrade') {
+        if (user) setUser({ ...user, role: 'pro' });
+        navigation.navigate('ProConfirmation');
+        return;
+      }
       navigation.navigate('PaymentSuccess');
     }, 1600);
   };

@@ -112,8 +112,9 @@ export default function Camera() {
         confidence: result.confidence,
         imageUri,
       });
-    } catch {
-      Alert.alert(t('scanner.errorTitle'), t('scanner.errorMsg'));
+    } catch (err) {
+      const detail = __DEV__ && err instanceof Error ? `\n\n${err.message}` : '';
+      Alert.alert(t('scanner.errorTitle'), t('scanner.errorMsg') + detail);
     }
   };
 

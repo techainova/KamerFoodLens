@@ -1,5 +1,8 @@
-﻿import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
+﻿import React, { useState, useEffect, useRef } from 'react';
+import {
+  View, Text, TouchableOpacity, TextInput, Pressable, Alert,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/types';
@@ -9,14 +12,15 @@ import { useColors } from '@/hooks/useAppTheme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'OTP'>;
 
-const DEMO_DIGITS = ['2', '4', '8', '', '', ''];
+const CODE_LENGTH = 6;
 
 export default function OTP({ navigation, route }: Props) {
     const C = useColors();
   const { t } = useTranslation();
-  const [digits] = useState(DEMO_DIGITS);
+  const [code, setCode] = useState('');
   const [seconds, setSeconds] = useState(59);
   const setUser = useAuthStore((s) => s.setUser);
+  const inputRef = useRef<TextInput>(null);
   const email = route.params?.email ?? 'am***@gmail.com';
   const isBusiness = route.params?.isBusiness ?? false;
 
@@ -27,7 +31,11 @@ export default function OTP({ navigation, route }: Props) {
   }, [seconds]);
 
   function handleVerify() {
-    setUser({ id: '1', email, firstName: 'Amah', lastName: 'Ndzié', username: 'amah.n', role: isBusiness ? 'pro' : 'standard', xpPoints: 1250, level: 2 });
+    if (code.length < CODE_LENGTH) {
+      Alert.alert(t('auth.otpIncompleteTitle', 'Code incomplet'), t('auth.otpIncompleteMsg', 'Veuillez saisir les 6 chiffres reçus par email.'));
+      return;
+    }
+    setUser({ id: '1', email, firstName: 'Amah', lastName: 'Ndzié', username: 'amah.n', location: 'Yaoundé, Cameroun', bio: "Passionnée de cuisine traditionnelle. J'apprends, je partage, je teste tout ce qui se mijote au Cameroun.", role: isBusiness ? 'pro' : 'standard', xpPoints: 1250, level: 2 });
   }
 
   const maskedEmail = email.includes('@')
@@ -82,28 +90,44 @@ export default function OTP({ navigation, route }: Props) {
           <Text style={{ fontWeight: '600', color: C.ink }}>{maskedEmail}</Text>
         </Text>
 
-        {/* OTP boxes */}
-        <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'center', marginTop: 28 }}>
-          {digits.map((d, i) => (
-            <View
-              key={i}
-              style={{
-                width: 44, height: 56, borderRadius: 10,
-                borderWidth: 1.5,
-                borderColor: i === 3 ? C.primary : C.border,
-                backgroundColor: C.surface,
-                alignItems: 'center', justifyContent: 'center',
-                shadowColor: i === 3 ? C.primary : "transparent",
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: i === 3 ? 0.2 : 0,
-                shadowRadius: 6,
-                elevation: i === 3 ? 2 : 0,
-              }}
-            >
-              <Text style={{ fontSize: 22, fontWeight: '600', color: C.ink }}>{d}</Text>
-            </View>
-          ))}
-        </View>
+        {/* OTP boxes — tap anywhere on the row to open the keyboard */}
+        <Pressable onPress={() => inputRef.current?.focus()} style={{ width: '100%' }}>
+          <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'center', marginTop: 28 }}>
+            {Array.from({ length: CODE_LENGTH }).map((_, i) => {
+              const isCursor = i === code.length;
+              return (
+                <View
+                  key={i}
+                  style={{
+                    width: 44, height: 56, borderRadius: 10,
+                    borderWidth: 1.5,
+                    borderColor: isCursor ? C.primary : C.border,
+                    backgroundColor: C.surface,
+                    alignItems: 'center', justifyContent: 'center',
+                    shadowColor: isCursor ? C.primary : "transparent",
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: isCursor ? 0.2 : 0,
+                    shadowRadius: 6,
+                    elevation: isCursor ? 2 : 0,
+                  }}
+                >
+                  <Text style={{ fontSize: 22, fontWeight: '600', color: C.ink }}>{code[i] ?? ''}</Text>
+                </View>
+              );
+            })}
+          </View>
+          {/* Real input driving the boxes above — invisible but focusable/typable */}
+          <TextInput
+            ref={inputRef}
+            value={code}
+            onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, CODE_LENGTH))}
+            keyboardType="number-pad"
+            maxLength={CODE_LENGTH}
+            autoFocus
+            caretHidden
+            style={{ position: 'absolute', opacity: 0, height: 56, width: '100%' }}
+          />
+        </Pressable>
 
         {/* Resend timer */}
         <Text style={{ fontSize: 12, color: C.inkMute, marginTop: 22, textAlign: 'center' }}>

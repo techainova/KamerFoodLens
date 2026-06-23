@@ -13,6 +13,8 @@ export interface User {
   username:  string;
   phone?:    string;
   avatar?:   string;
+  bio?:      string;
+  location?: string;
   role:      UserRole;
   xpPoints:  number;
   level:     number;

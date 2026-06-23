@@ -4,7 +4,6 @@
 // et expose les états loading/error/result au composant appelant.
 
 import { useCallback, useState } from 'react';
-import { preprocessImage } from '@/ai/preprocessImage';
 import { runInference } from '@/ai/runInference';
 import { interpretResult, UNKNOWN_CLASS } from '@/ai/interpretResult';
 import { getDishDescription, type DishDescription } from '@/ai/dishDescriptions';
@@ -34,9 +33,11 @@ export function useFoodScanner() {
   const scanImage = useCallback(async (imageUri: string): Promise<FoodScanResult> => {
     setState({ status: 'loading', result: null, error: null });
     try {
-      const input = await preprocessImage(imageUri);
-      const scores = await runInference(input);
+      const scores = await runInference(imageUri);
       const { classe, confiance } = interpretResult(scores);
+      if (__DEV__) {
+        console.log('[KFL][useFoodScanner] scores:', Array.from(scores), '-> classe:', classe, 'confiance:', confiance);
+      }
       const isUnknown = classe === UNKNOWN_CLASS;
 
       const result: FoodScanResult = {
@@ -50,6 +51,7 @@ export function useFoodScanner() {
       return result;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur inconnue lors du scan';
+      console.error('[KFL][useFoodScanner] échec du scan:', err);
       setState({ status: 'error', result: null, error: message });
       throw err;
     }

@@ -1,7 +1,7 @@
 ﻿import React, { useState } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, SafeAreaView,
-  TextInput, Modal, Alert, ActivityIndicator,
+  TextInput, Modal, Alert, ActivityIndicator, Image,
 } from 'react-native';
 import Svg, { Path, G, ClipPath, Rect, Defs } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
@@ -66,7 +66,7 @@ export default function Login({ navigation }: Props) {
     setLoading(true);
     await new Promise(r => setTimeout(r, 900));
     setLoading(false);
-    setUser({ id: '1', email, firstName: 'Amah', lastName: 'Ndzié', username: 'amah.n', role: 'standard', xpPoints: 1250, level: 2 });
+    setUser({ id: '1', email, firstName: 'Amah', lastName: 'Ndzié', username: 'amah.n', location: 'Yaoundé, Cameroun', bio: "Passionnée de cuisine traditionnelle. J'apprends, je partage, je teste tout ce qui se mijote au Cameroun.", role: 'standard', xpPoints: 1250, level: 2 });
   }
 
   async function handleForgotSend() {
@@ -119,10 +119,12 @@ export default function Login({ navigation }: Props) {
           </Text>
         </View>
 
-        {/* Image slot */}
-        <View style={{ marginTop: 20, height: 120, borderRadius: 16, backgroundColor: C.surface2, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: C.inkMute, fontSize: 11, fontStyle: 'italic' }}>ambiance culinaire</Text>
-        </View>
+        {/* Image — ambiance culinaire */}
+        <Image
+          source={require('../../../assets/auth/login-hero.jpg')}
+          style={{ marginTop: 20, height: 120, borderRadius: 16, backgroundColor: C.surface2 }}
+          resizeMode="cover"
+        />
 
         {/* Form */}
         <View style={{ marginTop: 24, gap: 14 }}>

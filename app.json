@@ -6,11 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0D2B6E"
-    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.techainova.kmerfoodlens"
@@ -31,9 +26,27 @@
     },
     "plugins": [
       "expo-camera",
-      "expo-location",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "KmerFoodLens utilise votre position pour trouver les restaurants à proximité."
+        }
+      ],
+      [
+        "react-native-maps",
+        {
+          "androidGoogleMapsApiKey": "AIzaSyBw_LN4zMkwg9pgqwmCcqxYIXxqbGnUPz8"
+        }
+      ],
       "expo-font",
-      "expo-splash-screen",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#0D2B6E"
+        }
+      ],
       "expo-notifications",
       "expo-image-picker",
       [
@@ -42,17 +55,21 @@
           "enableCoreMLDelegate": true
         }
       ],
-      "./plugins/withTfliteNoCompress.js"
+      "./plugins/withTfliteNoCompress.js",
+      "expo-audio",
+      [
+        "react-native-audio-api",
+        {
+          "iosBackgroundMode": false,
+          "iosMicrophonePermission": "KmerFoodLens utilise le microphone pour décrire un plat à voix haute.",
+          "androidPermissions": [
+            "android.permission.RECORD_AUDIO"
+          ],
+          "androidForegroundService": false
+        }
+      ],
+      "expo-asset"
     ],
-    "doctor": {
-      "reactNativeDirectoryCheck": {
-        "listUnknownPackages": false,
-        "exclude": [
-          "expo-av",
-          "expo-modules-jsi"
-        ]
-      }
-    },
     "extra": {
       "eas": {
         "projectId": "5d8901ec-d014-4e29-907d-6b4ac5e02c48"

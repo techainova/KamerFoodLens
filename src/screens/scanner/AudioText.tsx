@@ -9,6 +9,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ScannerStackParams } from '@/navigation/types';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
+import { useVoiceToText } from '@/hooks/useVoiceToText';
 
 type Nav = NativeStackNavigationProp<ScannerStackParams, 'AudioText'>;
 
@@ -50,10 +51,12 @@ export default function AudioText() {
   const { t } = useTranslation();
   const nav = useNavigation<Nav>();
   const [activeTab, setActiveTab] = useState<'audio' | 'text'>('audio');
-  const [isRecording, setIsRecording] = useState(false);
-  const [transcript, setTranscript] = useState('');
   const [textInput, setTextInput] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
+  const {
+    isRecording, isProcessing, transcript, error: voiceError,
+    startRecording, stopRecording,
+  } = useVoiceToText();
 
   // Mic pulse animation
   const micPulse = useRef(new Animated.Value(1)).current;
@@ -71,11 +74,9 @@ export default function AudioText() {
 
   const handleMicPress = () => {
     if (isRecording) {
-      setIsRecording(false);
-      setTranscript('"Je cherche un plat avec des feuilles vertes et des arachides..."');
+      stopRecording();
     } else {
-      setIsRecording(true);
-      setTranscript('');
+      startRecording();
     }
   };
 
@@ -146,9 +147,10 @@ export default function AudioText() {
               <TouchableOpacity
                 onPress={handleMicPress}
                 activeOpacity={0.85}
+                disabled={isProcessing}
                 style={{
                   width: 96, height: 96, borderRadius: 48,
-                  backgroundColor: isRecording ? '#C62828' : '#E8591A',
+                  backgroundColor: isRecording ? '#C62828' : isProcessing ? '#8C8278' : '#E8591A',
                   alignItems: 'center', justifyContent: 'center',
                   shadowColor: isRecording ? '#C62828' : '#E8591A',
                   shadowOffset: { width: 0, height: 0 },
@@ -164,15 +166,17 @@ export default function AudioText() {
             {/* Label */}
             <View style={{ alignItems: 'center', gap: 4 }}>
               <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>
-                {isRecording ? 'Enregistrement...' : t('audioText.speak')}
+                {isRecording ? 'Enregistrement...' : isProcessing ? 'Transcription en cours...' : t('audioText.speak')}
               </Text>
               <Text style={{ color: C.inkMute, fontSize: 12 }}>{t('audioText.spokenHint')}</Text>
             </View>
 
             {/* Transcript area */}
-            {(transcript.length > 0 || !isRecording) && (
+            {(transcript.length > 0 || voiceError || (!isRecording && !isProcessing)) && (
               <View style={{ width: '100%', backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 14, minHeight: 90 }}>
-                {transcript.length > 0 ? (
+                {voiceError ? (
+                  <Text style={{ fontSize: 13, color: C.error }}>{voiceError}</Text>
+                ) : transcript.length > 0 ? (
                   <Text style={{ fontSize: 14, color: C.inkSoft, lineHeight: 22 }}>
                     {transcript}
                   </Text>

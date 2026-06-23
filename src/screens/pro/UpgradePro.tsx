@@ -75,6 +75,7 @@ export default function UpgradePro() {
       provider: 'MTN',
       amount: 3000,
       phone: '',
+      purpose: 'pro-upgrade',
     });
   };
 

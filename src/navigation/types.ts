@@ -73,6 +73,11 @@ export type HomeStackParams = {
   LanguagePicker:       undefined;
   ThemePicker:          undefined;
   AboutKFL:             undefined;
+  StoriesViewer:        { authorId?: string };
+  AddStory:             undefined;
+  AllRecipes:           undefined;
+  AllEvents:            undefined;
+  AllStories:           undefined;
 };
 
 export type HomeStackParamList = HomeStackParams;

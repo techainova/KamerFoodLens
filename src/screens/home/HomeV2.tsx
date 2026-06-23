@@ -1,5 +1,8 @@
 ﻿import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
+import {
+  View, Text, ScrollView, TouchableOpacity, Image,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import { StackActions } from '@react-navigation/native';
@@ -7,12 +10,9 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { HomeStackParamList } from '@/navigation/types';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
+import { RECIPES } from '@/data/recipes';
 
-const TRENDING = [
-  { name: 'Ndolé', scans: 420, region: 'Littoral' },
-  { name: 'Poulet DG', scans: 340, region: 'Centre' },
-  { name: 'Mbongo Tchobi', scans: 260, region: 'Sud' },
-];
+const TRENDING = RECIPES.slice(0, 3);
 
 export default function HomeV2() {
     const C = useColors();
@@ -43,9 +43,9 @@ export default function HomeV2() {
               <Icon name="Bell" size={18} color="#6D4C41" />
               <View style={{ position: 'absolute', top: 7, right: 8, width: 8, height: 8, borderRadius: 4, backgroundColor: '#C62828', borderWidth: 1.5, borderColor: '#fff' }} />
             </TouchableOpacity>
-            <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center' }}>
+            <TouchableOpacity onPress={() => nav.navigate('ProfileScreen')} style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center' }}>
               <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700', fontFamily: 'Inter-Bold' }}>AN</Text>
-            </View>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -152,16 +152,17 @@ export default function HomeV2() {
         <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
             <Text style={{ color: C.ink, fontSize: 15, fontWeight: '700', fontFamily: 'Inter-Bold' }}>{t('home.trending')}</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => nav.navigate('AllRecipes')}>
               <Text style={{ fontSize: 11, color: '#E8591A', fontWeight: '600' }}>{t('common.seeAll')}</Text>
             </TouchableOpacity>
           </View>
           <View style={{ gap: 10 }}>
             {TRENDING.map((item, i) => (
               <TouchableOpacity
-                key={i}
+                key={item.id}
                 style={{ flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 10, paddingHorizontal: 12, backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border }}
                 activeOpacity={0.7}
+                onPress={() => nav.navigate('RecipeV1')}
               >
                 <Text style={{
                   width: 28, textAlign: 'center',
@@ -170,9 +171,13 @@ export default function HomeV2() {
                 }}>
                   {String(i + 1).padStart(2, '0')}
                 </Text>
-                <View style={{ width: 50, height: 50, borderRadius: 10, backgroundColor: C.surface2, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon name="ChefHat" size={22} color="#E5E0D8" />
-                </View>
+                {item.image ? (
+                  <Image source={item.image} style={{ width: 50, height: 50, borderRadius: 10, flexShrink: 0 }} resizeMode="cover" />
+                ) : (
+                  <View style={{ width: 50, height: 50, borderRadius: 10, backgroundColor: C.surface2, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name="ChefHat" size={22} color="#E5E0D8" />
+                  </View>
+                )}
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: C.ink, fontSize: 13, fontWeight: '600', fontFamily: 'Inter-SemiBold' }}>{item.name}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>

@@ -1,13 +1,23 @@
 ﻿import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
+import {
+  View, Text, TouchableOpacity, Image,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useColors } from '@/hooks/useAppTheme';
+import KFLLogo from '@/components/ui/KFLLogo';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Onboarding'>;
 
 const SLIDE_KEYS = ['slide1', 'slide2', 'slide3'] as const;
+
+const SLIDE_IMAGES = {
+  slide1: require('../../../assets/onboarding/slide1.jpg'),
+  slide2: require('../../../assets/onboarding/slide2.jpg'),
+  slide3: require('../../../assets/onboarding/slide3.jpg'),
+} as const;
 
 export default function Onboarding({ navigation }: Props) {
     const C = useColors();
@@ -28,9 +38,7 @@ export default function Onboarding({ navigation }: Props) {
       {/* Top bar — logo + skip */}
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <View style={{ width: 24, height: 24, borderRadius: 12, borderWidth: 1, borderColor: C.ink, alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 10, color: C.ink, fontWeight: '700' }}>K</Text>
-          </View>
+          <KFLLogo size={24} />
           <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 13, color: C.ink, fontWeight: '700' }}>KmerFoodLens</Text>
         </View>
         <TouchableOpacity onPress={() => navigation.navigate('Login')}>
@@ -40,18 +48,13 @@ export default function Onboarding({ navigation }: Props) {
         </TouchableOpacity>
       </View>
 
-      {/* Illustration slot */}
-      <View style={{ marginHorizontal: 32, marginTop: 24 }}>
-        <View style={{
-          height: 300, borderRadius: 20,
-          backgroundColor: C.surface2,
-          borderWidth: 1, borderStyle: 'dashed', borderColor: C.border,
-          alignItems: 'center', justifyContent: 'center',
-        }}>
-          <Text style={{ fontFamily: 'JetBrainsMono-Regular', fontSize: 11, color: C.inkMute, textAlign: 'center', paddingHorizontal: 16 }}>
-            {'[ illustration ]'}
-          </Text>
-        </View>
+      {/* Illustration */}
+      <View style={{ marginHorizontal: 32, marginTop: 24, alignItems: 'center' }}>
+        <Image
+          source={SLIDE_IMAGES[slideKey]}
+          style={{ width: '100%', height: 300, borderRadius: 20, backgroundColor: C.surface2 }}
+          resizeMode="cover"
+        />
       </View>
 
       {/* Copy */}

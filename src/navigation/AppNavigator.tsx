@@ -3,13 +3,18 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StackActions } from '@react-navigation/native';
+import { StackActions, getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import type { AppTabParams } from './types';
 
 // ── Core ────────────────────────────────────────────────────────────────────
 import HomeV1        from '@/screens/home/HomeV1';
 import HomeV2        from '@/screens/home/HomeV2';
 import HomeV3        from '@/screens/home/HomeV3';
+import StoriesViewer  from '@/screens/home/StoriesViewer';
+import AddStory       from '@/screens/home/AddStory';
+import AllRecipes     from '@/screens/home/AllRecipes';
+import AllEvents      from '@/screens/home/AllEvents';
+import AllStories     from '@/screens/home/AllStories';
 import Search        from '@/screens/home/Search';
 import Notifications from '@/screens/home/Notifications';
 
@@ -142,6 +147,11 @@ function HomeStackNav() {
       <HomeStack.Screen name="HomeScreen" component={HomeV1} />
       <HomeStack.Screen name="HomeV2"     component={HomeV2} />
       <HomeStack.Screen name="HomeV3"     component={HomeV3} />
+      <HomeStack.Screen name="StoriesViewer" component={StoriesViewer} />
+      <HomeStack.Screen name="AddStory"      component={AddStory} />
+      <HomeStack.Screen name="AllRecipes"    component={AllRecipes} />
+      <HomeStack.Screen name="AllEvents"     component={AllEvents} />
+      <HomeStack.Screen name="AllStories"    component={AllStories} />
       <HomeStack.Screen name="Onboarding"     component={Onboarding as React.ComponentType<Record<string, unknown>>} />
       <HomeStack.Screen name="SignupProAware" component={SignupProAware as React.ComponentType<Record<string, unknown>>} />
       <HomeStack.Screen name="Notifications" component={Notifications} />
@@ -335,6 +345,9 @@ export function AppNavigator() {
       screenOptions={{ headerShown: false }}
       tabBar={({ navigation, state }) => {
         if (state.index === 2) return null;
+        const activeRoute = state.routes[state.index];
+        const focusedRouteName = getFocusedRouteNameFromRoute(activeRoute);
+        if (focusedRouteName === 'StoriesViewer') return null;
         return (
         <WFBottomNav
           activeTab={TAB_NAMES[state.index] ?? 'home'}

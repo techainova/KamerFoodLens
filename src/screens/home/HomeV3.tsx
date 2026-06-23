@@ -1,5 +1,8 @@
 ﻿import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
+import {
+  View, Text, ScrollView, TouchableOpacity, Image, Alert,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import { StackActions } from '@react-navigation/native';
@@ -10,9 +13,9 @@ import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 
 const EXPLORE_ITEMS = [
-  { titleKey: 'home.exploreItem1', descKey: 'home.exploreItem1Desc', kind: 'Recettes' },
-  { titleKey: 'home.exploreItem2', descKey: 'home.exploreItem2Desc', kind: 'Lieux' },
-  { titleKey: 'home.exploreItem3', descKey: 'home.exploreItem3Desc', kind: 'Histoire' },
+  { titleKey: 'home.exploreItem1', descKey: 'home.exploreItem1Desc', kind: 'Recettes', image: require('../../../assets/dishes/eru.jpg'),     dest: 'RecipeV1' as const },
+  { titleKey: 'home.exploreItem2', descKey: 'home.exploreItem2Desc', kind: 'Lieux',    image: require('../../../assets/dishes/festival.jpg'), dest: 'MapScreen' as const },
+  { titleKey: 'home.exploreItem3', descKey: 'home.exploreItem3Desc', kind: 'Histoire', image: require('../../../assets/dishes/ndole.jpg'),    dest: 'RecipeV1' as const },
 ];
 
 const KIND_COLORS: Record<string, { bg: string; text: string }> = {
@@ -66,11 +69,10 @@ export default function HomeV3() {
             Le Mbongo,{'\n'}trésor du Sud
           </Text>
 
-          {/* Hero image slot */}
-          <View style={{ height: 268, backgroundColor: C.surface2, borderRadius: 18, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-            <Icon name="ChefHat" size={54} color="#E5E0D8" />
-            <Text style={{ fontFamily: 'JetBrainsMono-Regular', color: C.inkMute, fontSize: 11, marginTop: 10 }}>Mbongo Tchobi · plat héros</Text>
-          </View>
+          {/* Hero image */}
+          <TouchableOpacity activeOpacity={0.9} onPress={() => nav.navigate('RecipeV1')} style={{ height: 268, borderRadius: 18, overflow: 'hidden' }}>
+            <Image source={require('../../../assets/dishes/mbongo.jpg')} style={{ flex: 1 }} resizeMode="cover" />
+          </TouchableOpacity>
 
           {/* Body */}
           <Text style={{ fontSize: 13, color: C.inkSoft, lineHeight: 22, marginTop: 16 }}>
@@ -89,10 +91,16 @@ export default function HomeV3() {
               </View>
             </View>
             <View style={{ flexDirection: 'row', gap: 8 }}>
-              <TouchableOpacity style={{ width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', backgroundColor: C.surface }}>
+              <TouchableOpacity
+                style={{ width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', backgroundColor: C.surface }}
+                onPress={() => Alert.alert(t('common.share', 'Partager'), 'Mbongo Tchobi · trésor du Sud')}
+              >
                 <Icon name="Share2" size={16} color="#6D4C41" />
               </TouchableOpacity>
-              <TouchableOpacity style={{ height: 36, paddingHorizontal: 16, borderRadius: 18, backgroundColor: '#2C1810', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <TouchableOpacity
+                style={{ height: 36, paddingHorizontal: 16, borderRadius: 18, backgroundColor: '#2C1810', flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                onPress={() => nav.navigate('RecipeV1')}
+              >
                 <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>{t('home.readMore')}</Text>
                 <Icon name="ChevronRight" size={14} color="#fff" />
               </TouchableOpacity>
@@ -126,7 +134,7 @@ export default function HomeV3() {
             <Text style={{ color: C.ink, fontSize: 15, fontWeight: '700', fontFamily: 'Inter-Bold' }}>
               {t('home.toExplore')}
             </Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => nav.navigate('AllRecipes')}>
               <Text style={{ fontSize: 11, color: '#E8591A', fontWeight: '600' }}>{t('common.seeAll')}</Text>
             </TouchableOpacity>
           </View>
@@ -138,10 +146,9 @@ export default function HomeV3() {
                 key={i}
                 style={{ flexDirection: 'row', gap: 14, paddingVertical: 12, borderBottomWidth: i < 2 ? 1 : 0, borderColor: C.border }}
                 activeOpacity={0.75}
+                onPress={() => nav.navigate(item.dest)}
               >
-                <View style={{ width: 70, height: 70, backgroundColor: C.surface2, borderRadius: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon name="ChefHat" size={28} color="#E5E0D8" />
-                </View>
+                <Image source={item.image} style={{ width: 70, height: 70, borderRadius: 12, flexShrink: 0 }} resizeMode="cover" />
                 <View style={{ flex: 1, justifyContent: 'center' }}>
                   <View style={{ alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: colors.bg, marginBottom: 6 }}>
                     <Text style={{ fontSize: 10, color: colors.text, fontWeight: '700', letterSpacing: 0.5 }}>{item.kind.toUpperCase()}</Text>
