@@ -1,9 +1,11 @@
 ﻿import React from 'react';
 import {
-  View, Text, TouchableOpacity, StatusBar,
+  View, TouchableOpacity, StatusBar,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 
@@ -12,6 +14,7 @@ const SHADOW_MD = { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, 
 export default function PaymentSuccess() {
   const navigation = useNavigation<any>();
   const C = useColors();
+  const { t } = useTranslation();
   const route = useRoute<any>();
   const total = route.params?.total ?? 14000;
   const ref = 'KFL-' + Math.floor(Math.random() * 90000 + 10000);
@@ -28,23 +31,23 @@ export default function PaymentSuccess() {
         </View>
 
         <Text style={{ fontSize: 26, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 8, textAlign: 'center' }}>
-          Paiement réussi !
+          {t('payment.successTitle')}
         </Text>
         <Text style={{ fontSize: 15, color: C.inkSoft, textAlign: 'center', lineHeight: 22, marginBottom: 32 }}>
-          Votre commande a été confirmée et est en cours de préparation.
+          {t('payment.successDesc')}
         </Text>
 
         {/* Order details card */}
         <View style={{ width: '100%', backgroundColor: C.surface, borderRadius: 20, padding: 20, borderWidth: 1, borderColor: C.border, marginBottom: 32, ...SHADOW_MD }}>
           {[
-            { label: 'Référence', value: ref },
-            { label: 'Montant payé', value: `${total.toLocaleString()} XAF` },
-            { label: 'Méthode', value: 'MTN Mobile Money' },
-            { label: 'Statut', value: 'Confirmé' },
+            { label: t('payment.reference'), value: ref, mono: true },
+            { label: t('payment.amountPaid'), value: `${total.toLocaleString()} XAF` },
+            { label: t('payment.methodLabel'), value: t('payment.mtnMomo') },
+            { label: t('payment.status'), value: t('payment.statusConfirmed'), strong: true },
           ].map((item, i) => (
             <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: i < 3 ? 1 : 0, borderColor: C.border }}>
               <Text style={{ fontSize: 13, color: C.inkMute }}>{item.label}</Text>
-              <Text style={{ fontSize: 13, fontWeight: item.label === 'Statut' ? '700' : '600', color: item.label === 'Statut' ? '#2E7D32' : '#2C1810', fontFamily: item.label === 'Référence' ? 'JetBrainsMono-Regular' : 'Inter-SemiBold' }}>
+              <Text style={{ fontSize: 13, fontWeight: item.strong ? '700' : '600', color: item.strong ? '#2E7D32' : '#2C1810', fontFamily: item.mono ? 'JetBrainsMono-Regular' : 'Inter-SemiBold' }}>
                 {item.value}
               </Text>
             </View>
@@ -58,7 +61,7 @@ export default function PaymentSuccess() {
             activeOpacity={0.85}
           >
             <Icon name="Navigation" size={18} color="#fff" />
-            <Text style={{ fontSize: 15, fontWeight: '700', color: '#fff' }}>Suivre ma commande</Text>
+            <Text style={{ fontSize: 15, fontWeight: '700', color: '#fff' }}>{t('payment.trackOrder')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => navigation.navigate('HomeScreen')}
@@ -66,7 +69,7 @@ export default function PaymentSuccess() {
             activeOpacity={0.85}
           >
             <Icon name="Home" size={18} color="#6D4C41" />
-            <Text style={{ fontSize: 15, fontWeight: '600', color: C.inkSoft }}>Retour à l'accueil</Text>
+            <Text style={{ fontSize: 15, fontWeight: '600', color: C.inkSoft }}>{t('payment.backHome')}</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -1,11 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react';
+// src/screens/map/MapScreen.web.tsx
+// Variante web — react-native-maps n'est pas compatible react-native-web
+// (codegenNativeComponent non implémenté), donc cette page utilise une
+// simple iframe Google Maps en mode liste/carte plutôt que <MapView/>.
+
+import React, { useState } from 'react';
 import {
-  View, ScrollView, TextInput, TouchableOpacity, StatusBar, Dimensions, Platform,
+  View, ScrollView, TextInput, TouchableOpacity, StatusBar, Dimensions,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MapView, { Marker, PROVIDER_GOOGLE, type Region } from 'react-native-maps';
-import * as Location from 'expo-location';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
@@ -17,8 +20,8 @@ const SHADOW_MD = { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, 
 const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3, elevation: 2 };
 const SHADOW_LG = { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.14, shadowRadius: 12, elevation: 8 };
 
-// Douala, Cameroun — centre par défaut si la position de l'utilisateur est indisponible
-const DEFAULT_REGION: Region = { latitude: 4.0511, longitude: 9.7679, latitudeDelta: 0.05, longitudeDelta: 0.05 };
+// Douala, Cameroun — centre par défaut
+const DEFAULT_REGION = { latitude: 4.0511, longitude: 9.7679 };
 
 const RESTAURANTS = [
   {
@@ -70,27 +73,11 @@ export default function MapScreen() {
   const [activeFilter, setActiveFilter] = useState(0);
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [search, setSearch] = useState('');
-  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const mapRef = useRef<MapView>(null);
-
-  useEffect(() => {
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') return;
-      try {
-        const pos = await Location.getCurrentPositionAsync({});
-        const coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
-        setUserLocation(coords);
-        mapRef.current?.animateToRegion({ ...coords, latitudeDelta: 0.05, longitudeDelta: 0.05 }, 600);
-      } catch {
-        // position indisponible — on garde le centre par défaut (Douala)
-      }
-    })();
-  }, []);
+  const [selected, setSelected] = useState(RESTAURANTS[0]);
 
   const restaurantsWithDist = RESTAURANTS.map((r) => ({
     ...r,
-    dist: userLocation ? distanceKm(userLocation.latitude, userLocation.longitude, r.lat, r.lng) : distanceKm(DEFAULT_REGION.latitude, DEFAULT_REGION.longitude, r.lat, r.lng),
+    dist: distanceKm(DEFAULT_REGION.latitude, DEFAULT_REGION.longitude, r.lat, r.lng),
   }));
 
   const filtered = restaurantsWithDist.filter(r => {
@@ -102,6 +89,7 @@ export default function MapScreen() {
   });
 
   const MAP_H = SH * 0.54;
+  const embedSrc = `https://www.google.com/maps?q=${selected.lat},${selected.lng}&z=15&output=embed`;
 
   // ── LIST VIEW ──────────────────────────────────────────────────────────────
   if (viewMode === 'list') {
@@ -213,43 +201,19 @@ export default function MapScreen() {
     );
   }
 
-  // ── MAP VIEW (carte réelle Google Maps / Apple Maps) ───────────────────────
+  // ── MAP VIEW (iframe Google Maps — react-native-maps indisponible sur web) ─
   return (
     <View style={{ flex: 1, backgroundColor: C.cream }}>
       <StatusBar barStyle={C.statusBar} />
 
-      <MapView
-        ref={mapRef}
-        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: MAP_H }}
-        provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
-        initialRegion={DEFAULT_REGION}
-        showsUserLocation
-        showsMyLocationButton={false}
-      >
-        {filtered.map((r) => (
-          <Marker
-            key={r.id}
-            coordinate={{ latitude: r.lat, longitude: r.lng }}
-            onPress={() => navigation.navigate('Restaurant')}
-          >
-            <View style={{ alignItems: 'center' }}>
-              <View style={{
-                backgroundColor: r.kflVerified ? C.primary : C.surface,
-                borderWidth: r.kflVerified ? 0 : 1.5, borderColor: C.border,
-                paddingHorizontal: 10, paddingVertical: 5, borderRadius: 14,
-                flexDirection: 'row', alignItems: 'center', gap: 4,
-                ...SHADOW_MD,
-              }}>
-                <Icon name="Star" size={10} color={r.kflVerified ? '#fff' : C.gold} fill={r.kflVerified ? '#fff' : C.gold} />
-                <Text style={{ fontSize: 12, fontWeight: '700', color: r.kflVerified ? '#fff' : C.ink, fontFamily: 'Inter-Bold' }}>
-                  {r.rating}
-                </Text>
-              </View>
-              <View style={{ width: 8, height: 8, backgroundColor: r.kflVerified ? C.primary : C.inkMute, borderRadius: 4, marginTop: -3 }} />
-            </View>
-          </Marker>
-        ))}
-      </MapView>
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: MAP_H, backgroundColor: C.surface2, overflow: 'hidden' }}>
+        <iframe
+          title="KmerFoodLens map"
+          src={embedSrc}
+          style={{ border: 0, width: '100%', height: '100%' }}
+          loading="lazy"
+        />
+      </View>
 
       {/* Search overlay */}
       <SafeAreaView style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
@@ -290,14 +254,6 @@ export default function MapScreen() {
         </View>
       </SafeAreaView>
 
-      {/* Recentrer sur ma position */}
-      <TouchableOpacity
-        onPress={() => userLocation && mapRef.current?.animateToRegion({ ...userLocation, latitudeDelta: 0.05, longitudeDelta: 0.05 }, 400)}
-        style={{ position: 'absolute', right: 16, top: MAP_H - 60, width: 44, height: 44, borderRadius: 22, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', ...SHADOW_MD }}
-      >
-        <Icon name="Navigation" size={19} color={C.navy} />
-      </TouchableOpacity>
-
       {/* Bottom sheet */}
       <View style={{
         position: 'absolute', bottom: 0, left: 0, right: 0, top: MAP_H - 22,
@@ -330,11 +286,8 @@ export default function MapScreen() {
           {filtered.map((r) => (
             <TouchableOpacity
               key={r.id}
-              onPress={() => {
-                navigation.navigate('Restaurant');
-                mapRef.current?.animateToRegion({ latitude: r.lat, longitude: r.lng, latitudeDelta: 0.02, longitudeDelta: 0.02 }, 400);
-              }}
-              style={{ width: 190, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, overflow: 'hidden', ...SHADOW_SM }}
+              onPress={() => setSelected(r)}
+              style={{ width: 190, backgroundColor: r.id === selected.id ? C.goldSoft : C.surface, borderRadius: 16, borderWidth: 1, borderColor: r.id === selected.id ? C.primary : C.border, overflow: 'hidden', ...SHADOW_SM }}
               activeOpacity={0.85}
             >
               <View style={{ height: 94, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center', position: 'relative' }}>

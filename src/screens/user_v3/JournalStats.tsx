@@ -1,38 +1,44 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StatusBar,
+  View, ScrollView, TouchableOpacity, StatusBar,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 
 const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
 
 const WEEK_DATA = [
-  { day: 'L',  kcal: 1850, goal: 2000 },
-  { day: 'M',  kcal: 2100, goal: 2000 },
-  { day: 'Me', kcal: 1650, goal: 2000 },
-  { day: 'J',  kcal: 1920, goal: 2000 },
-  { day: 'V',  kcal: 1150, goal: 2000 },
-  { day: 'S',  kcal: 0,    goal: 2000 },
-  { day: 'D',  kcal: 0,    goal: 2000 },
+  { dayKey: 'mon', kcal: 1850 },
+  { dayKey: 'tue', kcal: 1620 },
+  { dayKey: 'wed', kcal: 1420, today: true },
+  { dayKey: 'thu', kcal: 0 },
+  { dayKey: 'fri', kcal: 0 },
+  { dayKey: 'sat', kcal: 0 },
+  { dayKey: 'sun', kcal: 0 },
 ];
 
-const maxKcal = Math.max(...WEEK_DATA.map(d => d.kcal), 2000);
+const GOAL_KCAL = 2000;
+const maxKcal = Math.max(...WEEK_DATA.map(d => d.kcal), GOAL_KCAL + 200);
 
 const TOP_DISHES = [
   { name: 'Ndolé',          count: 5, color: '#E8591A' },
-  { name: 'Bouillie maïs',  count: 4, color: '#F9A825' },
-  { name: 'Poulet DG',      count: 3, color: '#2E7D32' },
+  { name: 'Eru',            count: 3, color: '#F9A825' },
+  { name: 'Plantains frits', count: 2, color: '#2E7D32' },
 ];
 
-const PERIODS = ['Cette semaine', 'Ce mois', '3 mois'];
+const PERIODS = ['journalStats.periodWeek', 'journalStats.periodMonth', 'journalStats.periodAll'] as const;
 
 export default function JournalStats() {
   const navigation = useNavigation<any>();
   const C = useColors();
+  const { t } = useTranslation();
   const [period, setPeriod] = useState(0);
+
+  const weekAvg = Math.round(WEEK_DATA.filter(d => d.kcal > 0).reduce((s, d) => s + d.kcal, 0) / Math.max(1, WEEK_DATA.filter(d => d.kcal > 0).length));
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -41,67 +47,77 @@ export default function JournalStats() {
       {/* AppBar */}
       <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
-          <Icon name="ArrowLeft" size={22} color="#2C1810" />
+          <Icon name="ArrowLeft" size={22} color={C.ink} />
         </TouchableOpacity>
-        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>Statistiques</Text>
+        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>{t('journal.stats')}</Text>
+      </View>
+
+      <View style={{ paddingHorizontal: 16, paddingTop: 12, flexDirection: 'row', gap: 6 }}>
+        {PERIODS.map((key, i) => (
+          <TouchableOpacity
+            key={key}
+            onPress={() => setPeriod(i)}
+            style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, borderWidth: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: i === period ? C.primary : C.surface, borderColor: i === period ? C.primary : C.border }}
+          >
+            <Text style={{ fontSize: 12, fontWeight: '600', color: i === period ? '#fff' : C.inkSoft }}>{t(key)}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
 
-        {/* Period selector */}
-        <View style={{ flexDirection: 'row', backgroundColor: C.surface2, borderRadius: 18, padding: 4, marginBottom: 20 }}>
-          {PERIODS.map((p, i) => (
-            <TouchableOpacity key={i} onPress={() => setPeriod(i)}
-              style={{ flex: 1, paddingVertical: 8, borderRadius: 14, alignItems: 'center', backgroundColor: i === period ? '#fff' : 'transparent', ...(i === period ? SHADOW_SM : {}) }}>
-              <Text style={{ fontSize: 12, fontWeight: '500', color: i === period ? '#E8591A' : '#8C8278' }}>{p}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Summary cards */}
-        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
-          {[
-            { v: '1 934', l: 'Moy. kcal/j',      color: '#E8591A' },
-            { v: '5/7',   l: 'Jours loggés',      color: '#2E7D32' },
-            { v: '84%',   l: 'Objectif atteint',  color: '#F9A825' },
-          ].map((s, i) => (
-            <View key={i} style={{ flex: 1, padding: 14, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', ...SHADOW_SM }}>
-              <Text style={{ fontSize: 18, fontWeight: '700', color: s.color, fontFamily: 'PlayfairDisplay-Bold' }}>{s.v}</Text>
-              <Text style={{ fontSize: 11, color: C.inkMute, textAlign: 'center', marginTop: 2 }}>{s.l}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Calorie bar chart */}
-        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 12 }}>Calories par jour</Text>
-        <View style={{ padding: 16, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, marginBottom: 20, ...SHADOW_SM }}>
-          <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-around', height: 110, marginBottom: 8 }}>
-            {WEEK_DATA.map((d, i) => (
-              <View key={i} style={{ alignItems: 'center', width: 28 }}>
-                <View style={{
-                  width: '100%', borderRadius: 4,
-                  height: d.kcal > 0 ? Math.round((d.kcal / maxKcal) * 96) : 8,
-                  backgroundColor: d.kcal > 0
-                    ? d.kcal > d.goal ? '#C62828' : d.kcal >= d.goal * 0.9 ? '#2E7D32' : '#E8591A'
-                    : '#E5E0D8',
-                }} />
-              </View>
-            ))}
+        {/* Goal card */}
+        <TouchableOpacity
+          onPress={() => navigation.navigate('AccessibilitySettings')}
+          style={{ marginTop: 14, padding: 12, borderWidth: 1, borderColor: C.border, borderRadius: 12, backgroundColor: C.surface, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}
+        >
+          <View>
+            <Text style={{ fontSize: 11, color: C.inkMute }}>{t('journal.objective')}</Text>
+            <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, fontWeight: '700', color: C.ink }}>{GOAL_KCAL.toLocaleString()} kcal/{t('journalStats.perDay')}</Text>
+            <Text style={{ fontSize: 10, color: C.inkMute, marginTop: 4 }}>{t('journalStats.basedOnProfile')}</Text>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <View style={{ width: 20, height: 1, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border }} />
-            <Text style={{ fontSize: 11, color: C.inkMute }}>Objectif : 2 000 kcal</Text>
+          <Text style={{ fontSize: 12, color: C.primary, fontWeight: '600' }}>{t('journal.modify')} →</Text>
+        </TouchableOpacity>
+
+        {/* Weekly bar chart */}
+        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginTop: 20, marginBottom: 12 }}>{t('journalStats.thisWeek')}</Text>
+        <View style={{ padding: 16, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
+          <View style={{ position: 'relative' }}>
+            <View style={{ position: 'absolute', left: 0, right: 0, top: 16, borderTopWidth: 1, borderStyle: 'dashed', borderColor: C.inkMute }}>
+              <Text style={{ position: 'absolute', right: 0, top: -16, fontSize: 9, color: C.inkMute, backgroundColor: C.surface, paddingHorizontal: 4 }}>
+                {t('journalStats.goalAbbrev')} {GOAL_KCAL.toLocaleString()}
+              </Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-around', height: 110, marginBottom: 8 }}>
+              {WEEK_DATA.map((d, i) => (
+                <View key={i} style={{ alignItems: 'center', width: 28 }}>
+                  {d.kcal > 0 && <Text style={{ fontSize: 9, fontWeight: '700', color: d.today ? C.primary : C.inkMute, marginBottom: 2 }}>{d.kcal}</Text>}
+                  <View style={{
+                    width: '100%', borderRadius: 4,
+                    height: d.kcal > 0 ? Math.round((d.kcal / maxKcal) * 96) : 8,
+                    backgroundColor: d.kcal > 0
+                      ? d.kcal > GOAL_KCAL ? C.error : d.kcal >= GOAL_KCAL * 0.9 ? C.success : C.primary
+                      : 'transparent',
+                    borderWidth: d.kcal > 0 ? 0 : 1.5,
+                    borderStyle: d.kcal > 0 ? 'solid' : 'dashed',
+                    borderColor: C.border,
+                  }} />
+                </View>
+              ))}
+            </View>
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
             {WEEK_DATA.map((d, i) => (
-              <Text key={i} style={{ fontSize: 11, color: C.inkMute, width: 28, textAlign: 'center' }}>{d.day}</Text>
+              <Text key={i} style={{ fontSize: 11, width: 28, textAlign: 'center', color: d.today ? C.primary : C.inkMute, fontWeight: d.today ? '700' : '500' }}>
+                {t(`journalStats.day${d.dayKey}`)}
+              </Text>
             ))}
           </View>
         </View>
 
         {/* Top dishes */}
-        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 12 }}>Plats les plus consommés</Text>
-        <View style={{ gap: 10, marginBottom: 20 }}>
+        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginTop: 20, marginBottom: 12 }}>{t('journalStats.mostEaten')}</Text>
+        <View style={{ gap: 10 }}>
           {TOP_DISHES.map((dish, i) => (
             <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
               <View style={{ width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: dish.color + '20' }}>
@@ -115,25 +131,30 @@ export default function JournalStats() {
           ))}
         </View>
 
-        {/* Nutrients */}
-        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 12 }}>Macronutriments moyens</Text>
-        <View style={{ padding: 16, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
+        {/* Nutrition split */}
+        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginTop: 20, marginBottom: 12 }}>{t('journalStats.nutritionSplit')}</Text>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
           {[
-            { l: 'Protéines', v: '72g / 80g',   pct: 90, color: '#2E7D32' },
-            { l: 'Glucides',  v: '148g / 250g',  pct: 59, color: '#E8591A' },
-            { l: 'Lipides',   v: '55g / 65g',    pct: 85, color: '#F9A825' },
-            { l: 'Fibres',    v: '18g / 25g',    pct: 72, color: '#1A237E' },
-          ].map((n, i) => (
-            <View key={i} style={{ paddingVertical: 10, borderBottomWidth: i < 3 ? 1 : 0, borderColor: C.border }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                <Text style={{ fontSize: 14, color: C.ink }}>{n.l}</Text>
-                <Text style={{ fontSize: 12, color: C.inkMute }}>{n.v}</Text>
-              </View>
-              <View style={{ height: 6, backgroundColor: '#E5E0D8', borderRadius: 3, overflow: 'hidden' }}>
-                <View style={{ height: '100%', borderRadius: 3, width: `${n.pct}%`, backgroundColor: n.color }} />
-              </View>
+            { e: '🥩', l: t('journal.protein'), v: 22, bg: C.successSoft },
+            { e: '🍞', l: t('journal.carbs'),   v: 58, bg: C.goldSoft },
+            { e: '🫒', l: t('journal.fat'),      v: 20, bg: C.surface2 },
+          ].map((s, i) => (
+            <View key={i} style={{ flex: 1, padding: 12, borderRadius: 12, backgroundColor: s.bg, alignItems: 'center' }}>
+              <Text style={{ fontSize: 18 }}>{s.e}</Text>
+              <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 18, fontWeight: '700', color: C.ink, marginTop: 4 }}>{s.v}%</Text>
+              <Text style={{ fontSize: 10, color: C.inkMute }}>{s.l}</Text>
             </View>
           ))}
+        </View>
+
+        {/* Trend */}
+        <View style={{ marginTop: 20, padding: 12, backgroundColor: C.successSoft, borderRadius: 12 }}>
+          <Text style={{ fontSize: 11, fontWeight: '700', color: C.success, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6 }}>
+            ✓ {t('journal.trend')}
+          </Text>
+          <Text style={{ fontSize: 12, color: C.inkSoft, lineHeight: 18 }}>
+            {t('journalStats.trendText', { avg: weekAvg.toLocaleString(), diff: (GOAL_KCAL - weekAvg).toLocaleString() })} {t('journal.goodBalance')}
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -1,12 +1,9 @@
 // src/components/ui/FoodCard.tsx
 import React from 'react';
 import {
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+  Image, Pressable, StyleSheet, View,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { colors, fontFamily, fontSize, radius, shadows, spacing2 } from '@/constants/theme';
 import { ConfidenceBar } from './ConfidenceBar';
 import { Tag } from './Tag';

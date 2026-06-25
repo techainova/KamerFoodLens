@@ -1,7 +1,8 @@
 import React from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StatusBar,
+  View, ScrollView, TouchableOpacity, StatusBar,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -12,9 +13,10 @@ const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, 
 const SHADOW_MD = { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.10, shadowRadius: 6, elevation: 4 };
 
 const FEATURED_ORGS = [
-  { name: 'Chez Mama Pauline', type: 'Restaurant', rating: '4.8', open: true  },
-  { name: 'Chef Joël Academy', type: 'Formation',   rating: '4.9', open: true  },
-  { name: 'Kmer Saveurs',      type: 'Street food', rating: '4.3', open: false },
+  { name: 'Chez Maman Pauline', type: 'Restaurant',    followers: 247, initials: 'MP' },
+  { name: 'Chef Joëlle K.',     type: 'Chef indép.',   followers: 312, initials: 'JK' },
+  { name: 'Chef Lionel L.',     type: 'École hôt.',    followers: 89,  initials: 'LL' },
+  { name: 'La Marmite du Sud',  type: 'Restaurant',    followers: 156, initials: 'MS' },
 ];
 
 const POPULAR = ['Ndolé traditionnel', 'Poulet DG', 'Eru & Fufu'];
@@ -72,28 +74,23 @@ export default function HomeProAware() {
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingLeft: 16 }}>
-          <View style={{ flexDirection: 'row', gap: 12, paddingRight: 16 }}>
+          <View style={{ flexDirection: 'row', gap: 10, paddingRight: 16 }}>
             {FEATURED_ORGS.map((org, i) => (
-              <TouchableOpacity key={i} onPress={() => navigation.navigate('Restaurant')} style={{ width: 176, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, overflow: 'hidden', ...SHADOW_MD }}>
-                <View style={{ height: 96, backgroundColor: C.surface2, borderBottomWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon name="ChefHat" size={36} color={C.inkMute} />
-                  <View style={{ position: 'absolute', top: 8, right: 8, backgroundColor: C.gold, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10 }}>
-                    <Text style={{ color: '#fff', fontSize: 10, fontWeight: '700' }}>PRO</Text>
+              <TouchableOpacity key={i} onPress={() => navigation.navigate('Restaurant')} style={{ width: 160, borderRadius: 14, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, padding: 12, ...SHADOW_MD }}>
+                <View style={{ position: 'relative', alignSelf: 'flex-start' }}>
+                  <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: C.inkMute }}>{org.initials}</Text>
+                  </View>
+                  <View style={{ position: 'absolute', bottom: -2, right: -2, width: 18, height: 18, borderRadius: 9, backgroundColor: C.success, borderWidth: 2, borderColor: C.surface, alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name="Check" size={10} color="#fff" strokeWidth={3} />
                   </View>
                 </View>
-                <View style={{ padding: 10 }}>
-                  <Text style={{ fontSize: 13, fontWeight: '700', color: C.ink }}>{org.name}</Text>
-                  <Text style={{ fontSize: 12, color: C.inkMute }}>{org.type}</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                      <Icon name="Star" size={12} color={C.gold} fill={C.gold} />
-                      <Text style={{ fontSize: 12, color: C.gold, fontWeight: '600' }}>{org.rating}</Text>
-                    </View>
-                    <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8, backgroundColor: org.open ? C.successSoft : C.errorSoft }}>
-                      <Text style={{ fontSize: 11, fontWeight: '600', color: org.open ? C.success : C.error }}>
-                        {org.open ? t('homeProAware.open') : t('homeProAware.closed')}
-                      </Text>
-                    </View>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: C.ink, marginTop: 8 }} numberOfLines={1}>{org.name}</Text>
+                <Text style={{ fontSize: 10, color: C.inkMute, marginTop: 1 }}>{org.type}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+                  <Text style={{ fontSize: 10, color: C.inkMute }}>{org.followers} {t('homeProAware.followers')}</Text>
+                  <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, backgroundColor: C.goldSoft }}>
+                    <Text style={{ fontSize: 10, fontWeight: '700', color: C.primary }}>{t('homeProAware.follow')}</Text>
                   </View>
                 </View>
               </TouchableOpacity>

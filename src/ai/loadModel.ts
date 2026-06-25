@@ -3,6 +3,7 @@
 // une seule fois (singleton) — exécution 100% locale, aucun appel réseau.
 
 import { loadTensorflowModel, type TensorflowModel } from 'react-native-fast-tflite';
+import { resolveModelAssetUri } from './resolveModelAsset';
 
 let modelPromise: Promise<TensorflowModel> | null = null;
 
@@ -12,10 +13,8 @@ let modelPromise: Promise<TensorflowModel> | null = null;
  */
 export function loadModel(): Promise<TensorflowModel> {
   if (!modelPromise) {
-    modelPromise = loadTensorflowModel(
-      require('../../assets/models/kfl_food_model.tflite'),
-      [],
-    );
+    modelPromise = resolveModelAssetUri(require('../../assets/models/kfl_food_model.tflite'))
+      .then((url) => loadTensorflowModel({ url }, []));
   }
   return modelPromise;
 }

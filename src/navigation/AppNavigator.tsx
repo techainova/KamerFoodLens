@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackActions, getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import type { AppTabParams } from './types';
+import { useAuthStore } from '@/store/auth.store';
 
 // ── Core ────────────────────────────────────────────────────────────────────
 import HomeV1        from '@/screens/home/HomeV1';
@@ -99,6 +100,7 @@ import ProPaymentSetup     from '@/screens/order/ProPaymentSetup';
 import ProOrders           from '@/screens/order/ProOrders';
 import ProOrderDetail      from '@/screens/order/ProOrderDetail';
 import ProConfirmation     from '@/screens/pro/ProConfirmation';
+import ProRegistration     from '@/screens/pro/ProRegistration';
 import CreateEvent         from '@/screens/pro/CreateEvent';
 import ManageEvent         from '@/screens/pro/ManageEvent';
 import CreateCourse        from '@/screens/pro/CreateCourse';
@@ -139,6 +141,7 @@ const Tab = createBottomTabNavigator<AppTabParams>();
 const HomeStack    = createNativeStackNavigator();
 const ScannerStack = createNativeStackNavigator();
 const ProfileStack = createNativeStackNavigator();
+const ProStack     = createNativeStackNavigator();
 
 function HomeStackNav() {
   return (
@@ -232,6 +235,7 @@ function HomeStackNav() {
       <HomeStack.Screen name="ProOrders"           component={ProOrders} />
       <HomeStack.Screen name="ProOrderDetail"      component={ProOrderDetail} />
       <HomeStack.Screen name="ProConfirmation"     component={ProConfirmation} />
+      <HomeStack.Screen name="ProRegistration"     component={ProRegistration} />
       <HomeStack.Screen name="CreateEvent"         component={CreateEvent} />
       <HomeStack.Screen name="ManageEvent"         component={ManageEvent} />
       <HomeStack.Screen name="CreateCourse"        component={CreateCourse} />
@@ -327,19 +331,80 @@ function ProfileStackNav() {
 
       {/* ── Pro reachable from Profile ────────────────────────────── */}
       <ProfileStack.Screen name="UpgradePro"         component={UpgradePro} />
+      <ProfileStack.Screen name="ProRegistration"    component={ProRegistration} />
       <ProfileStack.Screen name="ProDashboard"       component={ProDashboard} />
       <ProfileStack.Screen name="SettingsProEntry"   component={SettingsProEntry} />
       <ProfileStack.Screen name="SettingsProActive"  component={SettingsProActive} />
       <ProfileStack.Screen name="ProfilePro"         component={ProfilePro} />
       <ProfileStack.Screen name="Badges"             component={Badges} />
+      <ProfileStack.Screen name="RestaurantMenu"     component={RestaurantMenu} />
+      <ProfileStack.Screen name="RestaurantMenuEdit" component={RestaurantMenuEdit} />
+      <ProfileStack.Screen name="ProRevenues"        component={ProRevenues} />
+      <ProfileStack.Screen name="ProFormationsList"  component={ProFormationsList} />
+      <ProfileStack.Screen name="ProFormationManage" component={ProFormationManage} />
+      <ProfileStack.Screen name="ProMessages"        component={ProMessages} />
+      <ProfileStack.Screen name="ProMessageDetail"   component={ProMessageDetail} />
+      <ProfileStack.Screen name="ProPromos"          component={ProPromos} />
+      <ProfileStack.Screen name="ProAnalytics"       component={ProAnalytics} />
+      <ProfileStack.Screen name="ProSubscription"    component={ProSubscription} />
+      <ProfileStack.Screen name="ProPaymentSetup"    component={ProPaymentSetup} />
+      <ProfileStack.Screen name="ProOrders"          component={ProOrders} />
+      <ProfileStack.Screen name="ProOrderDetail"     component={ProOrderDetail} />
+      <ProfileStack.Screen name="ProConfirmation"    component={ProConfirmation} />
+      <ProfileStack.Screen name="CreateEvent"        component={CreateEvent} />
+      <ProfileStack.Screen name="ManageEvent"        component={ManageEvent} />
+      <ProfileStack.Screen name="CreateCourse"       component={CreateCourse} />
+      <ProfileStack.Screen name="ManageCommunity"    component={ManageCommunity} />
+      <ProfileStack.Screen name="RestaurantPublicV4" component={RestaurantPublicV4} />
+      <ProfileStack.Screen name="OrderMenu"          component={OrderMenu} />
+      <ProfileStack.Screen name="OrderSummary"       component={OrderSummary} />
+      <ProfileStack.Screen name="OrderPayment"       component={OrderPayment} />
+      <ProfileStack.Screen name="OrderInvoice"       component={OrderInvoice} />
+      <ProfileStack.Screen name="OrderHistory"       component={OrderHistory} />
+      <ProfileStack.Screen name="Restaurant"         component={Restaurant} />
     </ProfileStack.Navigator>
   );
 }
 
-const TAB_NAMES: TabName[] = ['home', 'search', 'scanner', 'favorites', 'profile'];
-const ROUTE_NAMES = ['HomeTab', 'SearchTab', 'ScannerTab', 'FavoritesTab', 'ProfileTab'];
+function ProStackNav() {
+  return (
+    <ProStack.Navigator screenOptions={{ headerShown: false }}>
+      <ProStack.Screen name="ProDashboard"       component={ProDashboard} />
+      <ProStack.Screen name="RestaurantMenu"     component={RestaurantMenu} />
+      <ProStack.Screen name="RestaurantMenuEdit" component={RestaurantMenuEdit} />
+      <ProStack.Screen name="ProRevenues"        component={ProRevenues} />
+      <ProStack.Screen name="ProFormationsList"  component={ProFormationsList} />
+      <ProStack.Screen name="ProFormationManage" component={ProFormationManage} />
+      <ProStack.Screen name="ProMessages"        component={ProMessages} />
+      <ProStack.Screen name="ProMessageDetail"   component={ProMessageDetail} />
+      <ProStack.Screen name="ProPromos"          component={ProPromos} />
+      <ProStack.Screen name="ProAnalytics"       component={ProAnalytics} />
+      <ProStack.Screen name="ProSubscription"    component={ProSubscription} />
+      <ProStack.Screen name="ProPaymentSetup"    component={ProPaymentSetup} />
+      <ProStack.Screen name="ProOrders"          component={ProOrders} />
+      <ProStack.Screen name="ProOrderDetail"     component={ProOrderDetail} />
+      <ProStack.Screen name="ManageCommunity"    component={ManageCommunity} />
+      <ProStack.Screen name="CreateEvent"        component={CreateEvent} />
+      <ProStack.Screen name="ManageEvent"        component={ManageEvent} />
+      <ProStack.Screen name="CreateCourse"       component={CreateCourse} />
+      <ProStack.Screen name="SettingsProActive"  component={SettingsProActive} />
+    </ProStack.Navigator>
+  );
+}
+
+const TAB_NAMES_STANDARD: TabName[] = ['home', 'search', 'scanner', 'favorites', 'profile'];
+const ROUTE_NAMES_STANDARD = ['HomeTab', 'SearchTab', 'ScannerTab', 'FavoritesTab', 'ProfileTab'];
+
+// Compte Pro actif : 6 onglets — Favoris reste, « Pro » s'ajoute entre Favoris et Profil
+// (cf. design Module C5 — la barre standard n'est jamais réduite pour les comptes Pro).
+const TAB_NAMES_PRO: TabName[] = ['home', 'search', 'scanner', 'favorites', 'pro', 'profile'];
+const ROUTE_NAMES_PRO = ['HomeTab', 'SearchTab', 'ScannerTab', 'FavoritesTab', 'ProTab', 'ProfileTab'];
 
 export function AppNavigator() {
+  const isPro = useAuthStore((s) => s.user?.role === 'pro');
+  const TAB_NAMES = isPro ? TAB_NAMES_PRO : TAB_NAMES_STANDARD;
+  const ROUTE_NAMES = isPro ? ROUTE_NAMES_PRO : ROUTE_NAMES_STANDARD;
+
   return (
     <Tab.Navigator
       screenOptions={{ headerShown: false }}
@@ -351,11 +416,8 @@ export function AppNavigator() {
         return (
         <WFBottomNav
           activeTab={TAB_NAMES[state.index] ?? 'home'}
+          isPro={isPro}
           onTabPress={(tab) => {
-            if (tab === 'pro') {
-              navigation.navigate('HomeTab' as never);
-              return;
-            }
             const idx = TAB_NAMES.indexOf(tab);
             if (idx < 0) return;
             const routeName = ROUTE_NAMES[idx]!;
@@ -378,6 +440,7 @@ export function AppNavigator() {
       <Tab.Screen name="SearchTab"    component={Search} />
       <Tab.Screen name="ScannerTab"   component={ScannerStackNav} />
       <Tab.Screen name="FavoritesTab" component={FavoritesScreen} />
+      {isPro && <Tab.Screen name="ProTab" component={ProStackNav} />}
       <Tab.Screen name="ProfileTab"   component={ProfileStackNav} />
     </Tab.Navigator>
   );

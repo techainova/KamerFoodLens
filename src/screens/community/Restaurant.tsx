@@ -1,8 +1,9 @@
 ﻿import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, SafeAreaView,
-  StatusBar, TextInput,
+  View, ScrollView, TouchableOpacity, StatusBar, TextInput, Alert, Share,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
@@ -114,7 +115,7 @@ export default function Restaurant() {
               >
                 <Icon name="Bookmark" size={17} color="#fff" fill={bookmarked ? '#fff' : 'none'} />
               </TouchableOpacity>
-              <TouchableOpacity style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.4)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }}>
+              <TouchableOpacity onPress={() => Share.share({ message: 'Chez Mama Pauline sur KmerFoodLens — cuisine camerounaise authentique' })} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.4)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }}>
                 <Icon name="Share2" size={17} color="#fff" />
               </TouchableOpacity>
             </View>
@@ -352,6 +353,7 @@ export default function Restaurant() {
       {/* Bottom CTA */}
       <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 16, paddingVertical: 14, paddingBottom: 28, backgroundColor: C.surface, borderTopWidth: 1, borderColor: C.border, flexDirection: 'row', gap: 10 }}>
         <TouchableOpacity
+          onPress={() => Alert.alert(t('settings.comingSoonTitle', 'Bientôt disponible'), t('settings.comingSoonMsg', 'Cette fonctionnalité arrive dans une prochaine mise à jour.'))}
           style={{ flex: 1, height: 52, borderWidth: 2, borderColor: '#E8591A', borderRadius: 26, alignItems: 'center', justifyContent: 'center' }}
           activeOpacity={0.85}
         >
@@ -360,6 +362,7 @@ export default function Restaurant() {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
+          onPress={() => navigation.navigate(totalCart > 0 ? 'OrderSummary' : 'RestaurantPublicV4')}
           style={{ flex: 2, height: 52, backgroundColor: '#E8591A', borderRadius: 26, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
           activeOpacity={0.85}
         >

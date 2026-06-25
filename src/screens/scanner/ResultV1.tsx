@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StatusBar,
-  SafeAreaView, Image,
+  View, ScrollView, TouchableOpacity, StatusBar, Image,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';

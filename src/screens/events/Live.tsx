@@ -1,5 +1,8 @@
 ﻿import React, { useState } from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity } from 'react-native';
+import {
+  View, ScrollView, TextInput, TouchableOpacity,
+} from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';

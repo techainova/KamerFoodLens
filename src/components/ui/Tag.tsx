@@ -1,6 +1,9 @@
 // src/components/ui/Tag.tsx
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import {
+  StyleSheet, View,
+} from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { colors, fontFamily, fontSize, radius } from '@/constants/theme';
 
 export type TagTone = 'region' | 'veg' | 'spicy' | 'new' | 'neutral';

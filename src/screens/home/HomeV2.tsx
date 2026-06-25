@@ -1,7 +1,8 @@
 ﻿import React from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, Image,
+  View, ScrollView, TouchableOpacity, Image,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';

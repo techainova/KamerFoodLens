@@ -1,7 +1,8 @@
 ﻿import React, { useState } from 'react';
 import {
-  View, Text, TouchableOpacity, ScrollView, TextInput,
+  View, TouchableOpacity, ScrollView, TextInput,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';

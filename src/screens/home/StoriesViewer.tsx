@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  View, Text, Image, TouchableOpacity, Animated, StatusBar, Pressable, Alert, Dimensions,
+  View, Image, TouchableOpacity, Animated, StatusBar, Pressable, Alert, Dimensions,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';

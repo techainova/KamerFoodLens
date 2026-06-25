@@ -1,9 +1,10 @@
 ﻿import React from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StatusBar,
+  View, ScrollView, TouchableOpacity, StatusBar, Alert, Share,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 
@@ -17,10 +18,11 @@ const ORDER_ITEMS = [
 
 export default function OrderInvoice() {
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
   const C = useColors();
   const subtotal = ORDER_ITEMS.reduce((s, i) => s + i.price, 0);
   const delivery = 1000;
-  const total = subtotal + delivery;
+  const total = route.params?.total ?? subtotal + delivery;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -93,10 +95,14 @@ export default function OrderInvoice() {
 
       {/* Actions */}
       <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingVertical: 14, borderTopWidth: 1, borderColor: C.border, backgroundColor: C.surface }}>
-        <TouchableOpacity style={{ flex: 1, height: 44, borderWidth: 1, borderColor: C.border, borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}>
+        <TouchableOpacity onPress={() => Alert.alert('Bientôt disponible', "Le téléchargement PDF arrive dans une prochaine mise à jour.")} style={{ flex: 1, height: 44, borderWidth: 1, borderColor: C.border, borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}>
           <Text style={{ fontSize: 14, color: C.inkSoft }}>Télécharger PDF</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={{ flex: 1, height: 44, backgroundColor: '#E8591A', borderRadius: 22, alignItems: 'center', justifyContent: 'center' }} activeOpacity={0.85}>
+        <TouchableOpacity
+          onPress={() => Share.share({ message: `Facture KFL #KFL-2026-4821 · ${total.toLocaleString()} XAF · Chez Mama Pauline` })}
+          style={{ flex: 1, height: 44, backgroundColor: '#E8591A', borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}
+          activeOpacity={0.85}
+        >
           <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>Partager</Text>
         </TouchableOpacity>
       </View>

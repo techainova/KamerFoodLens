@@ -1,7 +1,8 @@
 ﻿import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StatusBar,
+  View, ScrollView, TouchableOpacity, StatusBar,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
@@ -71,11 +72,11 @@ export default function OrderHistory() {
                 <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink }}>{order.total.toLocaleString()} XAF</Text>
                 <View style={{ flexDirection: 'row', gap: 6 }}>
                   {order.status === 'delivered' && (
-                    <TouchableOpacity style={{ height: 30, paddingHorizontal: 12, backgroundColor: '#E8591A', borderRadius: 15, alignItems: 'center', justifyContent: 'center' }}>
+                    <TouchableOpacity onPress={() => navigation.navigate('OrderMenu')} style={{ height: 30, paddingHorizontal: 12, backgroundColor: '#E8591A', borderRadius: 15, alignItems: 'center', justifyContent: 'center' }}>
                       <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>Recommander</Text>
                     </TouchableOpacity>
                   )}
-                  <TouchableOpacity style={{ height: 30, paddingHorizontal: 12, borderWidth: 1, borderColor: C.border, borderRadius: 15, alignItems: 'center', justifyContent: 'center' }}>
+                  <TouchableOpacity onPress={() => navigation.navigate('OrderInvoice', { total: order.total })} style={{ height: 30, paddingHorizontal: 12, borderWidth: 1, borderColor: C.border, borderRadius: 15, alignItems: 'center', justifyContent: 'center' }}>
                     <Text style={{ fontSize: 12, color: C.inkSoft }}>Détails</Text>
                   </TouchableOpacity>
                 </View>

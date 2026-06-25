@@ -1,10 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
 import {
-  View, Text, TouchableOpacity, StatusBar, Animated,
-  SafeAreaView, Easing, Alert,
+  View, TouchableOpacity, StatusBar, Animated, Easing, Alert,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ScannerStackParams } from '@/navigation/types';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -51,6 +52,7 @@ function CornerBrackets() {
 
 export default function Camera() {
   const navigation = useNavigation<CameraNav>();
+  const isFocused = useIsFocused();
   const C = useColors();
   const { t } = useTranslation();
   const { isLoading, scanImage } = useFoodScanner();
@@ -159,9 +161,13 @@ export default function Camera() {
     <View style={{ flex: 1, backgroundColor: '#0B0B0B' }}>
       <StatusBar barStyle="light-content" />
 
-      {/* Caméra réelle (aperçu live) */}
-      {permission?.granted ? (
+      {/* Caméra réelle (aperçu live) — démontée hors focus pour forcer une
+          session caméra native fraîche à chaque retour sur cet écran
+          (le aperçu expo-camera peut rester figé/noir sinon, sur un second
+          accès après navigation vers Result puis retour en arrière). */}
+      {permission?.granted && isFocused ? (
         <CameraView
+          key={isFocused ? 'camera-active' : 'camera-inactive'}
           ref={cameraRef}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
           facing="back"

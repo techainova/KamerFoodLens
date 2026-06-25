@@ -1,5 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import {
+  View, TouchableOpacity,
+} from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { useTranslation } from 'react-i18next';
 
 interface Props {

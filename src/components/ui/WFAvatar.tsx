@@ -1,6 +1,9 @@
 // src/components/ui/WFAvatar.tsx
 import React from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import {
+  Image, StyleSheet, View,
+} from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { colors, fontFamily } from '@/constants/theme';
 
 type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';

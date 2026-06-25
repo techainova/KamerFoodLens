@@ -1,8 +1,9 @@
 ﻿import React, { useState, useRef, useEffect } from 'react';
 import {
-  View, Text, TouchableOpacity, SafeAreaView,
-  TextInput, ScrollView, Animated, Easing,
+  View, TouchableOpacity, TextInput, ScrollView, Animated, Easing,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -10,6 +11,7 @@ import type { ScannerStackParams } from '@/navigation/types';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { useVoiceToText } from '@/hooks/useVoiceToText';
+import { matchDishByDescription } from '@/ai/text/matchDishByDescription';
 
 type Nav = NativeStackNavigationProp<ScannerStackParams, 'AudioText'>;
 
@@ -81,10 +83,16 @@ export default function AudioText() {
   };
 
   const handleAnalyze = async () => {
+    const description = activeTab === 'audio' ? transcript : textInput;
     setAnalyzing(true);
-    await new Promise(r => setTimeout(r, 1200));
+    await new Promise(r => setTimeout(r, 800)); // léger délai pour matérialiser l'analyse à l'écran
+    const { classId, confidence } = matchDishByDescription(description);
     setAnalyzing(false);
-    nav.navigate('Result', { scanId: 'audio-scan-001' });
+    nav.navigate('Result', {
+      scanId: `text-scan-${Date.now()}`,
+      classId,
+      confidence,
+    });
   };
 
   const hasInput = activeTab === 'audio' ? transcript.length > 0 : textInput.length > 2;

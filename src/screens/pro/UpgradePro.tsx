@@ -3,12 +3,9 @@
 
 import React, { useState } from 'react';
 import {
-  ScrollView,
-  StatusBar,
-  Text,
-  TouchableOpacity,
-  View,
+  ScrollView, StatusBar, TouchableOpacity, View,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 
@@ -54,14 +51,15 @@ type Plan = {
   id: PlanId;
   label: string;
   price: string;
+  amount: number | null;
   period: string;
   savingsBadge?: string;
 };
 
 const PLANS: Plan[] = [
-  { id: 'monthly',    label: 'Mensuel',    price: '3 000 XAF',  period: '/ mois' },
-  { id: 'yearly',     label: 'Annuel',     price: '27 000 XAF', period: '/ an', savingsBadge: 'Économisez 25 %' },
-  { id: 'enterprise', label: 'Entreprise', price: 'Sur devis',  period: '' },
+  { id: 'monthly',    label: 'Mensuel',    price: '3 000 XAF',  amount: 3000,  period: '/ mois' },
+  { id: 'yearly',     label: 'Annuel',     price: '27 000 XAF', amount: 27000, period: '/ an', savingsBadge: 'Économisez 25 %' },
+  { id: 'enterprise', label: 'Entreprise', price: 'Sur devis',  amount: null,  period: '' },
 ];
 
 export default function UpgradePro() {
@@ -71,12 +69,7 @@ export default function UpgradePro() {
   const [selectedPlan, setSelectedPlan] = useState<PlanId>('yearly');
 
   const handleCTA = () => {
-    navigation.navigate('MobileMoneyConfirm', {
-      provider: 'MTN',
-      amount: 3000,
-      phone: '',
-      purpose: 'pro-upgrade',
-    });
+    navigation.navigate('ProRegistration');
   };
 
   const planBorderColor = (plan: Plan): string => {
@@ -265,7 +258,7 @@ export default function UpgradePro() {
             onPress={handleCTA}
             activeOpacity={0.85}
             accessibilityRole="button"
-            accessibilityLabel="Démarrer l'essai gratuit 7 jours"
+            accessibilityLabel="Continuer l'inscription"
             style={{
               backgroundColor: C.primary,
               borderRadius: 9999, paddingVertical: 16,
@@ -274,12 +267,12 @@ export default function UpgradePro() {
             }}
           >
             <Text style={{ fontFamily: 'Inter-Bold', fontSize: 16, color: '#FFFFFF', letterSpacing: 0.2 }}>
-              Démarrer l'essai gratuit 7 jours
+              Continuer l'inscription
             </Text>
           </TouchableOpacity>
 
           <Text style={{ fontFamily: 'Inter-Regular', fontSize: 13, color: C.inkMute, textAlign: 'center', marginTop: 10 }}>
-            Sans engagement · Annulez à tout moment
+            Activation immédiate après paiement · Annulez à tout moment
           </Text>
         </View>
 

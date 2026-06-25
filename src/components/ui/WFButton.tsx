@@ -1,15 +1,9 @@
 // src/components/ui/WFButton.tsx
 import React, { useRef } from 'react';
 import {
-  Animated,
-  ActivityIndicator,
-  Pressable,
-  StyleProp,
-  StyleSheet,
-  Text,
-  View,
-  ViewStyle,
+  Animated, ActivityIndicator, Pressable, StyleProp, StyleSheet, View, ViewStyle,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { colors, radius, spacing2, fontFamily, fontSize, letterSpacing } from '@/constants/theme';
 
 type Variant = 'primary' | 'secondary' | 'accent' | 'ghost' | 'danger';

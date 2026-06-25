@@ -1,7 +1,8 @@
 ﻿import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity,
+  View, ScrollView, TouchableOpacity, Share,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
@@ -32,6 +33,7 @@ export default function RestaurantPublicV4() {
   const C = useColors();
   const [activeTab, setActiveTab] = useState(0);
   const [cart, setCart] = useState<Record<string, number>>({});
+  const [saved, setSaved] = useState(false);
 
   const addToCart = (name: string) => setCart(prev => ({ ...prev, [name]: (prev[name] || 0) + 1 }));
   const cartCount = Object.values(cart).reduce((s, v) => s + v, 0);
@@ -52,10 +54,10 @@ export default function RestaurantPublicV4() {
             <Icon name="ArrowLeft" size={18} color="#fff" />
           </TouchableOpacity>
           <View style={{ flexDirection: 'row', gap: 6 }}>
-            <TouchableOpacity style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name="Bookmark" size={16} color="#fff" />
+            <TouchableOpacity onPress={() => setSaved((v) => !v)} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name="Bookmark" size={16} color={saved ? '#E8591A' : '#fff'} fill={saved ? '#E8591A' : 'none'} />
             </TouchableOpacity>
-            <TouchableOpacity style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' }}>
+            <TouchableOpacity onPress={() => Share.share({ message: 'Chez Mama Pauline sur KmerFoodLens — cuisine camerounaise authentique' })} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' }}>
               <Icon name="Share2" size={16} color="#fff" />
             </TouchableOpacity>
           </View>
@@ -132,7 +134,7 @@ export default function RestaurantPublicV4() {
       {/* Cart CTA */}
       {cartCount > 0 && (
         <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 16, paddingVertical: 14, backgroundColor: C.surface, borderTopWidth: 1, borderColor: C.border }}>
-          <TouchableOpacity style={{ height: 48, backgroundColor: '#E8591A', borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 }} activeOpacity={0.85}>
+          <TouchableOpacity onPress={() => navigation.navigate('OrderSummary')} style={{ height: 48, backgroundColor: '#E8591A', borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 }} activeOpacity={0.85}>
             <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}>
               <Text style={{ fontSize: 11, fontWeight: '700', color: '#E8591A' }}>{cartCount}</Text>
             </View>

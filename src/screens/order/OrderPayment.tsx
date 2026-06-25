@@ -1,9 +1,10 @@
 ﻿import React, { useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, ScrollView, StatusBar,
+  View, TextInput, TouchableOpacity, ScrollView, StatusBar,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 
@@ -16,10 +17,21 @@ const METHODS = [
 
 export default function OrderPayment() {
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
   const C = useColors();
   const [method, setMethod] = useState('mtn');
   const [phone, setPhone] = useState('');
-  const total = 13000;
+  const [processing, setProcessing] = useState(false);
+  const total = route.params?.total ?? 13000;
+
+  const handleConfirm = () => {
+    if (processing) return;
+    setProcessing(true);
+    setTimeout(() => {
+      setProcessing(false);
+      navigation.navigate('OrderInvoice', { total });
+    }, 1200);
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -80,8 +92,15 @@ export default function OrderPayment() {
       </ScrollView>
 
       <View style={{ paddingHorizontal: 16, paddingVertical: 14, borderTopWidth: 1, borderColor: C.border, backgroundColor: C.surface }}>
-        <TouchableOpacity style={{ height: 48, backgroundColor: '#E8591A', borderRadius: 24, alignItems: 'center', justifyContent: 'center' }} activeOpacity={0.85}>
-          <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>Confirmer le paiement · {total.toLocaleString()} XAF</Text>
+        <TouchableOpacity
+          onPress={handleConfirm}
+          disabled={processing}
+          style={{ height: 48, backgroundColor: processing ? '#8C8278' : '#E8591A', borderRadius: 24, alignItems: 'center', justifyContent: 'center' }}
+          activeOpacity={0.85}
+        >
+          <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>
+            {processing ? 'Traitement en cours...' : `Confirmer le paiement · ${total.toLocaleString()} XAF`}
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

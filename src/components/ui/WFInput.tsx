@@ -1,12 +1,9 @@
 // src/components/ui/WFInput.tsx
 import React, { useState } from 'react';
 import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TextInputProps,
-  View,
+  StyleSheet, TextInput, TextInputProps, View,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { colors, fontFamily, fontSize, radius, spacing2 } from '@/constants/theme';
 
 interface WFInputProps extends TextInputProps {

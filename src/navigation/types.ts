@@ -15,6 +15,7 @@ export type AppTabParams = {
   SearchTab:    undefined;
   ScannerTab:   undefined;
   FavoritesTab: undefined;
+  ProTab:       undefined;
   ProfileTab:   undefined;
 };
 

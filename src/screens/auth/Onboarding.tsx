@@ -1,7 +1,8 @@
 ﻿import React, { useState } from 'react';
 import {
-  View, Text, TouchableOpacity, Image,
+  View, TouchableOpacity, Image,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useColors } from '@/hooks/useAppTheme';

@@ -1,11 +1,9 @@
 // src/components/ui/WFAppBar.tsx
 import React from 'react';
 import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+  Pressable, StyleSheet, View,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, fontFamily, fontSize, shadows, spacing2 } from '@/constants/theme';
 

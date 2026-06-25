@@ -1,8 +1,9 @@
 ﻿import React, { useState } from 'react';
 import {
-  View, Text, TextInput, ScrollView, TouchableOpacity, SafeAreaView,
-  StatusBar, KeyboardAvoidingView, Platform,
+  View, TextInput, ScrollView, TouchableOpacity, StatusBar, KeyboardAvoidingView, Platform,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';

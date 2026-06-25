@@ -1,11 +1,9 @@
 // src/components/ui/WFChip.tsx
 import React from 'react';
 import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+  Pressable, StyleSheet, View,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { colors, fontFamily, fontSize, radius } from '@/constants/theme';
 
 interface WFChipProps {

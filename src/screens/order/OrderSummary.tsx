@@ -1,7 +1,8 @@
 ﻿import React, { useState } from 'react';
 import {
-  View, Text, TextInput, ScrollView, TouchableOpacity, StatusBar,
+  View, TextInput, ScrollView, TouchableOpacity, StatusBar,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
@@ -112,7 +113,7 @@ export default function OrderSummary() {
 
       {/* CTA */}
       <View style={{ paddingHorizontal: 16, paddingVertical: 14, borderTopWidth: 1, borderColor: C.border, backgroundColor: C.surface }}>
-        <TouchableOpacity style={{ height: 48, backgroundColor: '#E8591A', borderRadius: 24, alignItems: 'center', justifyContent: 'center' }} activeOpacity={0.85}>
+        <TouchableOpacity onPress={() => navigation.navigate('OrderPayment', { total, note, deliveryMode })} style={{ height: 48, backgroundColor: '#E8591A', borderRadius: 24, alignItems: 'center', justifyContent: 'center' }} activeOpacity={0.85}>
           <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>Passer au paiement · {total.toLocaleString()} XAF</Text>
         </TouchableOpacity>
       </View>

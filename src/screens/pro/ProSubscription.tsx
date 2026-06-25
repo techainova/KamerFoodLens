@@ -3,13 +3,9 @@
 
 import React from 'react';
 import {
-  Alert,
-  ScrollView,
-  StatusBar,
-  Text,
-  TouchableOpacity,
-  View,
+  Alert, ScrollView, StatusBar, TouchableOpacity, View,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useColors } from '@/hooks/useAppTheme';

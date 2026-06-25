@@ -2,7 +2,10 @@
 // Affiche le texte dans la langue active (FR ou EN)
 
 import React from 'react';
-import { Text, TextStyle } from 'react-native';
+import {
+  TextStyle,
+} from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { useTranslation } from 'react-i18next';
 
 interface Props {

@@ -1,5 +1,8 @@
 import React from 'react';
-import { View, Text, Pressable, Platform } from 'react-native';
+import {
+  View, Pressable, Platform,
+} from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { colors, shadows } from '@/constants/theme';
@@ -26,11 +29,12 @@ const TABS_STANDARD: TabDef[] = [
 ];
 
 const TABS_PRO: TabDef[] = [
-  { name: 'home',    icon: 'Home',     labelKey: 'nav.home' },
-  { name: 'search',  icon: 'Search',   labelKey: 'nav.search' },
-  { name: 'scanner', icon: 'ScanLine', labelKey: 'nav.scanner' },
-  { name: 'pro',     icon: 'Star',     labelKey: 'nav.pro', proOnly: true },
-  { name: 'profile', icon: 'User',     labelKey: 'nav.profile' },
+  { name: 'home',      icon: 'Home',     labelKey: 'nav.home' },
+  { name: 'search',    icon: 'Search',   labelKey: 'nav.search' },
+  { name: 'scanner',   icon: 'ScanLine', labelKey: 'nav.scanner' },
+  { name: 'favorites', icon: 'Heart',    labelKey: 'nav.favorites' },
+  { name: 'pro',       icon: 'Star',     labelKey: 'nav.pro', proOnly: true },
+  { name: 'profile',   icon: 'User',     labelKey: 'nav.profile' },
 ];
 
 interface Props {

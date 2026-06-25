@@ -1,7 +1,9 @@
 ﻿import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, SafeAreaView, StatusBar, Modal,
+  View, ScrollView, TouchableOpacity, StatusBar, Modal,
 } from 'react-native';
+import { Text } from '@/components/ui/ScaledText';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import Icon, { type IconName } from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
