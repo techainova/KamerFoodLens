@@ -10,9 +10,7 @@ import { useColors, useAppTheme, LIGHT, DARK } from '@/hooks/useAppTheme';
 import { useUIStore } from '@/store/ui.store';
 import type { ThemeMode } from '@/store/ui.store';
 import Icon from '@/components/ui/Icon';
-
-const SHADOW_MD = { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.10, shadowRadius: 6, elevation: 4 };
-const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
+import { SHADOW_SM, SHADOW_MD, SHADOW_LG } from '@/constants/theme';
 
 function MiniPreview({ palette }: { palette: typeof LIGHT }) {
   return (

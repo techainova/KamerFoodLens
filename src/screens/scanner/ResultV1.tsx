@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View, ScrollView, TouchableOpacity, StatusBar, Image,
+  View, ScrollView, TouchableOpacity, StatusBar, Image, Alert,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,6 +12,8 @@ import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { getDishDescription } from '@/ai/dishDescriptions';
 import { UNKNOWN_CLASS } from '@/ai/interpretResult';
+import { useFavoritesStore } from '@/store/favorites.store';
+import { useJournalStore } from '@/store/journal.store';
 
 type ResultNav = NativeStackNavigationProp<ScannerStackParams, 'Result'>;
 type ResultRoute = RouteProp<ScannerStackParams, 'Result'>;
@@ -36,14 +38,60 @@ export default function ResultV1() {
   const route = useRoute<ResultRoute>();
   const C = useColors();
   const { t } = useTranslation();
-  const [savedToJournal, setSavedToJournal] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
+  const [savingToJournal, setSavingToJournal] = useState(false);
+
+  const isSaved = useFavoritesStore((s) => s.isSaved);
+  const toggleFavorite = useFavoritesStore((s) => s.toggle);
+  const fetchFavorites = useFavoritesStore((s) => s.fetchAll);
+  const journalToday = useJournalStore((s) => s.getToday);
+  const addJournalEntry = useJournalStore((s) => s.addEntry);
+  const fetchJournal = useJournalStore((s) => s.fetchAll);
 
   const classId     = route.params?.classId ?? UNKNOWN_CLASS;
   const confidence  = route.params?.confidence ?? 0;
   const imageUri    = route.params?.imageUri;
   const isUnknown = classId === UNKNOWN_CLASS;
   const dish = isUnknown ? null : getDishDescription(classId);
+
+  useEffect(() => {
+    void fetchFavorites();
+    void fetchJournal();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const bookmarked = !isUnknown && isSaved(classId);
+  const savedToJournal = !isUnknown && journalToday().some((e) => e.dishId === classId);
+
+  const inferMealType = (): 'breakfast' | 'lunch' | 'dinner' | 'snack' => {
+    const hour = new Date().getHours();
+    if (hour < 11) return 'breakfast';
+    if (hour < 16) return 'lunch';
+    if (hour < 21) return 'dinner';
+    return 'snack';
+  };
+
+  const handleToggleBookmark = () => {
+    if (isUnknown) return;
+    void toggleFavorite('dish', classId).catch(() => {
+      Alert.alert(t('common.error'), t('scanner.favoriteError'));
+    });
+  };
+
+  const handleAddToJournal = () => {
+    if (isUnknown || !dish || savedToJournal || savingToJournal) return;
+    setSavingToJournal(true);
+    addJournalEntry({
+      dishId: classId,
+      dishName: dish.nomFR,
+      imageUrl: imageUri,
+      mealType: inferMealType(),
+      date: new Date().toISOString(),
+    })
+      .catch(() => {
+        Alert.alert(t('common.error'), t('scanner.journalError'));
+      })
+      .finally(() => setSavingToJournal(false));
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: '#2C1810' }}>
@@ -81,7 +129,7 @@ export default function ResultV1() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: bookmarked ? 'rgba(232,89,26,0.5)' : 'rgba(0,0,0,0.35)', borderWidth: 1, borderColor: bookmarked ? '#E8591A' : 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }}
-                onPress={() => setBookmarked(!bookmarked)}
+                onPress={handleToggleBookmark}
               >
                 <Icon name="Bookmark" size={17} color="#fff" fill={bookmarked ? '#fff' : 'none'} />
               </TouchableOpacity>
@@ -205,7 +253,8 @@ export default function ResultV1() {
                 {/* Secondary action */}
                 <TouchableOpacity
                   style={{ marginTop: 10, height: 46, borderWidth: 1, borderColor: C.border, borderRadius: 23, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.surface }}
-                  onPress={() => setSavedToJournal(true)}
+                  onPress={handleAddToJournal}
+                  disabled={savedToJournal || savingToJournal}
                   activeOpacity={0.8}
                 >
                   <Icon name="Bookmark" size={16} color={savedToJournal ? '#2E7D32' : '#6D4C41'} fill={savedToJournal ? '#2E7D32' : 'none'} />

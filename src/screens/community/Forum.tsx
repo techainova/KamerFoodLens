@@ -1,99 +1,58 @@
-﻿import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  View, ScrollView, TouchableOpacity, StatusBar, TextInput,
+  View, ScrollView, TouchableOpacity, StatusBar, TextInput, ActivityIndicator,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
+import { SHADOW_SM } from '@/constants/theme';
+import { useForumStore, FORUM_CATEGORIES } from '@/store/forum.store';
+import { useAuthStore } from '@/store/auth.store';
 
-const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
+const CAT_COLORS: Record<string, string> = {
+  Recettes:      '#E8591A',
+  Restaurants:   '#1A237E',
+  Ingrédients:   '#2E7D32',
+  Astuces:       '#9C27B0',
+  Événements:    '#F9A825',
+  Général:       '#8C8278',
+};
 
-const CATEGORIES = ['Tout', 'Recettes', 'Techniques', 'Restaurants', 'Culture'];
-
-const THREADS = [
-  {
-    id: '1',
-    category: 'Recettes',
-    catColor: '#E8591A',
-    title: 'Comment reproduire le Mbongo Tchobi authentique à la maison ?',
-    user: 'Chef Paul',
-    initials: 'CP',
-    initColor: '#E8591A',
-    time: '2h',
-    replies: 34,
-    views: 428,
-    hot: true,
-    pinned: false,
-  },
-  {
-    id: '2',
-    category: 'Culture',
-    catColor: '#1A237E',
-    title: 'Différences régionales du Ndolé : Douala vs Yaoundé vs Bafang',
-    user: 'Maman Caro',
-    initials: 'MC',
-    initColor: '#2E7D32',
-    time: '5h',
-    replies: 67,
-    views: 892,
-    hot: true,
-    pinned: false,
-  },
-  {
-    id: '3',
-    category: 'Techniques',
-    catColor: '#2E7D32',
-    title: '[ÉPINGLÉ] Guide complet des épices camerounaises — njansang, écorces HK...',
-    user: 'Admin KFL',
-    initials: 'AK',
-    initColor: '#F9A825',
-    time: '2j',
-    replies: 156,
-    views: 2341,
-    hot: false,
-    pinned: true,
-  },
-  {
-    id: '4',
-    category: 'Restaurants',
-    catcolor: '#8C8278',
-    title: 'Meilleurs restaurants de Poulet DG à Douala en 2024 ?',
-    user: 'Ngo Beatrice',
-    initials: 'NB',
-    initColor: '#1A237E',
-    time: '1j',
-    replies: 23,
-    views: 315,
-    hot: false,
-    pinned: false,
-  },
-  {
-    id: '5',
-    category: 'Recettes',
-    catColor: '#E8591A',
-    title: 'Achu Soup : les secrets de la pâte jaune bien onctueuse',
-    user: 'Charlotte NW',
-    initials: 'CW',
-    initColor: '#E8591A',
-    time: '3j',
-    replies: 41,
-    views: 567,
-    hot: false,
-    pinned: false,
-  },
-];
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const h = Math.floor(diff / 3600000);
+  if (h < 1) return 'À l\'instant';
+  if (h < 24) return `${h}h`;
+  const d = Math.floor(h / 24);
+  return d === 1 ? '1j' : `${d}j`;
+}
 
 export default function Forum() {
   const navigation = useNavigation<any>();
   const C = useColors();
-  const [activeCategory, setActiveCategory] = useState('Tout');
+  const { t } = useTranslation();
+  const allLabel = t('common.all');
+  const CATEGORIES = [allLabel, ...FORUM_CATEGORIES];
+  const [activeCategory, setActiveCategory] = useState(allLabel);
   const [search, setSearch] = useState('');
 
-  const filtered = THREADS.filter(t => {
-    const matchCat = activeCategory === 'Tout' || t.category === activeCategory;
-    const matchSearch = !search || t.title.toLowerCase().includes(search.toLowerCase());
+  const threads = useForumStore(s => s.threads);
+  const isLoading = useForumStore(s => s.isLoading);
+  const fetchAll = useForumStore(s => s.fetchAll);
+  const toggleThreadLike = useForumStore(s => s.toggleThreadLike);
+  const user = useAuthStore(s => s.user);
+
+  useEffect(() => {
+    void fetchAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const filtered = threads.filter(thread => {
+    const matchCat = activeCategory === allLabel || thread.category === activeCategory;
+    const matchSearch = !search || thread.title.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
   });
 
@@ -106,10 +65,7 @@ export default function Forum() {
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
           <Icon name="ArrowLeft" size={22} color="#2C1810" />
         </TouchableOpacity>
-        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>Forum</Text>
-        <TouchableOpacity style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name="Bell" size={17} color="#6D4C41" />
-        </TouchableOpacity>
+        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>{t('community.forum')}</Text>
       </View>
 
       {/* Search */}
@@ -119,7 +75,7 @@ export default function Forum() {
           <TextInput
             value={search}
             onChangeText={setSearch}
-            placeholder="Chercher un sujet..."
+            placeholder={t('community.newDiscussion')}
             placeholderTextColor="#8C8278"
             style={{ flex: 1, marginLeft: 8, fontSize: 14, color: C.ink }}
           />
@@ -139,60 +95,74 @@ export default function Forum() {
         ))}
       </ScrollView>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingVertical: 12, paddingHorizontal: 16, gap: 10, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
-        {filtered.map(thread => (
-          <TouchableOpacity
-            key={thread.id}
-            onPress={() => navigation.navigate('ForumDetail', { thread })}
-            activeOpacity={0.85}
-            style={{ backgroundColor: C.surface, borderRadius: 16, padding: 16, borderWidth: thread.pinned ? 1.5 : 1, borderColor: thread.pinned ? '#F9A825' + '60' : '#E5E0D8', ...SHADOW_SM }}
-          >
-            {thread.pinned && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 }}>
-                <Icon name="Award" size={12} color="#F9A825" />
-                <Text style={{ fontSize: 10, fontWeight: '700', color: '#F9A825', textTransform: 'uppercase', letterSpacing: 0.5 }}>Épinglé</Text>
-              </View>
-            )}
-
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: thread.catColor + '15' }}>
-                <Text style={{ fontSize: 10, fontWeight: '700', color: thread.catColor }}>{thread.category}</Text>
-              </View>
-              {thread.hot && (
-                <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: C.errorSoft }}>
-                  <Text style={{ fontSize: 10, fontWeight: '700', color: '#C62828' }}>HOT</Text>
-                </View>
-              )}
+      {isLoading && threads.length === 0 ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator color="#E8591A" />
+        </View>
+      ) : (
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingVertical: 12, paddingHorizontal: 16, gap: 10, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+          {filtered.length === 0 && (
+            <View style={{ alignItems: 'center', paddingTop: 60 }}>
+              <Icon name="MessageSquare" size={48} color="rgba(140,130,120,0.3)" />
+              <Text style={{ fontSize: 15, color: C.inkMute, marginTop: 12 }}>{t('community.noResults')}</Text>
             </View>
-
-            <Text style={{ fontSize: 15, fontWeight: '700', color: C.ink, lineHeight: 22, marginTop: 8, marginBottom: 10 }} numberOfLines={2}>
-              {thread.title}
-            </Text>
-
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: thread.initColor + '20', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: thread.initColor + '40' }}>
-                <Text style={{ fontSize: 10, fontWeight: '700', color: thread.initColor }}>{thread.initials[0]}</Text>
-              </View>
-              <Text style={{ flex: 1, fontSize: 12, color: C.inkSoft }}>{thread.user} · {thread.time}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Icon name="MessageCircle" size={13} color="#8C8278" />
-                  <Text style={{ fontSize: 12, color: C.inkMute }}>{thread.replies}</Text>
+          )}
+          {filtered.map(thread => {
+            const catColor = CAT_COLORS[thread.category] ?? '#8C8278';
+            const isHot = thread.replyCount > 1 || thread.views > 200;
+            const likedByMe = !!user && thread.likes.includes(user.id);
+            return (
+              <TouchableOpacity
+                key={thread.id}
+                onPress={() => navigation.navigate('ForumDetail', { threadId: thread.id })}
+                activeOpacity={0.85}
+                style={{ backgroundColor: C.surface, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#E5E0D8', ...SHADOW_SM }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: catColor + '15' }}>
+                    <Text style={{ fontSize: 10, fontWeight: '700', color: catColor }}>{thread.category}</Text>
+                  </View>
+                  {isHot && (
+                    <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: C.errorSoft }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: '#C62828' }}>HOT</Text>
+                    </View>
+                  )}
                 </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Icon name="Eye" size={13} color="#8C8278" />
-                  <Text style={{ fontSize: 12, color: C.inkMute }}>{thread.views}</Text>
+
+                <Text style={{ fontSize: 15, fontWeight: '700', color: C.ink, lineHeight: 22, marginTop: 8, marginBottom: 10 }} numberOfLines={2}>
+                  {thread.title}
+                </Text>
+
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: thread.avatarColor + '20', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: thread.avatarColor + '40' }}>
+                    <Text style={{ fontSize: 10, fontWeight: '700', color: thread.avatarColor }}>{thread.initials[0]}</Text>
+                  </View>
+                  <Text style={{ flex: 1, fontSize: 12, color: C.inkSoft }}>{thread.authorName} · {timeAgo(thread.createdAt)}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <TouchableOpacity onPress={() => void toggleThreadLike(thread.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <Icon name="Heart" size={13} color={likedByMe ? '#E8591A' : '#8C8278'} fill={likedByMe ? '#E8591A' : 'none'} />
+                      <Text style={{ fontSize: 12, color: C.inkMute }}>{thread.likes.length}</Text>
+                    </TouchableOpacity>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <Icon name="MessageCircle" size={13} color="#8C8278" />
+                      <Text style={{ fontSize: 12, color: C.inkMute }}>{thread.replyCount}</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <Icon name="Eye" size={13} color="#8C8278" />
+                      <Text style={{ fontSize: 12, color: C.inkMute }}>{thread.views}</Text>
+                    </View>
+                  </View>
                 </View>
-              </View>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      )}
 
       {/* FAB */}
       <TouchableOpacity
-        onPress={() => navigation.navigate('CreatePost')}
-        style={{ position: 'absolute', bottom: 96, right: 20, width: 52, height: 52, borderRadius: 26, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center', shadowColor: '#E8591A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 6 }}
+        onPress={() => navigation.navigate('CreateThread')}
+        style={{ position: 'absolute', bottom: 24, right: 20, width: 52, height: 52, borderRadius: 26, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center', shadowColor: '#E8591A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 6 }}
         activeOpacity={0.85}
       >
         <Icon name="Plus" size={24} color="#fff" />

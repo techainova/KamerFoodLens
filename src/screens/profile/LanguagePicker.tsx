@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View, ScrollView, TouchableOpacity, StatusBar,
 } from 'react-native';
@@ -9,9 +9,8 @@ import { useTranslation } from 'react-i18next';
 import i18n from '@/i18n';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
-
-const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
-const SHADOW_MD = { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.10, shadowRadius: 6, elevation: 4 };
+import { SHADOW_SM, SHADOW_MD, SHADOW_LG } from '@/constants/theme';
+import { useUIStore } from '@/store/ui.store';
 
 const LANGS = [
   { code: 'fr', flagBg: '#E8EAF6', flagText: 'FR', flagColor: '#1A237E', labelKey: 'languagePicker.frenchLabel', subKey: 'languagePicker.frenchSub', regionKey: 'languagePicker.frenchRegion' },
@@ -22,12 +21,13 @@ export default function LanguagePicker() {
   const navigation = useNavigation<any>();
   const C = useColors();
   const { t } = useTranslation();
+  const setLanguage = useUIStore((s) => s.setLanguage);
   const [selected, setSelected] = useState<'fr' | 'en'>(i18n.language === 'en' ? 'en' : 'fr');
   const [applying, setApplying] = useState(false);
 
   const handleApply = () => {
     setApplying(true);
-    i18n.changeLanguage(selected);
+    setLanguage(selected); // persiste dans MMKV + appelle i18n.changeLanguage via ui.store
     setTimeout(() => {
       setApplying(false);
       navigation.goBack();

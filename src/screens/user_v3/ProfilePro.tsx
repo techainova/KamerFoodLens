@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, ScrollView, TouchableOpacity, StatusBar,
+  View, ScrollView, TouchableOpacity, StatusBar, Image,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,8 +9,7 @@ import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { useAuthStore } from '@/store/auth.store';
-
-const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
+import { SHADOW_SM, SHADOW_MD, SHADOW_LG } from '@/constants/theme';
 
 const TAB_KEYS = ['tabPublications', 'tabEvents', 'tabFormations', 'tabReviews'] as const;
 const POST_COLORS = ['#E8591A', '#2E7D32', '#F9A825', '#1A237E', '#E8591A', '#2E7D32', '#F9A825', '#1A237E', '#E8591A'];
@@ -52,9 +51,21 @@ export default function ProfilePro() {
         {/* Avatar & identity */}
         <View style={{ alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16 }}>
           <View style={{ position: 'relative' }}>
-            <View style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: 32, fontWeight: '600', color: C.inkMute, fontFamily: 'Inter-Bold' }}>{avatarInitial}</Text>
-            </View>
+            <TouchableOpacity onPress={() => navigation.navigate('EditProfile')} activeOpacity={0.8}>
+              <View style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                {user?.avatar ? (
+                  <Image source={{ uri: user.avatar }} style={{ width: 96, height: 96 }} resizeMode="cover" />
+                ) : (
+                  <Text style={{ fontSize: 32, fontWeight: '600', color: C.inkMute, fontFamily: 'Inter-Bold' }}>{avatarInitial}</Text>
+                )}
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('EditProfile')}
+              style={{ position: 'absolute', bottom: 0, left: -4, width: 30, height: 30, borderRadius: 15, backgroundColor: C.primary, borderWidth: 2, borderColor: C.cream, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Icon name="Camera" size={14} color="#fff" />
+            </TouchableOpacity>
             <View style={{
               position: 'absolute', bottom: 0, right: -4,
               paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10,

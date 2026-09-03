@@ -1,55 +1,92 @@
 import React, { useState } from 'react';
 import {
-  View, ScrollView, TouchableOpacity, Switch, TextInput, StatusBar,
+  View, ScrollView, TouchableOpacity, TextInput, StatusBar, ActivityIndicator, Alert,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
+import { SHADOW_SM } from '@/constants/theme';
+import { proService, type ProPromo, type ProRestaurant } from '@/services/pro.service';
 
-const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
+type DiscountType = 'percent' | 'amount';
+const DURATIONS = [3, 7, 14, 30];
 
-type Promo = { code: string; discount: string; uses: number; max: number | null; active: boolean; expires: string };
-
-const PROMOS_INITIAL: Promo[] = [
-  { code: 'BIENVENUE20', discount: '20%', uses: 34,  max: 100,  active: true,  expires: '31 Jan' },
-  { code: 'NOEL2025',    discount: '15%', uses: 87,  max: 100,  active: false, expires: '26 Déc' },
-  { code: 'FIDELITE10',  discount: '10%', uses: 12,  max: null, active: true,  expires: 'Illimité' },
-];
+function promoStatus(promo: ProPromo, C: ReturnType<typeof useColors>): { label: string; color: string; bg: string } {
+  const now = Date.now();
+  const from = new Date(promo.validFrom).getTime();
+  const until = new Date(promo.validUntil).getTime();
+  if (now < from) return { label: 'scheduled', color: C.navy, bg: C.navySoft };
+  if (now > until) return { label: 'expired', color: C.inkMute, bg: C.surface2 };
+  return { label: 'active', color: C.success, bg: C.successSoft };
+}
 
 export default function ProPromos() {
   const navigation = useNavigation<any>();
   const C = useColors();
   const { t } = useTranslation();
-  const [promos, setPromos] = useState<Promo[]>(PROMOS_INITIAL);
+  const queryClient = useQueryClient();
+
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [newCode, setNewCode] = useState('');
-  const [newDiscount, setNewDiscount] = useState('');
+  const [title, setTitle] = useState('');
+  const [discountType, setDiscountType] = useState<DiscountType>('percent');
+  const [discountValue, setDiscountValue] = useState('');
+  const [duration, setDuration] = useState(7);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const toggle = (i: number) => setPromos(prev => prev.map((p, idx) => idx === i ? { ...p, active: !p.active } : p));
-  const removePromo = (i: number) => setPromos(prev => prev.filter((_, idx) => idx !== i));
+  const { data: promos = [], isLoading } = useQuery<ProPromo[]>({
+    queryKey: ['pro-promos'],
+    queryFn: () => proService.getPromos(),
+    staleTime: 60_000,
+  });
 
-  const confirmCreate = () => {
-    if (!newCode.trim() || !newDiscount.trim()) return;
-    setPromos(prev => [
-      { code: newCode.trim().toUpperCase(), discount: `${newDiscount.trim()}%`, uses: 0, max: null, active: true, expires: t('proPromos.unlimited') },
-      ...prev,
-    ]);
-    setNewCode('');
-    setNewDiscount('');
+  const { data: restaurants = [] } = useQuery<ProRestaurant[]>({
+    queryKey: ['pro-restaurants'],
+    queryFn: () => proService.getMyRestaurants(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const restaurantId = selectedRestaurantId ?? restaurants[0]?.id ?? null;
+
+  const resetForm = () => {
+    setTitle('');
+    setDiscountValue('');
+    setDiscountType('percent');
+    setDuration(7);
     setShowCreateForm(false);
   };
 
-  const cancelCreate = () => {
-    setNewCode('');
-    setNewDiscount('');
-    setShowCreateForm(false);
+  const handleCreate = async () => {
+    const value = parseInt(discountValue, 10);
+    if (!title.trim() || !value || value <= 0 || !restaurantId) return;
+    if (discountType === 'percent' && value > 100) return;
+
+    setSubmitting(true);
+    try {
+      const validFrom = new Date();
+      const validUntil = new Date(validFrom.getTime() + duration * 24 * 60 * 60 * 1000);
+      await proService.createPromo({
+        restaurantId,
+        title: title.trim(),
+        discountPercent: discountType === 'percent' ? value : undefined,
+        discountXAF: discountType === 'amount' ? value : undefined,
+        validFrom: validFrom.toISOString(),
+        validUntil: validUntil.toISOString(),
+      });
+      await queryClient.invalidateQueries({ queryKey: ['pro-promos'] });
+      resetForm();
+    } catch {
+      Alert.alert(t('common.error'), t('proPromos.createError'));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const activeCount = promos.filter(p => p.active).length;
-  const totalUses = promos.reduce((sum, p) => sum + p.uses, 0);
+  const activeCount = promos.filter(p => promoStatus(p, C).label === 'active').length;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -63,108 +100,155 @@ export default function ProPromos() {
         <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>{t('proPromos.title')}</Text>
         <TouchableOpacity
           onPress={() => setShowCreateForm(v => !v)}
-          style={{ height: 32, paddingHorizontal: 12, backgroundColor: C.gold, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 4 }}
+          disabled={!restaurantId}
+          style={{ height: 32, paddingHorizontal: 12, backgroundColor: restaurantId ? C.gold : C.surface2, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 4 }}
         >
-          <Icon name="Plus" size={12} color="#fff" />
-          <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>{t('proPromos.create')}</Text>
+          <Icon name="Plus" size={12} color={restaurantId ? '#fff' : C.inkMute} />
+          <Text style={{ color: restaurantId ? '#fff' : C.inkMute, fontSize: 12, fontWeight: '600' }}>{t('proPromos.create')}</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-
-        {showCreateForm && (
-          <View style={{ padding: 16, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.gold, marginBottom: 16, gap: 10, ...SHADOW_SM }}>
-            <TextInput
-              value={newCode}
-              onChangeText={setNewCode}
-              placeholder={t('proPromos.codePlaceholder')}
-              placeholderTextColor={C.inkMute}
-              autoCapitalize="characters"
-              style={{ height: 42, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 12, fontSize: 14, color: C.ink, backgroundColor: C.surface2 }}
-            />
-            <TextInput
-              value={newDiscount}
-              onChangeText={setNewDiscount}
-              placeholder={t('proPromos.discountPlaceholder')}
-              placeholderTextColor={C.inkMute}
-              keyboardType="numeric"
-              style={{ height: 42, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 12, fontSize: 14, color: C.ink, backgroundColor: C.surface2 }}
-            />
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              <TouchableOpacity
-                onPress={cancelCreate}
-                style={{ flex: 1, height: 40, borderRadius: 10, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}
-              >
-                <Text style={{ fontSize: 13, fontWeight: '600', color: C.inkSoft }}>{t('proPromos.cancel')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={confirmCreate}
-                style={{ flex: 1, height: 40, borderRadius: 10, backgroundColor: C.gold, alignItems: 'center', justifyContent: 'center' }}
-              >
-                <Text style={{ fontSize: 13, fontWeight: '700', color: '#fff' }}>{t('proPromos.confirm')}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        {/* Stats */}
-        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
-          {[
-            { v: String(activeCount), l: t('proPromos.activePromos') },
-            { v: String(totalUses), l: t('proPromos.uses') },
-            { v: '−12%', l: t('proPromos.avgDiscount') },
-          ].map((s, i) => (
-            <View key={i} style={{ flex: 1, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 12, alignItems: 'center', ...SHADOW_SM }}>
-              <Text style={{ fontSize: 16, fontWeight: '700', color: C.gold }}>{s.v}</Text>
-              <Text style={{ fontSize: 10, color: C.inkMute, textAlign: 'center', marginTop: 2 }}>{s.l}</Text>
-            </View>
-          ))}
+      {isLoading ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator color={C.primary} size="large" />
         </View>
+      ) : (
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
 
-        {/* Promo codes */}
-        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 12 }}>{t('proPromos.promoCodes')}</Text>
-        <View style={{ gap: 12 }}>
-          {promos.map((promo, i) => (
-            <View key={`${promo.code}-${i}`} style={{ padding: 16, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
-              <TouchableOpacity
-                onPress={() => removePromo(i)}
-                style={{ position: 'absolute', top: 10, right: 10, width: 24, height: 24, borderRadius: 12, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center', zIndex: 1 }}
-              >
-                <Icon name="X" size={12} color={C.inkMute} />
-              </TouchableOpacity>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, paddingRight: 28 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View style={{ backgroundColor: C.goldSoft, borderWidth: 1, borderColor: '#F9A82530', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
-                    <Text style={{ color: C.gold, fontWeight: '700', fontSize: 13, fontFamily: 'JetBrainsMono-Regular' }}>{promo.code}</Text>
-                  </View>
-                  <View style={{ backgroundColor: C.navy, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
-                    <Text style={{ color: '#fff', fontSize: 10, fontWeight: '700' }}>{promo.discount}</Text>
-                  </View>
-                </View>
-                <Switch
-                  value={promo.active} onValueChange={() => toggle(i)}
-                  trackColor={{ false: C.border, true: C.gold }} thumbColor="#fff"
-                />
-              </View>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Icon name="Users" size={12} color={C.inkMute} />
-                  <Text style={{ fontSize: 12, color: C.inkMute }}>{promo.uses}{promo.max ? `/${promo.max}` : ''} {t('proPromos.usesLabel')}</Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Icon name="Clock" size={12} color={C.inkMute} />
-                  <Text style={{ fontSize: 12, color: C.inkMute }}>{promo.expires}</Text>
-                </View>
-              </View>
-              {promo.max && (
-                <View style={{ height: 3, backgroundColor: C.surface2, borderRadius: 2, marginTop: 10, overflow: 'hidden' }}>
-                  <View style={{ height: '100%', width: `${(promo.uses / promo.max) * 100}%`, backgroundColor: C.gold, borderRadius: 2 }} />
+          {showCreateForm && (
+            <View style={{ padding: 16, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.gold, marginBottom: 16, gap: 10, ...SHADOW_SM }}>
+              {restaurants.length > 1 && (
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {restaurants.map(r => (
+                    <TouchableOpacity
+                      key={r.id}
+                      onPress={() => setSelectedRestaurantId(r.id)}
+                      style={{
+                        paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14,
+                        backgroundColor: restaurantId === r.id ? C.gold : C.surface2,
+                        borderWidth: 1, borderColor: restaurantId === r.id ? C.gold : C.border,
+                      }}
+                    >
+                      <Text style={{ fontSize: 12, fontWeight: '600', color: restaurantId === r.id ? '#fff' : C.inkSoft }}>{r.name}</Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
               )}
+
+              <TextInput
+                value={title}
+                onChangeText={setTitle}
+                placeholder={t('proPromos.titlePlaceholder')}
+                placeholderTextColor={C.inkMute}
+                style={{ height: 42, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 12, fontSize: 14, color: C.ink, backgroundColor: C.surface2 }}
+              />
+
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TouchableOpacity
+                  onPress={() => setDiscountType('percent')}
+                  style={{ flex: 1, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: discountType === 'percent' ? C.navy : C.surface2, borderWidth: 1, borderColor: discountType === 'percent' ? C.navy : C.border }}
+                >
+                  <Text style={{ fontSize: 12, fontWeight: '600', color: discountType === 'percent' ? '#fff' : C.inkSoft }}>{t('proPromos.percentOff')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setDiscountType('amount')}
+                  style={{ flex: 1, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: discountType === 'amount' ? C.navy : C.surface2, borderWidth: 1, borderColor: discountType === 'amount' ? C.navy : C.border }}
+                >
+                  <Text style={{ fontSize: 12, fontWeight: '600', color: discountType === 'amount' ? '#fff' : C.inkSoft }}>{t('proPromos.amountOff')}</Text>
+                </TouchableOpacity>
+              </View>
+
+              <TextInput
+                value={discountValue}
+                onChangeText={setDiscountValue}
+                placeholder={discountType === 'percent' ? t('proPromos.percentPlaceholder') : t('proPromos.amountPlaceholder')}
+                placeholderTextColor={C.inkMute}
+                keyboardType="numeric"
+                style={{ height: 42, borderWidth: 1, borderColor: C.border, borderRadius: 10, paddingHorizontal: 12, fontSize: 14, color: C.ink, backgroundColor: C.surface2 }}
+              />
+
+              <Text style={{ fontSize: 12, color: C.inkMute }}>{t('proPromos.duration')}</Text>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                {DURATIONS.map(d => (
+                  <TouchableOpacity
+                    key={d}
+                    onPress={() => setDuration(d)}
+                    style={{ flex: 1, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: duration === d ? C.gold : C.surface2, borderWidth: 1, borderColor: duration === d ? C.gold : C.border }}
+                  >
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: duration === d ? '#fff' : C.inkSoft }}>{t('proPromos.days', { count: d })}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <TouchableOpacity
+                  onPress={resetForm}
+                  style={{ flex: 1, height: 40, borderRadius: 10, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Text style={{ fontSize: 13, fontWeight: '600', color: C.inkSoft }}>{t('proPromos.cancel')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => void handleCreate()}
+                  disabled={submitting}
+                  style={{ flex: 1, height: 40, borderRadius: 10, backgroundColor: C.gold, alignItems: 'center', justifyContent: 'center' }}
+                >
+                  {submitting ? <ActivityIndicator color="#fff" /> : <Text style={{ fontSize: 13, fontWeight: '700', color: '#fff' }}>{t('proPromos.confirm')}</Text>}
+                </TouchableOpacity>
+              </View>
             </View>
-          ))}
-        </View>
-      </ScrollView>
+          )}
+
+          {/* Stats */}
+          <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
+            <View style={{ flex: 1, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 12, alignItems: 'center', ...SHADOW_SM }}>
+              <Text style={{ fontSize: 16, fontWeight: '700', color: C.gold }}>{activeCount}</Text>
+              <Text style={{ fontSize: 10, color: C.inkMute, textAlign: 'center', marginTop: 2 }}>{t('proPromos.activePromos')}</Text>
+            </View>
+            <View style={{ flex: 1, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 12, alignItems: 'center', ...SHADOW_SM }}>
+              <Text style={{ fontSize: 16, fontWeight: '700', color: C.gold }}>{promos.length}</Text>
+              <Text style={{ fontSize: 10, color: C.inkMute, textAlign: 'center', marginTop: 2 }}>{t('proPromos.total')}</Text>
+            </View>
+          </View>
+
+          {/* Promo list */}
+          <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 12 }}>{t('proPromos.promoList')}</Text>
+
+          {promos.length === 0 ? (
+            <Text style={{ fontSize: 13, color: C.inkMute, textAlign: 'center', paddingVertical: 24 }}>{t('proPromos.empty')}</Text>
+          ) : (
+            <View style={{ gap: 12 }}>
+              {promos.map((promo) => {
+                const status = promoStatus(promo, C);
+                return (
+                  <View key={promo.id} style={{ padding: 16, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                        <View style={{ backgroundColor: C.navy, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
+                          <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>
+                            {promo.discountPercent != null ? `-${promo.discountPercent}%` : `-${promo.discountXAF?.toLocaleString()} XAF`}
+                          </Text>
+                        </View>
+                        <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink, flex: 1 }} numberOfLines={1}>{promo.title}</Text>
+                      </View>
+                      <View style={{ backgroundColor: status.bg, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 }}>
+                        <Text style={{ fontSize: 10, fontWeight: '700', color: status.color }}>{t(`proPromos.status_${status.label}`)}</Text>
+                      </View>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <Icon name="Clock" size={12} color={C.inkMute} />
+                      <Text style={{ fontSize: 12, color: C.inkMute }}>
+                        {new Date(promo.validFrom).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                        {' – '}
+                        {new Date(promo.validUntil).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }

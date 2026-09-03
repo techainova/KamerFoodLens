@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  View, ScrollView, TextInput, TouchableOpacity, StatusBar, Dimensions, Platform,
+  View, ScrollView, TextInput, TouchableOpacity, StatusBar, Dimensions, Platform, Image,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,42 +10,13 @@ import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
+import { SHADOW_SM, SHADOW_MD, SHADOW_LG } from '@/constants/theme';
+import { useRestaurantStore } from '@/store/restaurant.store';
 
 const { height: SH } = Dimensions.get('window');
 
-const SHADOW_MD = { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.10, shadowRadius: 6, elevation: 4 };
-const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3, elevation: 2 };
-const SHADOW_LG = { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.14, shadowRadius: 12, elevation: 8 };
-
 // Douala, Cameroun — centre par défaut si la position de l'utilisateur est indisponible
 const DEFAULT_REGION: Region = { latitude: 4.0511, longitude: 9.7679, latitudeDelta: 0.05, longitudeDelta: 0.05 };
-
-const RESTAURANTS = [
-  {
-    id: '1', name: 'Chez Mama Pauline', type: 'Cuisine traditionnelle',
-    rating: 4.8, reviews: 127, open: true,
-    hours: '11h–22h', price: '$$', specialties: ['Ndolé', 'Poulet DG'],
-    kflVerified: true, lat: 4.0511, lng: 9.7679,
-  },
-  {
-    id: '2', name: "Restaurant L'Authenticité", type: 'Cuisine du Littoral',
-    rating: 4.6, reviews: 89, open: true,
-    hours: '10h–21h', price: '$$$', specialties: ['Mbongo tchobi', 'Eru'],
-    kflVerified: true, lat: 4.0465, lng: 9.7735,
-  },
-  {
-    id: '3', name: 'Kmer Saveurs', type: 'Street food camerounaise',
-    rating: 4.3, reviews: 54, open: false,
-    hours: '12h–20h', price: '$', specialties: ['Soya', 'Koki'],
-    kflVerified: false, lat: 4.0552, lng: 9.7601,
-  },
-  {
-    id: '4', name: 'La Table du Wouri', type: 'Cuisine fusion',
-    rating: 4.9, reviews: 203, open: true,
-    hours: '12h–23h', price: '$$$', specialties: ['Poisson braisé', 'Plantains'],
-    kflVerified: true, lat: 4.0580, lng: 9.7690,
-  },
-];
 
 function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371;
@@ -72,8 +43,12 @@ export default function MapScreen() {
   const [search, setSearch] = useState('');
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const mapRef = useRef<MapView>(null);
+  const restaurants = useRestaurantStore((s) => s.restaurants);
+  const fetchNearby = useRestaurantStore((s) => s.fetchNearby);
 
   useEffect(() => {
+    fetchNearby(DEFAULT_REGION.latitude, DEFAULT_REGION.longitude);
+
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') return;
@@ -82,20 +57,24 @@ export default function MapScreen() {
         const coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
         setUserLocation(coords);
         mapRef.current?.animateToRegion({ ...coords, latitudeDelta: 0.05, longitudeDelta: 0.05 }, 600);
+        fetchNearby(coords.latitude, coords.longitude);
       } catch {
         // position indisponible — on garde le centre par défaut (Douala)
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const restaurantsWithDist = RESTAURANTS.map((r) => ({
+  const restaurantsWithDist = restaurants.map((r) => ({
     ...r,
     dist: userLocation ? distanceKm(userLocation.latitude, userLocation.longitude, r.lat, r.lng) : distanceKm(DEFAULT_REGION.latitude, DEFAULT_REGION.longitude, r.lat, r.lng),
   }));
 
   const filtered = restaurantsWithDist.filter(r => {
-    if (activeFilter === 1 && !r.open) return false;
+    if (activeFilter === 1 && !r.isOpen) return false;
+    if (activeFilter === 2 && !r.specialties.some(s => s.toLowerCase().includes('ndol'))) return false;
     if (activeFilter === 3 && r.dist > 2) return false;
+    if (activeFilter === 4 && r.price !== '€') return false;
     if (search && !r.name.toLowerCase().includes(search.toLowerCase()) &&
         !r.specialties.some(s => s.toLowerCase().includes(search.toLowerCase()))) return false;
     return true;
@@ -166,12 +145,17 @@ export default function MapScreen() {
           {filtered.map((r) => (
             <TouchableOpacity
               key={r.id}
-              onPress={() => navigation.navigate('Restaurant')}
+              onPress={() => navigation.navigate('Restaurant', { restaurantId: r.id })}
               style={{ backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, flexDirection: 'row', overflow: 'hidden', ...SHADOW_SM }}
               activeOpacity={0.85}
             >
               <View style={{ width: 100, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                {r.kflVerified && (
+                {r.imageUrl ? (
+                  <Image source={{ uri: r.imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                ) : (
+                  <Icon name="ChefHat" size={32} color={C.inkMute} />
+                )}
+                {r.isVerified && (
                   <View style={{ position: 'absolute', top: 6, left: 6, backgroundColor: C.primary, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
                       <Text style={{ color: '#fff', fontSize: 9, fontWeight: '700', fontFamily: 'JetBrainsMono-Regular' }}>KFL</Text>
@@ -179,15 +163,14 @@ export default function MapScreen() {
                     </View>
                   </View>
                 )}
-                <Icon name="ChefHat" size={32} color={C.inkMute} />
               </View>
               <View style={{ flex: 1, padding: 14 }}>
                 <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 2, fontFamily: 'Inter-Bold' }}>{r.name}</Text>
                 <Text style={{ fontSize: 12, color: C.inkMute, marginBottom: 8 }}>{r.type}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 6 }}>
-                  <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: r.open ? C.success : C.error }} />
-                  <Text style={{ fontSize: 11, color: r.open ? C.success : C.error, fontWeight: '600' }}>
-                    {r.open ? `Ouvert · ${r.hours}` : 'Fermé'}
+                  <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: r.isOpen ? C.success : C.error }} />
+                  <Text style={{ fontSize: 11, color: r.isOpen ? C.success : C.error, fontWeight: '600' }}>
+                    {r.isOpen ? `Ouvert · ${r.hoursLabel}` : 'Fermé'}
                   </Text>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -199,7 +182,7 @@ export default function MapScreen() {
                     <Icon name="Star" size={10} color={C.gold} fill={C.gold} />
                     <Text style={{ fontSize: 11, color: C.gold, fontWeight: '700' }}>{r.rating}</Text>
                   </View>
-                  <Text style={{ fontSize: 11, color: C.inkMute }}>({r.reviews})</Text>
+                  <Text style={{ fontSize: 11, color: C.inkMute }}>({r.reviewCount})</Text>
                   <Text style={{ fontSize: 11, color: C.inkSoft }}>{r.price}</Text>
                 </View>
               </View>
@@ -230,22 +213,22 @@ export default function MapScreen() {
           <Marker
             key={r.id}
             coordinate={{ latitude: r.lat, longitude: r.lng }}
-            onPress={() => navigation.navigate('Restaurant')}
+            onPress={() => navigation.navigate('Restaurant', { restaurantId: r.id })}
           >
             <View style={{ alignItems: 'center' }}>
               <View style={{
-                backgroundColor: r.kflVerified ? C.primary : C.surface,
-                borderWidth: r.kflVerified ? 0 : 1.5, borderColor: C.border,
+                backgroundColor: r.isVerified ? C.primary : C.surface,
+                borderWidth: r.isVerified ? 0 : 1.5, borderColor: C.border,
                 paddingHorizontal: 10, paddingVertical: 5, borderRadius: 14,
                 flexDirection: 'row', alignItems: 'center', gap: 4,
                 ...SHADOW_MD,
               }}>
-                <Icon name="Star" size={10} color={r.kflVerified ? '#fff' : C.gold} fill={r.kflVerified ? '#fff' : C.gold} />
-                <Text style={{ fontSize: 12, fontWeight: '700', color: r.kflVerified ? '#fff' : C.ink, fontFamily: 'Inter-Bold' }}>
+                <Icon name="Star" size={10} color={r.isVerified ? '#fff' : C.gold} fill={r.isVerified ? '#fff' : C.gold} />
+                <Text style={{ fontSize: 12, fontWeight: '700', color: r.isVerified ? '#fff' : C.ink, fontFamily: 'Inter-Bold' }}>
                   {r.rating}
                 </Text>
               </View>
-              <View style={{ width: 8, height: 8, backgroundColor: r.kflVerified ? C.primary : C.inkMute, borderRadius: 4, marginTop: -3 }} />
+              <View style={{ width: 8, height: 8, backgroundColor: r.isVerified ? C.primary : C.inkMute, borderRadius: 4, marginTop: -3 }} />
             </View>
           </Marker>
         ))}
@@ -331,14 +314,19 @@ export default function MapScreen() {
             <TouchableOpacity
               key={r.id}
               onPress={() => {
-                navigation.navigate('Restaurant');
+                navigation.navigate('Restaurant', { restaurantId: r.id });
                 mapRef.current?.animateToRegion({ latitude: r.lat, longitude: r.lng, latitudeDelta: 0.02, longitudeDelta: 0.02 }, 400);
               }}
               style={{ width: 190, backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border, overflow: 'hidden', ...SHADOW_SM }}
               activeOpacity={0.85}
             >
               <View style={{ height: 94, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                {r.kflVerified && (
+                {r.imageUrl ? (
+                  <Image source={{ uri: r.imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                ) : (
+                  <Icon name="ChefHat" size={34} color={C.inkMute} />
+                )}
+                {r.isVerified && (
                   <View style={{ position: 'absolute', top: 8, right: 8, backgroundColor: C.primary, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
                       <Text style={{ color: '#fff', fontSize: 9, fontWeight: '700', fontFamily: 'JetBrainsMono-Regular' }}>KFL</Text>
@@ -346,16 +334,15 @@ export default function MapScreen() {
                     </View>
                   </View>
                 )}
-                <Icon name="ChefHat" size={34} color={C.inkMute} />
               </View>
               <View style={{ padding: 12 }}>
                 <Text style={{ fontSize: 13, fontWeight: '700', color: C.ink, marginBottom: 2, fontFamily: 'Inter-Bold' }} numberOfLines={1}>{r.name}</Text>
                 <Text style={{ fontSize: 11, color: C.inkMute, marginBottom: 6 }} numberOfLines={1}>{r.type}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                    <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: r.open ? C.success : C.error }} />
-                    <Text style={{ fontSize: 10, color: r.open ? C.success : C.error, fontWeight: '600' }}>
-                      {r.open ? 'Ouvert' : 'Fermé'}
+                    <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: r.isOpen ? C.success : C.error }} />
+                    <Text style={{ fontSize: 10, color: r.isOpen ? C.success : C.error, fontWeight: '600' }}>
+                      {r.isOpen ? 'Ouvert' : 'Fermé'}
                     </Text>
                   </View>
                   <Text style={{ fontSize: 10, color: C.inkMute }}>· {r.dist.toFixed(1)} km</Text>

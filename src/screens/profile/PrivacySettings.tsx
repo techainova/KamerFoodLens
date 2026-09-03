@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View, ScrollView, TouchableOpacity, Switch, StatusBar, Alert,
 } from 'react-native';
@@ -9,8 +9,7 @@ import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import type { IconName } from '@/components/ui/Icon';
-
-const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
+import { SHADOW_SM, SHADOW_MD, SHADOW_LG } from '@/constants/theme';
 
 type ToggleKey = 'publicProfile' | 'showActivity' | 'shareAnalytics' | 'locationServices' | 'partnerData';
 type PrivacyItem = { key: ToggleKey; icon: IconName; labelKey: string; descKey: string };

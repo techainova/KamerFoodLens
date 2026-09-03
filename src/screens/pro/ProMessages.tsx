@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
 import {
-  View, ScrollView, TextInput, TouchableOpacity, StatusBar,
+  View, ScrollView, TextInput, TouchableOpacity, StatusBar, ActivityIndicator,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
+import { proService } from '@/services/pro.service';
 
-const CONVOS = [
-  { name: 'Sami Nguimfack', last: 'Bonjour, ma commande est-elle prête ?', time: '14:32', unread: 2 },
-  { name: 'Adèle Biya',     last: 'Merci pour la livraison rapide !',      time: '11:15', unread: 0 },
-  { name: 'Ngo Mireille',   last: 'Avez-vous le Ndolé sans piment ?',      time: 'Hier',  unread: 1 },
-];
+function formatMessageDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+    + ' · ' + new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+}
 
 export default function ProMessages() {
   const navigation = useNavigation<any>();
@@ -21,7 +22,17 @@ export default function ProMessages() {
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
 
-  const filtered = CONVOS.filter(c => c.name.toLowerCase().includes(query.trim().toLowerCase()));
+  const { data, isLoading } = useQuery({
+    queryKey: ['pro-messages', 1],
+    queryFn: () => proService.getMessages(1),
+    staleTime: 60_000,
+  });
+
+  const messages = data?.items ?? [];
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? messages.filter(m => m.senderName.toLowerCase().includes(q) || m.subject.toLowerCase().includes(q))
+    : messages;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -49,38 +60,45 @@ export default function ProMessages() {
         </View>
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }}>
-        {filtered.length === 0 ? (
-          <View style={{ alignItems: 'center', paddingTop: 60, gap: 10 }}>
-            <Icon name="Search" size={32} color={C.inkMute} />
-            <Text style={{ fontSize: 13, color: C.inkMute }}>{t('proMessages.noResults')}</Text>
-          </View>
-        ) : (
-          filtered.map((convo, i) => (
-            <TouchableOpacity
-              key={i}
-              onPress={() => navigation.navigate('ProMessageDetail', { userId: convo.name })}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderColor: C.border, backgroundColor: convo.unread > 0 ? '#FEF3EC' : C.surface }}
-            >
-              <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ color: C.inkSoft, fontSize: 16, fontWeight: '600' }}>{convo.name[0]}</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink }}>{convo.name}</Text>
-                <Text style={{ fontSize: 12, color: convo.unread > 0 ? C.ink : C.inkMute, fontWeight: convo.unread > 0 ? '500' : '400', marginTop: 2 }} numberOfLines={1}>{convo.last}</Text>
-              </View>
-              <View style={{ alignItems: 'flex-end', gap: 6 }}>
-                <Text style={{ fontSize: 11, color: C.inkMute }}>{convo.time}</Text>
-                {convo.unread > 0 && (
-                  <View style={{ width: 20, height: 20, backgroundColor: C.primary, borderRadius: 10, alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ color: '#fff', fontSize: 10, fontWeight: '700' }}>{convo.unread}</Text>
+      {isLoading ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator color={C.primary} size="large" />
+        </View>
+      ) : (
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }}>
+          {filtered.length === 0 ? (
+            <View style={{ alignItems: 'center', paddingTop: 60, gap: 10 }}>
+              <Icon name="Search" size={32} color={C.inkMute} />
+              <Text style={{ fontSize: 13, color: C.inkMute }}>
+                {messages.length === 0 ? t('proMessages.empty') : t('proMessages.noResults')}
+              </Text>
+            </View>
+          ) : (
+            filtered.map((m) => (
+              <TouchableOpacity
+                key={m.id}
+                onPress={() => navigation.navigate('ProMessageDetail', { messageId: m.id })}
+                style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderColor: C.border, backgroundColor: m.isRead ? C.surface : '#FEF3EC' }}
+              >
+                <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginTop: 2 }}>
+                  <Text style={{ color: C.inkSoft, fontSize: 16, fontWeight: '600' }}>{m.senderName[0]?.toUpperCase() ?? '?'}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <Text style={{ fontSize: 14, fontWeight: m.isRead ? '500' : '700', color: C.ink }}>{m.senderName}</Text>
+                    <Text style={{ fontSize: 11, color: C.inkMute }}>{formatMessageDate(m.createdAt)}</Text>
                   </View>
+                  <Text style={{ fontSize: 13, color: C.ink, fontWeight: m.isRead ? '400' : '600', marginTop: 3 }} numberOfLines={1}>{m.subject}</Text>
+                  <Text style={{ fontSize: 12, color: C.inkMute, marginTop: 2 }} numberOfLines={1}>{m.body}</Text>
+                </View>
+                {!m.isRead && (
+                  <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: C.primary, marginTop: 6 }} />
                 )}
-              </View>
-            </TouchableOpacity>
-          ))
-        )}
-      </ScrollView>
+              </TouchableOpacity>
+            ))
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }

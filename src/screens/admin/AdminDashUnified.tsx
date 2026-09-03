@@ -1,21 +1,14 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View, ScrollView, TextInput, TouchableOpacity, StatusBar,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
-
-const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
-
-const STATS = [
-  { v: '8 247',  l: 'Utilisateurs', delta: '+124', color: '#1A237E', icon: 'Users'     as const },
-  { v: '312',    l: 'Pros actifs',  delta: '+8',   color: '#F9A825', icon: 'Star'      as const },
-  { v: '47 892', l: 'Scans/mois',  delta: '+12%', color: '#E8591A', icon: 'ScanLine'  as const },
-  { v: '1.4M',   l: 'Revenus XAF', delta: '+9%',  color: '#2E7D32', icon: 'DollarSign'as const },
-];
+import { SHADOW_SM } from '@/constants/theme';
 
 const RECENT_USERS = [
   { name: 'Sami Nguimfack', role: 'Standard', status: 'active',    joined: '15 Jun' },
@@ -23,19 +16,27 @@ const RECENT_USERS = [
   { name: 'Chef Joël',      role: 'Pro',      status: 'suspended', joined: '12 Jun' },
 ];
 
-const QUICK_ACTIONS = [
-  { l: 'Utilisateurs', icon: 'Users'      as const, route: 'AdminUsers'      },
-  { l: 'Modération',   icon: 'Shield'     as const, route: 'AdminModeration' },
-  { l: 'Finance',      icon: 'DollarSign' as const, route: 'AdminFinance'    },
-  { l: 'Logs',         icon: 'List'       as const, route: 'AdminLogs'       },
-  { l: 'Tombola',      icon: 'Ticket'     as const, route: 'AdminTombola'    },
-  { l: 'Événements',   icon: 'Calendar'   as const, route: 'AdminEvents'     },
-];
-
 export default function AdminDashUnified() {
   const navigation = useNavigation<any>();
   const C = useColors();
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
+
+  const STATS = [
+    { v: '8 247',  l: t('admin.users'),      delta: '+124', color: '#1A237E', icon: 'Users'      as const },
+    { v: '312',    l: t('admin.activePros'), delta: '+8',   color: '#F9A825', icon: 'Star'       as const },
+    { v: '47 892', l: t('admin.scansMonth'), delta: '+12%', color: '#E8591A', icon: 'ScanLine'   as const },
+    { v: '1.4M',   l: t('admin.revenueXaf'), delta: '+9%', color: '#2E7D32', icon: 'DollarSign' as const },
+  ];
+
+  const QUICK_ACTIONS = [
+    { l: t('admin.users'),       icon: 'Users'      as const, route: 'AdminUsers'      },
+    { l: t('admin.moderation'),  icon: 'Shield'     as const, route: 'AdminModeration' },
+    { l: t('admin.finance'),     icon: 'DollarSign' as const, route: 'AdminFinance'    },
+    { l: t('admin.navLogs'),     icon: 'List'       as const, route: 'AdminLogs'       },
+    { l: t('admin.tombolaAdmin'),icon: 'Ticket'     as const, route: 'AdminTombola'    },
+    { l: t('admin.events'),      icon: 'Calendar'   as const, route: 'AdminEvents'     },
+  ];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -58,7 +59,7 @@ export default function AdminDashUnified() {
           <Icon name="Search" size={15} color="#8C8278" />
           <TextInput
             value={search} onChangeText={setSearch}
-            placeholder="Rechercher un utilisateur, Pro, commande..."
+            placeholder={t('admin.searchPlaceholder')}
             placeholderTextColor="#8C8278" style={{ flex: 1, fontSize: 14, color: C.ink }}
           />
         </View>
@@ -85,7 +86,7 @@ export default function AdminDashUnified() {
         </View>
 
         {/* Quick actions */}
-        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 12 }}>Actions rapides</Text>
+        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 12 }}>{t('admin.quickActions')}</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
           {QUICK_ACTIONS.map((a, i) => (
             <TouchableOpacity
@@ -100,7 +101,7 @@ export default function AdminDashUnified() {
         </View>
 
         {/* Recent users */}
-        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 12 }}>Utilisateurs récents</Text>
+        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 12 }}>{t('admin.recentUsers')}</Text>
         <View style={{ borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, overflow: 'hidden', ...SHADOW_SM }}>
           {RECENT_USERS.map((user, i) => (
             <TouchableOpacity
@@ -116,7 +117,7 @@ export default function AdminDashUnified() {
               </View>
               <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, backgroundColor: user.status === 'active' ? '#E3F0E4' : '#FBDCDC' }}>
                 <Text style={{ fontSize: 11, fontWeight: '600', color: user.status === 'active' ? '#2E7D32' : '#C62828' }}>
-                  {user.status === 'active' ? 'Actif' : 'Suspendu'}
+                  {user.status === 'active' ? t('admin.statusActive') : t('admin.statusSuspended')}
                 </Text>
               </View>
             </TouchableOpacity>

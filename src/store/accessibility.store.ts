@@ -34,6 +34,7 @@ interface AccessibilityState {
   actionDelay:     boolean;
   largeTargets:    boolean;
   letterSpacing:   LetterSpacing;
+  ttsEnabled:      boolean;
 
   setTextSize:        (v: TextSize) => void;
   setContrastMode:    (v: ContrastMode) => void;
@@ -49,6 +50,7 @@ interface AccessibilityState {
   setActionDelay:     (v: boolean) => void;
   setLargeTargets:    (v: boolean) => void;
   setLetterSpacing:   (v: LetterSpacing) => void;
+  setTtsEnabled:      (v: boolean) => void;
   reset: () => void;
 }
 
@@ -67,6 +69,7 @@ const DEFAULTS = {
   actionDelay:     false,
   largeTargets:    false,
   letterSpacing:   'normal' as LetterSpacing,
+  ttsEnabled:      false,
 };
 
 export const useAccessibilityStore = create<AccessibilityState>()(
@@ -88,6 +91,7 @@ export const useAccessibilityStore = create<AccessibilityState>()(
       setActionDelay:     (actionDelay)     => set({ actionDelay }),
       setLargeTargets:    (largeTargets)    => set({ largeTargets }),
       setLetterSpacing:   (letterSpacing)   => set({ letterSpacing }),
+      setTtsEnabled:      (ttsEnabled)      => set({ ttsEnabled }),
       reset: () => set({ ...DEFAULTS }),
     }),
     {

@@ -1,14 +1,13 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View, ScrollView, TouchableOpacity, StatusBar,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
-
-const TABS = ['En attente', 'Approuvés', 'Rejetés'];
 
 const PENDING = [
   { name: 'Kmer Saveurs',    owner: 'Kevin Bah',   type: 'Restaurant', submitted: '14 Jun', docs: true  },
@@ -18,7 +17,10 @@ const PENDING = [
 export default function AdminProList() {
   const navigation = useNavigation<any>();
   const C = useColors();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState(0);
+
+  const TABS = [t('admin.tabPending'), t('admin.tabApproved'), t('admin.tabRejected')];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -29,7 +31,7 @@ export default function AdminProList() {
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12, padding: 4 }}>
           <Icon name="ArrowLeft" size={20} color="#fff" />
         </TouchableOpacity>
-        <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700', flex: 1 }}>Comptes Pro</Text>
+        <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700', flex: 1 }}>{t('admin.proList')}</Text>
         <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#C62828', alignItems: 'center', justifyContent: 'center' }}>
           <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>{PENDING.length}</Text>
         </View>
@@ -56,27 +58,27 @@ export default function AdminProList() {
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink }}>{pro.name}</Text>
                     <Text style={{ fontSize: 12, color: C.inkMute, marginTop: 2 }}>{pro.owner} · {pro.type}</Text>
-                    <Text style={{ fontSize: 11, color: C.inkMute, marginTop: 1 }}>Soumis le {pro.submitted}</Text>
+                    <Text style={{ fontSize: 11, color: C.inkMute, marginTop: 1 }}>{t('admin.submittedOn')} {pro.submitted}</Text>
                   </View>
                   <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, backgroundColor: pro.docs ? '#E3F0E4' : '#FBDCDC', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                     <Icon name={pro.docs ? 'Check' : 'AlertTriangle'} size={10} color={pro.docs ? '#2E7D32' : '#C62828'} />
                     <Text style={{ fontSize: 11, fontWeight: '600', color: pro.docs ? '#2E7D32' : '#C62828' }}>
-                      {pro.docs ? 'Docs OK' : 'Docs manquants'}
+                      {pro.docs ? t('admin.docsOk') : t('admin.docsMissing')}
                     </Text>
                   </View>
                 </View>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
                   <TouchableOpacity style={{ flex: 1, height: 36, backgroundColor: C.successSoft, borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ color: '#2E7D32', fontSize: 12, fontWeight: '600' }}>Approuver</Text>
+                    <Text style={{ color: '#2E7D32', fontSize: 12, fontWeight: '600' }}>{t('admin.approve')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={{ flex: 1, height: 36, backgroundColor: C.errorSoft, borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ color: '#C62828', fontSize: 12, fontWeight: '600' }}>Rejeter</Text>
+                    <Text style={{ color: '#C62828', fontSize: 12, fontWeight: '600' }}>{t('admin.reject')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => navigation.navigate('AdminProDetail', { restaurantId: pro.name })}
                     style={{ height: 36, paddingHorizontal: 12, borderWidth: 1, borderColor: C.border, borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}
                   >
-                    <Text style={{ color: C.inkSoft, fontSize: 12 }}>Détails</Text>
+                    <Text style={{ color: C.inkSoft, fontSize: 12 }}>{t('admin.details')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -85,7 +87,7 @@ export default function AdminProList() {
         ) : (
           <View style={{ alignItems: 'center', justifyContent: 'center', paddingTop: 64 }}>
             <Icon name="Check" size={32} color="rgba(140,130,120,0.3)" />
-            <Text style={{ color: C.inkMute, fontSize: 14, marginTop: 12 }}>Aucun élément dans cet onglet.</Text>
+            <Text style={{ color: C.inkMute, fontSize: 14, marginTop: 12 }}>{t('admin.emptyTab')}</Text>
           </View>
         )}
       </ScrollView>

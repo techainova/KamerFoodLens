@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import {
   View, TouchableOpacity, StatusBar, Animated, Easing, Alert,
 } from 'react-native';
@@ -61,12 +61,18 @@ export default function Camera() {
   const [flashOn, setFlashOn]   = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
+  // Increment on every focus so CameraView gets a new key → fresh native session
+  const [cameraKey, setCameraKey] = useState(0);
 
   useEffect(() => {
     if (permission && !permission.granted && permission.canAskAgain) {
       requestPermission();
     }
   }, [permission, requestPermission]);
+
+  useEffect(() => {
+    if (isFocused) setCameraKey(k => k + 1);
+  }, [isFocused]);
 
   // Scan line animation
   const scanAnim = useRef(new Animated.Value(0)).current;
@@ -167,7 +173,7 @@ export default function Camera() {
           accès après navigation vers Result puis retour en arrière). */}
       {permission?.granted && isFocused ? (
         <CameraView
-          key={isFocused ? 'camera-active' : 'camera-inactive'}
+          key={cameraKey}
           ref={cameraRef}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
           facing="back"

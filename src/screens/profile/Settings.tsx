@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View, ScrollView, TouchableOpacity, Switch, StatusBar, Alert,
 } from 'react-native';
@@ -11,6 +11,7 @@ import Icon from '@/components/ui/Icon';
 import type { IconName } from '@/components/ui/Icon';
 import { useAccessibilityStore } from '@/store/accessibility.store';
 import { useAuthStore } from '@/store/auth.store';
+import { useNotificationsStore } from '@/store/notifications.store';
 
 type ToggleItem  = { labelKey: string; icon: IconName; type: 'toggle'; toggleKey: string };
 type NavItem     = { labelKey: string; icon: IconName; type: 'nav'; valueKey?: string; valueParams?: Record<string, unknown>; screen?: string; danger?: boolean };
@@ -72,6 +73,9 @@ const REAL_SCREENS: Record<string, string> = {
   language:              'LanguagePicker',
   theme:                 'ThemePicker',
   ProPaymentSetup:        'ProPaymentSetup',
+  transactions:          'TransactionHistory',
+  help:                  'FAQScreen',
+  terms:                 'TermsScreen',
 };
 
 export default function ProfileSettings() {
@@ -86,23 +90,41 @@ export default function ProfileSettings() {
     themeMode === 'dark'   ? 'settings.themeValueDark' :
     themeMode === 'system' ? 'settings.themeValueSystem' :
                              'settings.themeValueLight';
-  const [toggles, setToggles] = useState<Record<string, boolean>>({
-    push: true, tts: true,
-  });
-
   const contrastMode = useAccessibilityStore((s) => s.contrastMode);
   const setContrastMode = useAccessibilityStore((s) => s.setContrastMode);
   const textSize = useAccessibilityStore((s) => s.textSize);
+  const ttsEnabled = useAccessibilityStore((s) => s.ttsEnabled);
+  const setTtsEnabled = useAccessibilityStore((s) => s.setTtsEnabled);
   const TEXT_SIZE_KEYS = ['accessibility.sizeSmall', 'accessibility.sizeNormal', 'accessibility.sizeLarge', 'accessibility.sizeXLarge'];
+
+  const pushEnabled = useNotificationsStore((s) => s.pushEnabled);
+  const enablePush = useNotificationsStore((s) => s.enablePush);
+  const disablePush = useNotificationsStore((s) => s.disablePush);
 
   const getToggle = (key: string): boolean => {
     if (key === 'contrast') return contrastMode > 0;
-    return toggles[key] ?? false;
+    if (key === 'push') return pushEnabled;
+    if (key === 'tts') return ttsEnabled;
+    return false;
   };
 
   const setToggle = (key: string, val: boolean) => {
     if (key === 'contrast') { setContrastMode(val ? 1 : 0); return; }
-    setToggles(prev => ({ ...prev, [key]: val }));
+    if (key === 'tts') { setTtsEnabled(val); return; }
+    if (key === 'push') {
+      if (val) {
+        void enablePush().then((granted) => {
+          if (!granted) {
+            Alert.alert(
+              t('settings.pushPermissionDeniedTitle', 'Permission refusée'),
+              t('settings.pushPermissionDeniedMsg', 'Autorisez les notifications dans les réglages de votre téléphone pour activer cette option.'),
+            );
+          }
+        });
+      } else {
+        void disablePush();
+      }
+    }
   };
 
   const handleLogout = () => {
@@ -113,19 +135,13 @@ export default function ProfileSettings() {
   };
 
   const handleNavPress = (screen?: string) => {
+    if (!screen) return; // Display-only row (e.g. email) — nothing to navigate to.
     if (screen === 'logout') { handleLogout(); return; }
-    if (screen && REAL_SCREENS[screen]) {
+    if (REAL_SCREENS[screen]) {
       navigation.navigate(REAL_SCREENS[screen]);
       return;
     }
-    const msgs: Record<string, [string, string]> = {
-      theme:        [t('settings.themeAlertTitle'), t('settings.themeAlertMsg')],
-      help:         [t('settings.faqAlertTitle'), t('settings.faqAlertMsg')],
-      terms:        [t('settings.termsAlertTitle'), t('settings.termsAlertMsg')],
-      transactions: [t('settings.transactionsAlertTitle'), t('settings.transactionsAlertMsg')],
-    };
-    const [title, msg] = msgs[screen ?? ''] ?? [t('settings.comingSoonTitle'), t('settings.comingSoonMsg')];
-    Alert.alert(title, msg, [{ text: 'OK' }]);
+    Alert.alert(t('settings.comingSoonTitle'), t('settings.comingSoonMsg'), [{ text: 'OK' }]);
   };
 
   const resolveValue = (item: NavItem): string | null => {
@@ -185,7 +201,7 @@ export default function ProfileSettings() {
                           {resolveValue(item)}
                         </Text>
                       ) : null}
-                      {!danger && <Icon name="ChevronRight" size={16} color={C.inkMute} />}
+                      {!danger && item.screen && <Icon name="ChevronRight" size={16} color={C.inkMute} />}
                     </View>
                   )}
                 </TouchableOpacity>

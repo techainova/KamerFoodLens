@@ -1,10 +1,11 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, TouchableOpacity, StatusBar, Animated,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 
@@ -23,15 +24,16 @@ type Phase = 'playing' | 'answered' | 'complete';
 export default function SpeedChallenge() {
   const navigation = useNavigation<any>();
   const C = useColors();
-  const [phase, setPhase]         = useState<Phase>('playing');
+  const { t } = useTranslation();
+  const [phase, setPhase]           = useState<Phase>('playing');
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [selected, setSelected]   = useState<string | null>(null);
-  const [totalXP, setTotalXP]     = useState(0);
-  const [streak, setStreak]       = useState(0);
-  const [maxStreak, setMaxStreak] = useState(0);
-  const [timeLeft, setTimeLeft]   = useState(ROUND_TIME);
-  const [answers, setAnswers]     = useState<boolean[]>([]);
-  const timerRef  = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [selected, setSelected]     = useState<string | null>(null);
+  const [totalXP, setTotalXP]       = useState(0);
+  const [streak, setStreak]         = useState(0);
+  const [maxStreak, setMaxStreak]   = useState(0);
+  const [timeLeft, setTimeLeft]     = useState(ROUND_TIME);
+  const [answers, setAnswers]       = useState<boolean[]>([]);
+  const timerRef    = useRef<ReturnType<typeof setInterval> | null>(null);
   const progressAnim = useRef(new Animated.Value(1)).current;
 
   const dish = DISHES[currentIdx]!;
@@ -131,18 +133,18 @@ export default function SpeedChallenge() {
         </View>
 
         <Text style={{ fontSize: 24, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 6, textAlign: 'center' }}>
-          {perfect ? 'Parfait !' : good ? 'Bien joué !' : "Continue d'essayer !"}
+          {perfect ? t('games.perfect') : good ? t('games.wellPlayed') : t('games.keepTrying')}
         </Text>
         <Text style={{ fontSize: 15, color: C.inkSoft, marginBottom: 24, textAlign: 'center' }}>
-          {correct}/{DISHES.length} identifications correctes
+          {correct}/{DISHES.length} {t('games.correctAnswers').toLowerCase()}
         </Text>
 
         <View style={{ width: '100%', backgroundColor: C.surface, borderRadius: 18, padding: 20, borderWidth: 1, borderColor: C.border, marginBottom: 24 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
             {[
-              { label: 'XP gagnés', value: `+${totalXP}`, color: '#F9A825' },
-              { label: 'Corrects',  value: `${correct}/${DISHES.length}`, color: '#2E7D32' },
-              { label: 'Streak max', value: `x${maxStreak}`, color: '#E8591A' },
+              { label: t('games.xpEarned'),       value: `+${totalXP}`,              color: '#F9A825' },
+              { label: t('games.correctAnswers'),  value: `${correct}/${DISHES.length}`, color: '#2E7D32' },
+              { label: t('games.streakMax'),       value: `x${maxStreak}`,            color: '#E8591A' },
             ].map(stat => (
               <View key={stat.label} style={{ alignItems: 'center' }}>
                 <Text style={{ fontSize: 20, fontWeight: '700', color: stat.color, fontFamily: 'Inter-Bold' }}>{stat.value}</Text>
@@ -157,13 +159,13 @@ export default function SpeedChallenge() {
           style={{ width: '100%', height: 52, borderRadius: 16, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}
           activeOpacity={0.85}
         >
-          <Text style={{ fontSize: 16, fontWeight: '700', color: '#fff' }}>Rejouer</Text>
+          <Text style={{ fontSize: 16, fontWeight: '700', color: '#fff' }}>{t('games.playAgain')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={{ width: '100%', height: 52, borderRadius: 16, borderWidth: 1.5, borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}
         >
-          <Text style={{ fontSize: 16, fontWeight: '600', color: C.inkSoft }}>Retour aux jeux</Text>
+          <Text style={{ fontSize: 16, fontWeight: '600', color: C.inkSoft }}>{t('games.backToGames')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -180,7 +182,7 @@ export default function SpeedChallenge() {
           <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
             <Icon name="ArrowLeft" size={22} color="#2C1810" />
           </TouchableOpacity>
-          <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 18, color: C.ink }}>Défi rapide</Text>
+          <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 18, color: C.ink }}>{t('games.speedChallenge')}</Text>
           {streak >= 2 && (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, backgroundColor: '#FEF3EC' }}>
               <Icon name="Flame" size={13} color="#E8591A" fill="#E8591A" />
@@ -202,7 +204,7 @@ export default function SpeedChallenge() {
             return <View key={i} style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: bg }} />;
           })}
         </View>
-        <Text style={{ fontSize: 11, color: C.inkMute }}>Plat {currentIdx + 1} sur {DISHES.length}</Text>
+        <Text style={{ fontSize: 11, color: C.inkMute }}>{t('games.dishProgress', { n: currentIdx + 1, total: DISHES.length })}</Text>
       </View>
 
       {/* Timer bar */}
@@ -219,7 +221,7 @@ export default function SpeedChallenge() {
         {/* Dish image */}
         <View style={{ height: 180, borderRadius: 20, backgroundColor: C.surface2, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center', marginBottom: 16, overflow: 'hidden' }}>
           <Icon name="ChefHat" size={56} color="rgba(140,130,120,0.22)" />
-          <Text style={{ fontSize: 12, color: C.inkMute, fontStyle: 'italic', marginTop: 8 }}>Identifiez ce plat</Text>
+          <Text style={{ fontSize: 12, color: C.inkMute, fontStyle: 'italic', marginTop: 8 }}>{t('games.identifyDish')}</Text>
 
           {/* Region badge */}
           <View style={{ position: 'absolute', bottom: 12, left: 12, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.48)' }}>
@@ -234,7 +236,7 @@ export default function SpeedChallenge() {
         </View>
 
         <Text style={{ fontSize: 15, fontWeight: '600', color: C.inkSoft, textAlign: 'center', marginBottom: 16 }}>
-          Quel est ce plat camerounais ?
+          {t('games.whichDishQuestion')}
         </Text>
 
         {/* Options */}

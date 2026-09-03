@@ -1,16 +1,18 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View, TextInput, TouchableOpacity, StatusBar,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 
 export default function AdminLogin() {
   const navigation = useNavigation<any>();
   const C = useColors();
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
@@ -26,7 +28,7 @@ export default function AdminLogin() {
         <Icon name="Shield" size={28} color="#fff" />
       </View>
       <Text style={{ color: '#fff', fontSize: 24, fontFamily: 'PlayfairDisplay-Bold', marginBottom: 4 }}>Admin KFL</Text>
-      <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginBottom: 32 }}>Panneau d'administration sécurisé</Text>
+      <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginBottom: 32 }}>{t('admin.securePanel')}</Text>
 
       {step === 'credentials' ? (
         <View style={{ width: '100%', gap: 12 }}>
@@ -34,7 +36,7 @@ export default function AdminLogin() {
             <Icon name="Mail" size={16} color="rgba(255,255,255,0.4)" />
             <TextInput
               value={email} onChangeText={setEmail}
-              placeholder="Email admin" placeholderTextColor="rgba(255,255,255,0.3)"
+              placeholder={t('admin.adminEmail')} placeholderTextColor="rgba(255,255,255,0.3)"
               style={{ flex: 1, fontSize: 14, color: '#fff' }}
               keyboardType="email-address" autoCapitalize="none"
             />
@@ -43,7 +45,7 @@ export default function AdminLogin() {
             <Icon name="Lock" size={16} color="rgba(255,255,255,0.4)" />
             <TextInput
               value={password} onChangeText={setPassword}
-              placeholder="Mot de passe" placeholderTextColor="rgba(255,255,255,0.3)"
+              placeholder={t('auth.password')} placeholderTextColor="rgba(255,255,255,0.3)"
               style={{ flex: 1, fontSize: 14, color: '#fff' }}
               secureTextEntry={!showPass}
             />
@@ -56,15 +58,15 @@ export default function AdminLogin() {
             style={{ height: 48, backgroundColor: '#1A237E', borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginTop: 8 }}
             activeOpacity={0.85}
           >
-            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>Continuer</Text>
+            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>{t('common.next')}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.goBack()} style={{ alignItems: 'center', marginTop: 8 }}>
-            <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>Annuler</Text>
+            <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>{t('common.cancel')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
         <View style={{ width: '100%', alignItems: 'center', gap: 16 }}>
-          <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, textAlign: 'center' }}>Code TOTP (6 chiffres)</Text>
+          <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, textAlign: 'center' }}>{t('admin.totpLabel')}</Text>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             {Array.from({ length: 6 }).map((_, i) => (
               <View key={i} style={{ width: 44, height: 56, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: totp[i] ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
@@ -83,10 +85,10 @@ export default function AdminLogin() {
             style={{ height: 48, backgroundColor: '#1A237E', borderRadius: 24, alignItems: 'center', justifyContent: 'center', width: '100%' }}
             activeOpacity={0.85}
           >
-            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>Accéder au panel</Text>
+            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>{t('admin.accessPanel')}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setStep('credentials')}>
-            <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>← Retour</Text>
+            <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>← {t('common.back')}</Text>
           </TouchableOpacity>
         </View>
       )}

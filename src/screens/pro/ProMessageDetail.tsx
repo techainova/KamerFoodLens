@@ -1,24 +1,41 @@
-﻿import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View, ScrollView, TextInput, TouchableOpacity, StatusBar,
+  View, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
-
-const MESSAGES = [
-  { from: 'client', text: 'Bonjour, ma commande est-elle prête ?',          time: '14:28' },
-  { from: 'pro',    text: 'Bonjour ! Oui, elle sera prête dans 10 minutes.', time: '14:30' },
-  { from: 'client', text: 'Super merci ! J\'arrive.',                        time: '14:31' },
-  { from: 'client', text: 'Avez-vous ajouté la sauce extra comme demandé ?', time: '14:32' },
-];
+import { proService, type ProMessage } from '@/services/pro.service';
 
 export default function ProMessageDetail() {
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  const queryClient = useQueryClient();
   const C = useColors();
-  const [msg, setMsg] = useState('');
+  const { t } = useTranslation();
+  const { messageId } = route.params as { messageId: string };
+
+  const [message, setMessage] = useState<ProMessage | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const result = await proService.markMessageRead(messageId);
+        if (!cancelled) setMessage(result);
+        queryClient.invalidateQueries({ queryKey: ['pro-messages'] });
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [messageId]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -27,45 +44,40 @@ export default function ProMessageDetail() {
       {/* AppBar */}
       <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
-          <Icon name="ArrowLeft" size={22} color="#2C1810" />
+          <Icon name="ArrowLeft" size={22} color={C.ink} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
-          <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 17, color: C.ink, lineHeight: 20 }}>Sami Nguimfack</Text>
-          <Text style={{ fontSize: 12, color: C.inkMute }}>Commande #KFL-4825</Text>
+          <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 17, color: C.ink, lineHeight: 20 }} numberOfLines={1}>
+            {message?.senderName ?? ''}
+          </Text>
+          {message && (
+            <Text style={{ fontSize: 12, color: C.inkMute }}>
+              {new Date(message.createdAt).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+            </Text>
+          )}
         </View>
       </View>
 
-      <ScrollView style={{ flex: 1, paddingHorizontal: 16 }} contentContainerStyle={{ paddingVertical: 12, paddingBottom: 10 }} showsVerticalScrollIndicator={false}>
-        {MESSAGES.map((m, i) => (
-          <View key={i} style={{ marginBottom: 10, alignItems: m.from === 'pro' ? 'flex-end' : 'flex-start' }}>
-            <View style={{
-              maxWidth: '75%', padding: 12, borderRadius: 18,
-              backgroundColor: m.from === 'pro' ? '#F9A825' : '#fff',
-              borderWidth: m.from === 'pro' ? 0 : 1,
-              borderColor: C.border,
-              borderTopRightRadius: m.from === 'pro' ? 4 : 18,
-              borderTopLeftRadius: m.from === 'pro' ? 18 : 4,
-            }}>
-              <Text style={{ fontSize: 14, color: m.from === 'pro' ? '#fff' : '#2C1810' }}>{m.text}</Text>
-            </View>
-            <Text style={{ fontSize: 11, color: C.inkMute, marginTop: 3 }}>{m.time}</Text>
+      {loading ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator color={C.primary} size="large" />
+        </View>
+      ) : !message ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <Text style={{ fontSize: 13, color: C.inkMute }}>{t('proMessages.notFound')}</Text>
+        </View>
+      ) : (
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }} showsVerticalScrollIndicator={false}>
+          <View style={{ backgroundColor: C.surface, borderRadius: 18, borderWidth: 1, borderColor: C.border, padding: 16 }}>
+            <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 16, color: C.ink, marginBottom: 10 }}>
+              {message.subject}
+            </Text>
+            <Text style={{ fontSize: 14, color: C.ink, lineHeight: 21 }}>
+              {message.body}
+            </Text>
           </View>
-        ))}
-      </ScrollView>
-
-      {/* Input bar */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderColor: C.border, backgroundColor: C.surface }}>
-        <View style={{ flex: 1, height: 40, backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border, borderRadius: 20, paddingHorizontal: 14, justifyContent: 'center' }}>
-          <TextInput
-            value={msg} onChangeText={setMsg}
-            placeholder="Votre réponse..." placeholderTextColor="#8C8278"
-            style={{ fontSize: 14, color: C.ink }}
-          />
-        </View>
-        <TouchableOpacity style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#F9A825', alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name="Send" size={18} color="#fff" />
-        </TouchableOpacity>
-      </View>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }

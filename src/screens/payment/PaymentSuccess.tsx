@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import {
   View, TouchableOpacity, StatusBar,
 } from 'react-native';
@@ -8,8 +8,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
-
-const SHADOW_MD = { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.10, shadowRadius: 6, elevation: 4 };
+import { SHADOW_SM, SHADOW_MD, SHADOW_LG } from '@/constants/theme';
 
 export default function PaymentSuccess() {
   const navigation = useNavigation<any>();

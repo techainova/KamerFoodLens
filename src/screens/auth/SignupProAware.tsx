@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, TouchableOpacity, ScrollView, TextInput, Alert,
+  View, TouchableOpacity, ScrollView, TextInput, Alert, ActivityIndicator,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +10,8 @@ import type { RootStackParamList } from '@/navigation/types';
 import LangSwitch from '@/components/auth/LangSwitch';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
+import { authService } from '@/services/auth.service';
+import { isNetworkError } from '@/utils/apiError';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SignupProAware'>;
 
@@ -24,17 +26,46 @@ export default function SignupProAware({ navigation }: Props) {
   const [showPw, setShowPw] = useState(false);
   const [accepted, setAccepted] = useState(true);
   const [isBusiness, setIsBusiness] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
+    setError('');
     if (!firstName.trim() || !lastName.trim() || !email.trim() || !password.trim()) {
       Alert.alert(t('auth.missingFieldsTitle'), t('auth.missingFieldsMsg'));
+      return;
+    }
+    if (password.length < 8) {
+      setError(t('auth.passwordTooShort8', 'Mot de passe minimum 8 caractères.'));
       return;
     }
     if (!accepted) {
       Alert.alert(t('auth.acceptTermsRequired'));
       return;
     }
-    navigation.navigate('OTP', { email, isBusiness });
+    setLoading(true);
+    try {
+      await authService.signup({
+        firstName,
+        lastName,
+        email: email.toLowerCase().trim(),
+        phone,
+        password,
+        isBusiness,
+      });
+      navigation.navigate('OTP', { email: email.toLowerCase().trim(), isBusiness });
+    } catch (err) {
+      if (__DEV__) {
+        console.warn('[KFL][SignupProAware] échec de l\'inscription :', err);
+      }
+      if (isNetworkError(err)) {
+        setError(t('auth.networkError', 'Impossible de joindre le serveur. Vérifiez votre connexion.'));
+      } else {
+        setError(t('auth.signupFailed', "Erreur lors de l'inscription. Cet email est peut-être déjà utilisé."));
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -75,7 +106,7 @@ export default function SignupProAware({ navigation }: Props) {
                 style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, paddingHorizontal: 14, fontSize: 14, color: C.ink }}
                 value={firstName}
                 onChangeText={setFirstName}
-                placeholder="Amah"
+                placeholder={t('auth.firstName')}
                 placeholderTextColor={C.inkMute}
               />
             </View>
@@ -87,7 +118,7 @@ export default function SignupProAware({ navigation }: Props) {
                 style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, paddingHorizontal: 14, fontSize: 14, color: C.ink }}
                 value={lastName}
                 onChangeText={setLastName}
-                placeholder="Ndongo"
+                placeholder={t('auth.lastName')}
                 placeholderTextColor={C.inkMute}
               />
             </View>
@@ -106,7 +137,7 @@ export default function SignupProAware({ navigation }: Props) {
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                placeholder="amah@example.com"
+                placeholder={t('auth.emailPlaceholder', 'vous@example.com')}
                 placeholderTextColor={C.inkMute}
               />
             </View>
@@ -200,15 +231,27 @@ export default function SignupProAware({ navigation }: Props) {
             </View>
           </TouchableOpacity>
 
+          {/* Erreur */}
+          {error.length > 0 && (
+            <View style={{ backgroundColor: '#FBDCDC', borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Icon name="AlertCircle" size={15} color="#C62828" />
+              <Text style={{ fontSize: 13, color: '#C62828', flex: 1 }}>{error}</Text>
+            </View>
+          )}
+
           {/* CTA */}
           <TouchableOpacity
             style={{ height: 56, backgroundColor: C.primary, borderRadius: 28, alignItems: 'center', justifyContent: 'center', marginTop: 6 }}
             onPress={handleSignup}
             activeOpacity={0.85}
+            disabled={loading}
           >
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600', fontFamily: 'Inter-SemiBold' }}>
-              {t('auth.signup')}
-            </Text>
+            {loading
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600', fontFamily: 'Inter-SemiBold' }}>
+                  {t('auth.signup')}
+                </Text>
+            }
           </TouchableOpacity>
         </View>
 

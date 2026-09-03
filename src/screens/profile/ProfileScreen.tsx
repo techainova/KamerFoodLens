@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View, ScrollView, TouchableOpacity, StatusBar,
+  View, ScrollView, TouchableOpacity, StatusBar, Image,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,17 +9,13 @@ import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { useAuthStore } from '@/store/auth.store';
+import { useFavoritesStore } from '@/store/favorites.store';
+import { useStoriesStore } from '@/store/stories.store';
 import ProfilePro from '@/screens/user_v3/ProfilePro';
-
-const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
+import StoryHighlightBar from '@/screens/home/story-stickers/StoryHighlightBar';
+import { SHADOW_SM, SHADOW_MD, SHADOW_LG } from '@/constants/theme';
 
 const POST_COLORS = ['#E8591A', '#2E7D32', '#F9A825', '#1A237E', '#E8591A', '#2E7D32', '#F9A825', '#1A237E', '#E8591A'];
-const FAVORITES = [
-  { name: 'Ndolé traditionnel', region: 'Littoral · Cameroun', rating: 4.9 },
-  { name: 'Poulet DG', region: 'Centre · Cameroun', rating: 4.7 },
-  { name: 'Eru spécial', region: 'Sud-Ouest · Cameroun', rating: 4.8 },
-  { name: 'Mbongo Tchobi', region: 'Littoral · Cameroun', rating: 5.0 },
-];
 const REVIEWS = [
   { dish: 'Ndolé traditionnel', restaurant: 'Chez Mama Pauline', rating: 5, text: 'Authentique et délicieux, exactement comme à la maison.' },
   { dish: 'Poulet DG', restaurant: "Restaurant L'Authenticité", rating: 4, text: 'Très bon, un peu salé à mon goût.' },
@@ -42,6 +38,16 @@ export default function ProfileScreen() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState(0);
   const user = useAuthStore((s) => s.user);
+  const favorites = useFavoritesStore((s) => s.favorites);
+  const fetchFavorites = useFavoritesStore((s) => s.fetchAll);
+  const highlights = useStoriesStore((s) => s.highlights);
+  const fetchHighlights = useStoriesStore((s) => s.fetchHighlights);
+
+  useEffect(() => {
+    void fetchFavorites();
+    if (user?.id) void fetchHighlights(user.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const TABS = [t('profile.tabPublications'), t('profile.favorites'), t('profile.badges'), t('profile.tabAvis')];
 
@@ -73,9 +79,21 @@ export default function ProfileScreen() {
         {/* Avatar & identity */}
         <View style={{ alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16 }}>
           <View style={{ position: 'relative' }}>
-            <View style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: 32, fontWeight: '600', color: C.inkMute, fontFamily: 'Inter-Bold' }}>{avatarInitial}</Text>
-            </View>
+            <TouchableOpacity onPress={() => navigation.navigate('EditProfile')} activeOpacity={0.8}>
+              <View style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                {user?.avatar ? (
+                  <Image source={{ uri: user.avatar }} style={{ width: 96, height: 96 }} resizeMode="cover" />
+                ) : (
+                  <Text style={{ fontSize: 32, fontWeight: '600', color: C.inkMute, fontFamily: 'Inter-Bold' }}>{avatarInitial}</Text>
+                )}
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('EditProfile')}
+              style={{ position: 'absolute', bottom: 0, left: -4, width: 30, height: 30, borderRadius: 15, backgroundColor: C.primary, borderWidth: 2, borderColor: C.cream, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Icon name="Camera" size={14} color="#fff" />
+            </TouchableOpacity>
             <View style={{ position: 'absolute', bottom: 0, right: -4, paddingHorizontal: 8, paddingVertical: 2, backgroundColor: C.primary, borderRadius: 10, borderWidth: 2, borderColor: C.cream }}>
               <Text style={{ fontSize: 10, fontWeight: '700', color: '#fff' }}>{t('profile.levelN', { n: user?.level ?? 1 })}</Text>
             </View>
@@ -115,6 +133,14 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Histoires à la une */}
+        <StoryHighlightBar
+          highlights={highlights}
+          isMine
+          myAuthorId={user?.id}
+          onOpenHighlight={(highlightId) => navigation.navigate('StoriesViewer', { highlightId })}
+        />
+
         {/* Tabs */}
         <View style={{ flexDirection: 'row', backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
           {TABS.map((tab, i) => (
@@ -144,26 +170,40 @@ export default function ProfileScreen() {
         {/* Favorites list */}
         {activeTab === 1 && (
           <View style={{ paddingHorizontal: 16, paddingTop: 14, gap: 10 }}>
-            {FAVORITES.map((fav, i) => (
-              <TouchableOpacity
-                key={i}
-                style={{ backgroundColor: C.surface, borderRadius: 14, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}
-                activeOpacity={0.85}
-              >
-                <View style={{ width: 50, height: 50, borderRadius: 12, backgroundColor: C.surface2, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon name="Camera" size={18} color={C.inkMute} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink, marginBottom: 2 }}>{fav.name}</Text>
-                  <Text style={{ fontSize: 12, color: C.inkMute }}>{fav.region}</Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                  <Icon name="Star" size={12} color={C.gold} fill={C.gold} />
-                  <Text style={{ fontSize: 12, fontWeight: '700', color: C.ink }}>{fav.rating}</Text>
-                </View>
-                <Icon name="ChevronRight" size={16} color={C.inkMute} />
-              </TouchableOpacity>
-            ))}
+            {favorites.length === 0 ? (
+              <View style={{ alignItems: 'center', paddingTop: 40 }}>
+                <Icon name="Heart" size={40} color={C.inkMute} />
+                <Text style={{ fontSize: 14, color: C.inkMute, marginTop: 10 }}>{t('favorites.empty')}</Text>
+              </View>
+            ) : favorites.map((fav) => {
+              const navigable = fav.type === 'recipe' || fav.type === 'restaurant';
+              return (
+                <TouchableOpacity
+                  key={fav.id}
+                  disabled={!navigable}
+                  activeOpacity={navigable ? 0.85 : 1}
+                  onPress={() => {
+                    if (fav.type === 'recipe') navigation.navigate('Recipe', { dishId: fav.itemId });
+                    else if (fav.type === 'restaurant') navigation.navigate('Restaurant', { restaurantId: fav.itemId });
+                  }}
+                  style={{ backgroundColor: C.surface, borderRadius: 14, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}
+                >
+                  <View style={{ width: 50, height: 50, borderRadius: 12, backgroundColor: C.surface2, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name={fav.type === 'restaurant' ? 'Store' : 'ChefHat'} size={18} color={C.inkMute} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink, marginBottom: 2 }}>{fav.name}</Text>
+                    {!!fav.region && <Text style={{ fontSize: 12, color: C.inkMute }}>{fav.region}</Text>}
+                  </View>
+                  {fav.rating !== null && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                      <Icon name="Star" size={12} color={C.gold} fill={C.gold} />
+                      <Text style={{ fontSize: 12, fontWeight: '700', color: C.ink }}>{fav.rating}</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
           </View>
         )}
 

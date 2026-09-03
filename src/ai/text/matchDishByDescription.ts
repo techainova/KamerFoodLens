@@ -1,16 +1,10 @@
 // src/ai/text/matchDishByDescription.ts
 // Reconnaissance d'un plat à partir d'une description texte libre (saisie au
-// clavier ou transcrite depuis la voix), sans modèle ML — un plat de KFL n'a
-// que quelques dizaines de variantes possibles, et la base de référence
-// (`assets/.../dish_descriptions.json` via `src/ai/data/dish_descriptions.json`)
-// ne contient que 6 entrées : un classifieur par recouvrement de mots-clés
-// (ingrédients + nom du plat) est instantané, 100% local, et largement plus
-// fiable ici qu'un modèle d'embeddings généraliste téléchargé pour l'occasion
-// (qui ajouterait des dizaines de Mo et de la latence pour un gain nul sur un
-// référentiel aussi petit). L'interface est volontairement la même que celle
-// attendue par l'écran Résultat (`classId` + `confidence`), donc un vrai
-// modèle de similarité sémantique pourra remplacer cette fonction plus tard
-// sans toucher au reste de l'app.
+// clavier ou transcrite depuis la voix), sans modèle ML.
+// La base `dish_descriptions.json` liste les plats camerounais connus.
+// L'interface est identique à celle attendue par l'écran Résultat (`classId`
+// + `confidence`), ce qui permet un futur remplacement par un modèle
+// d'embeddings sans toucher au reste de l'app.
 
 import dishDescriptions from '../data/dish_descriptions.json';
 import { UNKNOWN_CLASS } from '../interpretResult';
@@ -19,6 +13,7 @@ interface DishEntry {
   nomFR: string;
   nomEN: string;
   ingredients: string[];
+  aliases?: string[];
 }
 
 const DB = dishDescriptions as Record<string, DishEntry>;
@@ -27,8 +22,44 @@ const STOPWORDS = new Set([
   'de', 'des', 'du', 'la', 'le', 'les', 'un', 'une', 'et', 'avec', 'dans',
   'pour', 'au', 'aux', 'en', 'sur', 'ou', 'qui', 'que', 'ce', 'cette', 'ca',
   'je', 'cherche', 'recherche', 'plat', 'contient', 'contenant', 'fait',
-  'avec', 'tres', 'plus', 'comme', 'cest', 'il', 'y', 'a',
+  'tres', 'plus', 'comme', 'cest', 'il', 'y', 'a', 'est', 'sont', 'voir',
+  'mange', 'manger', 'veux', 'voudrais', 'voulez',
 ]);
+
+// Common Whisper transcription errors for Cameroonian words
+const PHONETIC_MAP: Record<string, string> = {
+  'endolé': 'ndolé',
+  'andole': 'ndole',
+  'un dolé': 'ndole',
+  'un dole': 'ndole',
+  'indole': 'ndole',
+  'ndolée': 'ndole',
+  'aidole': 'ndole',
+  'palme': 'palme',
+  'poulet dg': 'poulet dg',
+  'poulet tg': 'poulet dg',
+  'poule dg': 'poulet dg',
+  'mbongot': 'mbongo',
+  'mboncho': 'mbongo',
+  'mbonjo': 'mbongo',
+  'woakye': 'waakye',
+  'waki': 'waakye',
+  'waaki': 'waakye',
+  'écoang': 'ekwang',
+  'écouang': 'ekwang',
+  'aquang': 'ekwang',
+  'jolloff': 'jollof',
+  'joloff': 'jollof',
+  'cocoyam': 'cocoyam',
+};
+
+function applyPhoneticFixes(s: string): string {
+  let result = s;
+  for (const [typo, correct] of Object.entries(PHONETIC_MAP)) {
+    result = result.replace(new RegExp(typo, 'gi'), correct);
+  }
+  return result;
+}
 
 function normalize(s: string): string {
   return s
@@ -49,14 +80,16 @@ export interface DescriptionMatch {
 }
 
 /**
- * Compare une description libre (FR) à la base de plats connus de KFL et
- * retourne le plat le plus probable, ou `UNKNOWN_CLASS` ("inconnu") si aucun
- * recouvrement suffisant n'est trouvé.
+ * Compare une description libre (FR ou EN) à la base de plats connus de KFL
+ * et retourne le plat le plus probable, ou `UNKNOWN_CLASS` ("inconnu") si aucun
+ * recouvrement suffisant n'est trouvé. Gère les variantes phonétiques
+ * issues des transcriptions Whisper de l'accent camerounais.
  */
-export function matchDishByDescription(text: string): DescriptionMatch {
-  const inputNorm = normalize(text);
+export function matchDishByDescription(rawText: string): DescriptionMatch {
+  const fixed = applyPhoneticFixes(rawText);
+  const inputNorm = normalize(fixed);
   if (!inputNorm) return { classId: UNKNOWN_CLASS, confidence: 0 };
-  const inputTokens = new Set(significantTokens(text));
+  const inputTokens = new Set(significantTokens(fixed));
 
   let bestId: string | null = null;
   let bestScore = 0;
@@ -64,10 +97,17 @@ export function matchDishByDescription(text: string): DescriptionMatch {
   for (const [id, dish] of Object.entries(DB)) {
     let score = 0;
 
-    // Mention directe du nom du plat — signal le plus fort. On teste la
-    // phrase complète (ex. "ndolé") puis, si elle ne matche pas telle quelle
-    // (ex. nom suivi d'un qualificatif régional comme "Riz Jollof (Ghana)"),
-    // un recouvrement par mot-clé du nom (ex. juste "jollof").
+    // 1. Direct alias / name match — strongest signal (+5 for exact alias)
+    const allAliases = dish.aliases ?? [];
+    for (const alias of allAliases) {
+      const aliasNorm = normalize(alias);
+      if (aliasNorm && inputNorm.includes(aliasNorm)) {
+        score += 5;
+        break;
+      }
+    }
+
+    // 2. French / English name match (+4 exact, or partial token)
     for (const name of [dish.nomFR, dish.nomEN]) {
       const nameNorm = normalize(name);
       if (!nameNorm) continue;
@@ -80,15 +120,16 @@ export function matchDishByDescription(text: string): DescriptionMatch {
       }
     }
 
+    // 3. Ingredient match (+3 for full phrase, +1 per overlapping token, cap 2)
     for (const ingredient of dish.ingredients) {
       const ingNorm = normalize(ingredient);
       if (ingNorm && inputNorm.includes(ingNorm)) {
-        score += 3; // phrase ingrédient complète retrouvée telle quelle
+        score += 3;
         continue;
       }
       const ingTokens = significantTokens(ingredient);
       const hits = ingTokens.filter((tok) => inputTokens.has(tok)).length;
-      score += Math.min(hits, 2); // recouvrement partiel, plafonné
+      score += Math.min(hits, 2);
     }
 
     if (score > bestScore) {
@@ -97,11 +138,11 @@ export function matchDishByDescription(text: string): DescriptionMatch {
     }
   }
 
-  // Sous ce seuil, le recouvrement est trop faible pour être fiable.
+  // Threshold: need at least 2 points to avoid spurious matches
   if (!bestId || bestScore < 2) {
     return { classId: UNKNOWN_CLASS, confidence: 0 };
   }
 
-  const confidence = Math.max(0.35, Math.min(0.95, 0.35 + bestScore * 0.08));
+  const confidence = Math.max(0.35, Math.min(0.95, 0.35 + bestScore * 0.07));
   return { classId: bestId, confidence };
 }

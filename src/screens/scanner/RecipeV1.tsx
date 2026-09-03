@@ -1,60 +1,93 @@
-﻿import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  View, ScrollView, TouchableOpacity, TextInput,
+  View, ScrollView, TouchableOpacity, StatusBar, Image, ActivityIndicator,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import * as Speech from 'expo-speech';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
-
-const INGREDIENTS = [
-  { qty: '500g', name: 'Feuilles de ndolé fraîches', en: 'Fresh ndolé leaves' },
-  { qty: '300g', name: "Pâte d'arachide",           en: 'Peanut paste' },
-  { qty: '400g', name: 'Poisson fumé',               en: 'Smoked fish' },
-  { qty: '200g', name: 'Viande de bœuf',             en: 'Beef' },
-  { qty: '4',    name: 'Crevettes séchées',           en: 'Dried shrimps' },
-  { qty: '1',    name: 'Oignon',                      en: 'Onion' },
-  { qty: '3',    name: "Gousses d'ail",               en: 'Garlic cloves' },
-  { qty: '50ml', name: 'Huile de palme',              en: 'Palm oil' },
-];
-
-const STEPS = [
-  { n: 1, text: "Laver et blanchir les feuilles de ndolé dans de l'eau bouillante 3 minutes. Égoutter et presser pour enlever l'amertume.", timer: '3 min' },
-  { n: 2, text: "Dans une casserole, faire revenir l'oignon et l'ail émincés dans l'huile de palme à feu moyen.", timer: '5 min' },
-  { n: 3, text: "Ajouter la viande coupée en morceaux, saler, poivrer. Faire dorer puis couvrir d'eau à mi-hauteur.", timer: '20 min' },
-  { n: 4, text: "Incorporer la pâte d'arachide délayée dans un peu d'eau tiède. Mélanger soigneusement.", timer: '' },
-  { n: 5, text: "Ajouter le poisson fumé émietté, les crevettes séchées et les feuilles de ndolé. Laisser mijoter.", timer: '25 min' },
-  { n: 6, text: "Ajuster l'assaisonnement. Servir chaud avec du plantain mûr frit ou du riz.", timer: '' },
-];
-
-const NUTRITION = [
-  { label: 'Calories', value: '420', unit: 'kcal', color: '#E8591A', pct: 72 },
-  { label: 'Protéines', value: '32', unit: 'g', color: '#2E7D32', pct: 65 },
-  { label: 'Lipides', value: '24', unit: 'g', color: '#F9A825', pct: 48 },
-  { label: 'Glucides', value: '18', unit: 'g', color: '#1A237E', pct: 30 },
-  { label: 'Fibres', value: '6', unit: 'g', color: '#2E7D32', pct: 24 },
-];
-
-const REVIEWS = [
-  { author: 'Amah N.', rating: 5, text: "Recette authentique ! J'ai suivi à la lettre et c'était délicieux.", date: 'il y a 2 jours', avatar: 'AN' },
-  { author: 'Patrick K.', rating: 4, text: "Très bon, j'aurais mis un peu plus de piment. Mais la texture des feuilles est parfaite.", date: 'il y a 1 semaine', avatar: 'PK' },
-  { author: 'Marie T.', rating: 5, text: "Mon plat préféré ! Félicitations pour la qualité de la recette.", date: 'il y a 2 semaines', avatar: 'MT' },
-];
+import { recipesService, type Recipe } from '@/services/recipes.service';
+import { useFavoritesStore } from '@/store/favorites.store';
+import { useAccessibilityStore } from '@/store/accessibility.store';
 
 const TAB_KEYS = ['ingredients', 'steps', 'nutrition', 'reviews'] as const;
 type TabKey = typeof TAB_KEYS[number];
 
+function formatDuration(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m} min`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}min`;
+}
+
 export default function RecipeV1() {
-    const C = useColors();
+  const C = useColors();
   const { t } = useTranslation();
-  const nav = useNavigation();
+  const nav = useNavigation<any>();
+  const route = useRoute<any>();
+  const dishId: string | undefined = route.params?.dishId;
+
+  const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>('ingredients');
   const [portions, setPortions] = useState(4);
-  const [checked, setChecked] = useState<Set<number>>(new Set([2, 5]));
-  const [reviewText, setReviewText] = useState('');
-  const [myRating, setMyRating] = useState(0);
+  const [checked, setChecked] = useState<Set<number>>(new Set());
+
+  const isSaved = useFavoritesStore((s) => s.isSaved);
+  const toggleFavorite = useFavoritesStore((s) => s.toggle);
+  const fetchFavorites = useFavoritesStore((s) => s.fetchAll);
+  const ttsEnabled = useAccessibilityStore((s) => s.ttsEnabled);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  useEffect(() => {
+    return () => { void Speech.stop(); };
+  }, []);
+
+  const handleToggleSpeech = () => {
+    if (isSpeaking) {
+      void Speech.stop();
+      setIsSpeaking(false);
+      return;
+    }
+    if (!recipe) return;
+    const stepsText = recipe.steps
+      .map((step, i) => `${t('recipe.stepN', { n: i + 1, defaultValue: 'Étape {{n}}' })}. ${step.description}`)
+      .join('. ');
+    const fullText = [recipe.name, recipe.description, stepsText].filter(Boolean).join('. ');
+    Speech.speak(fullText, { language: 'fr-FR', onDone: () => setIsSpeaking(false), onStopped: () => setIsSpeaking(false) });
+    setIsSpeaking(true);
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!dishId) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      try {
+        const detail = await recipesService.getDetail(dishId);
+        if (!cancelled) {
+          setRecipe(detail);
+          setPortions(detail.servings);
+        }
+      } catch {
+        if (!cancelled) setRecipe(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    void fetchFavorites();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dishId]);
+
+  const bookmarked = recipe ? isSaved(recipe.id) : false;
 
   const toggleCheck = (i: number) => {
     const next = new Set(checked);
@@ -69,8 +102,44 @@ export default function RecipeV1() {
     reviews:     t('recipe.reviews'),
   };
 
+  const ratingRounded = useMemo(() => (recipe ? Math.round(recipe.rating) : 0), [recipe]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: C.cream, alignItems: 'center', justifyContent: 'center' }}>
+        <StatusBar barStyle={C.statusBar} />
+        <ActivityIndicator color="#E8591A" />
+      </SafeAreaView>
+    );
+  }
+
+  if (!recipe) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
+        <StatusBar barStyle={C.statusBar} />
+        <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderColor: C.border, backgroundColor: C.surface }}>
+          <TouchableOpacity
+            style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}
+            onPress={() => nav.goBack()}
+          >
+            <Icon name="ArrowLeft" size={17} color="#6D4C41" />
+          </TouchableOpacity>
+          <Text style={{ flex: 1, fontSize: 16, fontWeight: '700', color: C.ink, fontFamily: 'Inter-Bold' }}>
+            {t('recipe.title')}
+          </Text>
+        </View>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <Icon name="ChefHat" size={48} color={C.inkMute} />
+          <Text style={{ fontSize: 16, fontWeight: '700', color: C.ink, marginTop: 16 }}>{t('recipe.notFound')}</Text>
+          <Text style={{ fontSize: 13, color: C.inkSoft, marginTop: 8, textAlign: 'center' }}>{t('recipe.notFoundDesc')}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
+      <StatusBar barStyle={C.statusBar} />
 
       {/* AppBar */}
       <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1, borderColor: C.border, backgroundColor: C.surface }}>
@@ -80,66 +149,70 @@ export default function RecipeV1() {
         >
           <Icon name="ArrowLeft" size={17} color="#6D4C41" />
         </TouchableOpacity>
-        <Text style={{ flex: 1, fontSize: 16, fontWeight: '700', color: C.ink, fontFamily: 'Inter-Bold' }}>
+        <Text style={{ flex: 1, fontSize: 16, fontWeight: '700', color: C.ink, fontFamily: 'Inter-Bold' }} numberOfLines={1}>
           {t('recipe.title')}
         </Text>
-        <TouchableOpacity style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name="Share2" size={16} color="#6D4C41" />
-        </TouchableOpacity>
-        <TouchableOpacity style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name="Bookmark" size={16} color="#6D4C41" />
+        {ttsEnabled && (
+          <TouchableOpacity
+            onPress={handleToggleSpeech}
+            style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: isSpeaking ? '#E8591A' : C.border, backgroundColor: isSpeaking ? '#FEF0E8' : C.surface, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Icon name="Volume2" size={16} color={isSpeaking ? '#E8591A' : '#6D4C41'} />
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity
+          onPress={() => void toggleFavorite('recipe', recipe.id)}
+          style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: bookmarked ? '#E8591A' : C.border, backgroundColor: bookmarked ? '#FEF0E8' : C.surface, alignItems: 'center', justifyContent: 'center' }}
+        >
+          <Icon name="Bookmark" size={16} color={bookmarked ? '#E8591A' : '#6D4C41'} fill={bookmarked ? '#E8591A' : 'none'} />
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 90 }} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
 
-        {/* Video / Hero */}
-        <View style={{ margin: 16, borderRadius: 16, overflow: 'hidden', position: 'relative' }}>
+        {/* Hero */}
+        <View style={{ margin: 16, borderRadius: 16, overflow: 'hidden' }}>
           <View style={{ height: 200, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name="ChefHat" size={50} color="#E5E0D8" />
-            <Text style={{ color: C.inkMute, fontSize: 11, marginTop: 8, fontStyle: 'italic' }}>vidéo recette · 7:45</Text>
+            {recipe.imageUrl ? (
+              <Image source={{ uri: recipe.imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+            ) : (
+              <Icon name="ChefHat" size={50} color="#E5E0D8" />
+            )}
           </View>
-          {/* Play button */}
-          <TouchableOpacity style={{ position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center' }}>
-            <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 10, elevation: 6 }}>
-              <Icon name="PlayCircle" size={30} color="#fff" fill="#E8591A" />
-            </View>
-          </TouchableOpacity>
-          {/* Duration */}
-          <View style={{ position: 'absolute', bottom: 10, left: 10, backgroundColor: 'rgba(0,0,0,0.65)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
-            <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>7:45</Text>
-          </View>
-          {/* TTS button */}
-          <TouchableOpacity style={{ position: 'absolute', top: 10, right: 10, width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name="Volume2" size={16} color="#fff" />
-          </TouchableOpacity>
         </View>
 
         {/* Title + Meta */}
         <View style={{ paddingHorizontal: 16, marginBottom: 4 }}>
           <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 26, color: C.ink, lineHeight: 30 }}>
-            Ndolé traditionnel
+            {recipe.name}
           </Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8, flexWrap: 'wrap' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <Icon name="Clock" size={13} color="#8C8278" />
-              <Text style={{ color: C.inkMute, fontSize: 12 }}>1h 30min</Text>
+              <Text style={{ color: C.inkMute, fontSize: 12 }}>{formatDuration(recipe.duration)}</Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <Icon name="BarChart2" size={13} color="#8C8278" />
-              <Text style={{ color: C.inkMute, fontSize: 12 }}>{t('recipe.medium')}</Text>
+              <Text style={{ color: C.inkMute, fontSize: 12 }}>{t(`recipe.${recipe.difficulty}`)}</Text>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-              {[1,2,3,4,5].map(s => (
-                <Icon key={s} name="Star" size={12} color="#F9A825" fill="#F9A825" />
-              ))}
-              <Text style={{ color: C.inkMute, fontSize: 12, marginLeft: 4 }}>(312)</Text>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Icon name="MapPin" size={13} color="#8C8278" />
-              <Text style={{ color: C.inkMute, fontSize: 12 }}>Littoral</Text>
-            </View>
+            {recipe.ratingCount > 0 && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <Icon key={s} name="Star" size={12} color="#F9A825" fill={s <= ratingRounded ? '#F9A825' : 'none'} />
+                ))}
+                <Text style={{ color: C.inkMute, fontSize: 12, marginLeft: 4 }}>({recipe.ratingCount})</Text>
+              </View>
+            )}
+            {!!recipe.region && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Icon name="MapPin" size={13} color="#8C8278" />
+                <Text style={{ color: C.inkMute, fontSize: 12 }}>{recipe.region}</Text>
+              </View>
+            )}
           </View>
+          {!!recipe.description && (
+            <Text style={{ fontSize: 13, color: C.inkSoft, lineHeight: 20, marginTop: 12 }}>{recipe.description}</Text>
+          )}
         </View>
 
         {/* Tabs */}
@@ -162,7 +235,6 @@ export default function RecipeV1() {
           {/* ── INGRÉDIENTS ── */}
           {activeTab === 'ingredients' && (
             <>
-              {/* Portions stepper */}
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingBottom: 16, borderBottomWidth: 1, borderColor: C.border }}>
                 <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink, fontFamily: 'Inter-SemiBold' }}>
                   {t('recipe.servings')}
@@ -186,188 +258,114 @@ export default function RecipeV1() {
                 </View>
               </View>
 
-              {/* Ingredient list */}
-              <View style={{ gap: 2 }}>
-                {INGREDIENTS.map((item, i) => {
-                  const isChecked = checked.has(i);
-                  return (
-                    <TouchableOpacity
-                      key={i}
-                      onPress={() => toggleCheck(i)}
-                      style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderColor: C.border }}
-                      activeOpacity={0.7}
-                    >
-                      <View style={{ width: 24, height: 24, borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: isChecked ? '#2E7D32' : 'transparent', borderWidth: isChecked ? 0 : 1.5, borderColor: C.border, flexShrink: 0 }}>
-                        {isChecked && <Icon name="Check" size={14} color="#fff" strokeWidth={2.5} />}
-                      </View>
-                      <Text style={{ width: 48, fontSize: 13, fontWeight: '700', color: '#E8591A' }}>{item.qty}</Text>
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 14, color: isChecked ? '#8C8278' : '#2C1810', textDecorationLine: isChecked ? 'line-through' : 'none' }}>
-                          {item.name}
-                        </Text>
-                        <Text style={{ fontSize: 11, color: C.inkMute, fontStyle: 'italic' }}>{item.en}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+              {recipe.ingredients.length === 0 ? (
+                <Text style={{ fontSize: 13, color: C.inkMute, textAlign: 'center', paddingVertical: 24 }}>{t('recipe.notFoundDesc')}</Text>
+              ) : (
+                <View style={{ gap: 2 }}>
+                  {recipe.ingredients.map((item, i) => {
+                    const isChecked = checked.has(i);
+                    return (
+                      <TouchableOpacity
+                        key={item.id}
+                        onPress={() => toggleCheck(i)}
+                        style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderColor: C.border }}
+                        activeOpacity={0.7}
+                      >
+                        <View style={{ width: 24, height: 24, borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: isChecked ? '#2E7D32' : 'transparent', borderWidth: isChecked ? 0 : 1.5, borderColor: C.border, flexShrink: 0 }}>
+                          {isChecked && <Icon name="Check" size={14} color="#fff" strokeWidth={2.5} />}
+                        </View>
+                        <Text style={{ width: 60, fontSize: 13, fontWeight: '700', color: '#E8591A' }}>{item.quantity}{item.unit ? ` ${item.unit}` : ''}</Text>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ fontSize: 14, color: isChecked ? '#8C8278' : '#2C1810', textDecorationLine: isChecked ? 'line-through' : 'none' }}>
+                            {item.name}
+                          </Text>
+                          {!!item.nameEN && <Text style={{ fontSize: 11, color: C.inkMute, fontStyle: 'italic' }}>{item.nameEN}</Text>}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
             </>
           )}
 
           {/* ── ÉTAPES ── */}
           {activeTab === 'steps' && (
-            <View style={{ gap: 16 }}>
-              {STEPS.map((step) => (
-                <View key={step.n} style={{ flexDirection: 'row', gap: 14 }}>
-                  {/* Step number */}
-                  <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
-                    <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>{step.n}</Text>
-                  </View>
-                  {/* Content */}
-                  <View style={{ flex: 1, paddingBottom: 16, borderBottomWidth: step.n < STEPS.length ? 1 : 0, borderColor: C.border }}>
-                    {/* Step image slot */}
-                    <View style={{ height: 120, backgroundColor: C.surface2, borderRadius: 12, marginBottom: 10, alignItems: 'center', justifyContent: 'center' }}>
-                      <Icon name="ChefHat" size={30} color="#E5E0D8" />
+            recipe.steps.length === 0 ? (
+              <Text style={{ fontSize: 13, color: C.inkMute, textAlign: 'center', paddingVertical: 24 }}>{t('recipe.notFoundDesc')}</Text>
+            ) : (
+              <View style={{ gap: 16 }}>
+                {recipe.steps.map((step, i) => (
+                  <View key={step.id} style={{ flexDirection: 'row', gap: 14 }}>
+                    <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+                      <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>{step.order}</Text>
                     </View>
-                    <Text style={{ fontSize: 14, color: C.ink, lineHeight: 22 }}>{step.text}</Text>
-                    {step.timer && (
-                      <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: '#FEF0E8', borderWidth: 1, borderColor: '#E8591A' }}>
-                        <Icon name="Clock" size={14} color="#E8591A" />
-                        <Text style={{ color: '#E8591A', fontSize: 12, fontWeight: '700' }}>{step.timer}</Text>
-                      </TouchableOpacity>
-                    )}
+                    <View style={{ flex: 1, paddingBottom: 16, borderBottomWidth: i < recipe.steps.length - 1 ? 1 : 0, borderColor: C.border }}>
+                      {step.imageUrl ? (
+                        <Image source={{ uri: step.imageUrl }} style={{ height: 120, borderRadius: 12, marginBottom: 10 }} resizeMode="cover" />
+                      ) : (
+                        <View style={{ height: 120, backgroundColor: C.surface2, borderRadius: 12, marginBottom: 10, alignItems: 'center', justifyContent: 'center' }}>
+                          <Icon name="ChefHat" size={30} color="#E5E0D8" />
+                        </View>
+                      )}
+                      {!!step.title && <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 4 }}>{step.title}</Text>}
+                      <Text style={{ fontSize: 14, color: C.ink, lineHeight: 22 }}>{step.description}</Text>
+                      {!!step.durationMin && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: '#FEF0E8', borderWidth: 1, borderColor: '#E8591A' }}>
+                          <Icon name="Clock" size={14} color="#E8591A" />
+                          <Text style={{ color: '#E8591A', fontSize: 12, fontWeight: '700' }}>{step.durationMin} min</Text>
+                        </View>
+                      )}
+                    </View>
                   </View>
-                </View>
-              ))}
-            </View>
+                ))}
+              </View>
+            )
           )}
 
           {/* ── NUTRITION ── */}
           {activeTab === 'nutrition' && (
             <View style={{ gap: 16 }}>
-              {/* Calorie circle */}
               <View style={{ alignItems: 'center', paddingVertical: 16 }}>
                 <View style={{ width: 110, height: 110, borderRadius: 55, borderWidth: 8, borderColor: '#E8591A', alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 26, color: C.ink }}>420</Text>
-                  <Text style={{ fontSize: 11, color: C.inkMute }}>kcal</Text>
+                  <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: recipe.calories ? 26 : 14, color: C.ink }}>
+                    {recipe.calories ?? t('recipe.caloriesUnavailable')}
+                  </Text>
+                  {!!recipe.calories && <Text style={{ fontSize: 11, color: C.inkMute }}>kcal</Text>}
                 </View>
-                <Text style={{ color: C.inkMute, fontSize: 12, marginTop: 8 }}>par portion · {t('recipe.servings')}: {portions}</Text>
+                <Text style={{ color: C.inkMute, fontSize: 12, marginTop: 8 }}>{t('recipe.perServing')}</Text>
               </View>
 
-              {/* Macros */}
-              {NUTRITION.slice(1).map((n) => (
-                <View key={n.label}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-                    <Text style={{ fontSize: 14, color: C.ink, fontWeight: '500' }}>{n.label}</Text>
-                    <Text style={{ fontSize: 14, color: C.ink, fontWeight: '700' }}>{n.value}{n.unit}</Text>
-                  </View>
-                  <View style={{ height: 8, backgroundColor: C.surface2, borderRadius: 4, overflow: 'hidden' }}>
-                    <View style={{ height: 8, width: `${n.pct}%`, backgroundColor: n.color, borderRadius: 4 }} />
-                  </View>
+              {!!recipe.spiceLevel && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  {[1, 2, 3, 4, 5].map((lvl) => (
+                    <Icon key={lvl} name="Flame" size={16} color={lvl <= recipe.spiceLevel ? '#C62828' : C.border} />
+                  ))}
                 </View>
-              ))}
-
-              {/* Vitamins note */}
-              <View style={{ backgroundColor: C.successSoft, padding: 14, borderRadius: 14, marginTop: 4 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Icon name="Check" size={14} color="#2E7D32" strokeWidth={2.5} />
-                  <Text style={{ color: '#2E7D32', fontSize: 13, fontWeight: '600' }}>Riche en vitamines A, C, K</Text>
-                </View>
-                <Text style={{ color: '#2E7D32', fontSize: 12, marginTop: 2 }}>Source de protéines complètes · Faible en glucides</Text>
-              </View>
+              )}
             </View>
           )}
 
           {/* ── AVIS ── */}
           {activeTab === 'reviews' && (
-            <View style={{ gap: 16 }}>
-              {/* Summary */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, paddingBottom: 16, borderBottomWidth: 1, borderColor: C.border }}>
-                <View style={{ alignItems: 'center' }}>
-                  <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 42, color: C.ink }}>4.8</Text>
-                  <View style={{ flexDirection: 'row', gap: 2 }}>
-                    {[1,2,3,4,5].map(s => (
-                      <Icon key={s} name="Star" size={14} color="#F9A825" fill="#F9A825" />
-                    ))}
-                  </View>
-                  <Text style={{ color: C.inkMute, fontSize: 11 }}>312 avis</Text>
-                </View>
-                <View style={{ flex: 1, gap: 5 }}>
-                  {[5,4,3,2,1].map((s) => (
-                    <View key={s} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Text style={{ color: C.inkMute, fontSize: 11, width: 8 }}>{s}</Text>
-                      <View style={{ flex: 1, height: 6, backgroundColor: C.surface2, borderRadius: 3, overflow: 'hidden' }}>
-                        <View style={{ height: 6, width: `${s === 5 ? 75 : s === 4 ? 18 : s === 3 ? 5 : 2}%`, backgroundColor: '#F9A825', borderRadius: 3 }} />
-                      </View>
-                    </View>
+            <View style={{ gap: 16, alignItems: 'center', paddingVertical: 24 }}>
+              <View style={{ alignItems: 'center' }}>
+                <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 42, color: C.ink }}>{recipe.rating.toFixed(1)}</Text>
+                <View style={{ flexDirection: 'row', gap: 2, marginTop: 4 }}>
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Icon key={s} name="Star" size={14} color="#F9A825" fill={s <= ratingRounded ? '#F9A825' : 'none'} />
                   ))}
                 </View>
+                <Text style={{ color: C.inkMute, fontSize: 11, marginTop: 4 }}>{recipe.ratingCount} {t('map.rating').toLowerCase()}</Text>
               </View>
-
-              {/* Write review */}
-              <View style={{ gap: 10 }}>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink }}>Votre avis</Text>
-                <View style={{ flexDirection: 'row', gap: 4 }}>
-                  {[1,2,3,4,5].map(s => (
-                    <TouchableOpacity key={s} onPress={() => setMyRating(s)}>
-                      <Icon name="Star" size={28} color={s <= myRating ? '#F9A825' : '#E5E0D8'} fill={s <= myRating ? '#F9A825' : 'none'} />
-                    </TouchableOpacity>
-                  ))}
-                </View>
-                <TextInput
-                  style={{ height: 80, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 12, fontSize: 13, color: C.ink, textAlignVertical: 'top' }}
-                  placeholder="Partagez votre expérience..."
-                  placeholderTextColor="#8C8278"
-                  value={reviewText}
-                  onChangeText={setReviewText}
-                  multiline
-                />
-                <TouchableOpacity style={{ height: 44, backgroundColor: reviewText.length > 3 ? '#E8591A' : '#E5E0D8', borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700' }}>Publier</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Reviews list */}
-              {REVIEWS.map((r, i) => (
-                <View key={i} style={{ gap: 10, paddingTop: 14, borderTopWidth: 1, borderColor: C.border }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center' }}>
-                      <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>{r.avatar}</Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 13, fontWeight: '700', color: C.ink }}>{r.author}</Text>
-                      <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
-                        {[1,2,3,4,5].map(s => (
-                          <Icon key={s} name="Star" size={11} color={s <= r.rating ? '#F9A825' : '#E5E0D8'} fill={s <= r.rating ? '#F9A825' : 'none'} />
-                        ))}
-                        <Text style={{ color: C.inkMute, fontSize: 11 }}> · {r.date}</Text>
-                      </View>
-                    </View>
-                    <TouchableOpacity>
-                      <Icon name="ThumbsUp" size={16} color="#8C8278" />
-                    </TouchableOpacity>
-                  </View>
-                  <Text style={{ fontSize: 13, color: C.inkSoft, lineHeight: 20 }}>{r.text}</Text>
-                </View>
-              ))}
+              <Text style={{ fontSize: 13, color: C.inkMute, textAlign: 'center', paddingHorizontal: 24 }}>
+                {t('recipe.reviewsUnavailable')}
+              </Text>
             </View>
           )}
 
         </View>
       </ScrollView>
-
-      {/* Bottom CTA */}
-      <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, paddingBottom: 24, backgroundColor: C.cream, borderTopWidth: 1, borderColor: C.border }}>
-        <TouchableOpacity
-          style={{ height: 52, backgroundColor: '#E8591A', borderRadius: 26, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 }}
-          activeOpacity={0.85}
-        >
-          <Icon name="Package" size={20} color="#fff" />
-          <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700', fontFamily: 'Inter-Bold' }}>
-            {t('recipe.addToShopping')}
-          </Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 }

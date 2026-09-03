@@ -12,6 +12,7 @@ import HomeV1        from '@/screens/home/HomeV1';
 import HomeV2        from '@/screens/home/HomeV2';
 import HomeV3        from '@/screens/home/HomeV3';
 import StoriesViewer  from '@/screens/home/StoriesViewer';
+import StoryCreatorCamera from '@/screens/home/StoryCreatorCamera';
 import AddStory       from '@/screens/home/AddStory';
 import AllRecipes     from '@/screens/home/AllRecipes';
 import AllEvents      from '@/screens/home/AllEvents';
@@ -36,6 +37,7 @@ import MapScreen from '@/screens/map/MapScreen';
 import Feed        from '@/screens/community/Feed';
 import Forum       from '@/screens/community/Forum';
 import ForumDetail from '@/screens/community/ForumDetail';
+import CreateThread from '@/screens/community/CreateThread';
 import Restaurant  from '@/screens/community/Restaurant';
 import CreatePost  from '@/screens/community/CreatePost';
 
@@ -63,11 +65,14 @@ import FavoritesScreen from '@/screens/profile/FavoritesScreen';
 import EditProfile     from '@/screens/profile/EditProfile';
 import SettingsScreen  from '@/screens/profile/Settings';
 import History         from '@/screens/profile/History';
+import HistoryStoriesViewer from '@/screens/profile/HistoryStoriesViewer';
 import ChangePassword  from '@/screens/profile/ChangePassword';
 import PrivacySettings from '@/screens/profile/PrivacySettings';
 import LanguagePicker  from '@/screens/profile/LanguagePicker';
 import ThemePicker     from '@/screens/profile/ThemePicker';
 import AboutKFL        from '@/screens/profile/AboutKFL';
+import FAQScreen       from '@/screens/profile/FAQScreen';
+import TermsScreen     from '@/screens/profile/TermsScreen';
 
 // ── Payment ──────────────────────────────────────────────────────────────────
 import Payment              from '@/screens/payment/Payment';
@@ -105,7 +110,6 @@ import CreateEvent         from '@/screens/pro/CreateEvent';
 import ManageEvent         from '@/screens/pro/ManageEvent';
 import CreateCourse        from '@/screens/pro/CreateCourse';
 import ManageCommunity     from '@/screens/pro/ManageCommunity';
-import RestaurantPublicV4  from '@/screens/order/RestaurantPublicV4';
 
 // ── Admin ────────────────────────────────────────────────────────────────────
 import AdminLogin        from '@/screens/admin/AdminLogin';
@@ -127,6 +131,7 @@ import AdminPush         from '@/screens/admin/AdminPush';
 // ── User V3 ──────────────────────────────────────────────────────────────────
 import FoodJournal           from '@/screens/user_v3/FoodJournal';
 import JournalStats          from '@/screens/user_v3/JournalStats';
+import JournalStoriesViewer  from '@/screens/user_v3/JournalStoriesViewer';
 import SearchByIngredients   from '@/screens/user_v3/SearchByIngredients';
 import AccessibilitySettings from '@/screens/user_v3/AccessibilitySettings';
 import SettingsProEntry      from '@/screens/user_v3/SettingsProEntry';
@@ -151,6 +156,7 @@ function HomeStackNav() {
       <HomeStack.Screen name="HomeV2"     component={HomeV2} />
       <HomeStack.Screen name="HomeV3"     component={HomeV3} />
       <HomeStack.Screen name="StoriesViewer" component={StoriesViewer} />
+      <HomeStack.Screen name="StoryCreatorCamera" component={StoryCreatorCamera} />
       <HomeStack.Screen name="AddStory"      component={AddStory} />
       <HomeStack.Screen name="AllRecipes"    component={AllRecipes} />
       <HomeStack.Screen name="AllEvents"     component={AllEvents} />
@@ -178,6 +184,7 @@ function HomeStackNav() {
       {/* ── Community sub-screens ───────────────────────────────────── */}
       <HomeStack.Screen name="Restaurant"    component={Restaurant} />
       <HomeStack.Screen name="ForumDetail"   component={ForumDetail} />
+      <HomeStack.Screen name="CreateThread"  component={CreateThread} />
       <HomeStack.Screen name="CreatePost"    component={CreatePost} />
 
       {/* ── Events sub-screens ──────────────────────────────────────── */}
@@ -199,10 +206,13 @@ function HomeStackNav() {
       <HomeStack.Screen name="EditProfile"      component={EditProfile} />
       <HomeStack.Screen name="Settings"         component={SettingsScreen} />
       <HomeStack.Screen name="History"          component={History} />
+      <HomeStack.Screen name="HistoryStoriesViewer" component={HistoryStoriesViewer} />
       <HomeStack.Screen name="ChangePassword"   component={ChangePassword} />
       <HomeStack.Screen name="PrivacySettings"  component={PrivacySettings} />
       <HomeStack.Screen name="LanguagePicker"   component={LanguagePicker} />
       <HomeStack.Screen name="AboutKFL"         component={AboutKFL} />
+      <HomeStack.Screen name="FAQScreen"        component={FAQScreen} />
+      <HomeStack.Screen name="TermsScreen"      component={TermsScreen} />
 
       {/* ── Payment ─────────────────────────────────────────────────── */}
       <HomeStack.Screen name="Payment"              component={Payment} />
@@ -240,7 +250,6 @@ function HomeStackNav() {
       <HomeStack.Screen name="ManageEvent"         component={ManageEvent} />
       <HomeStack.Screen name="CreateCourse"        component={CreateCourse} />
       <HomeStack.Screen name="ManageCommunity"     component={ManageCommunity} />
-      <HomeStack.Screen name="RestaurantPublicV4"  component={RestaurantPublicV4} />
 
       {/* ── Admin ───────────────────────────────────────────────────── */}
       <HomeStack.Screen name="AdminLogin"       component={AdminLogin} />
@@ -262,6 +271,7 @@ function HomeStackNav() {
       {/* ── User V3 ─────────────────────────────────────────────────── */}
       <HomeStack.Screen name="FoodJournal"           component={FoodJournal} />
       <HomeStack.Screen name="JournalStats"          component={JournalStats} />
+      <HomeStack.Screen name="JournalStoriesViewer"  component={JournalStoriesViewer} />
       <HomeStack.Screen name="SearchByIngredients"   component={SearchByIngredients} />
       <HomeStack.Screen name="AccessibilitySettings" component={AccessibilitySettings} />
       <HomeStack.Screen name="SettingsProEntry"      component={SettingsProEntry} />
@@ -294,6 +304,7 @@ function ProfileStackNav() {
       <ProfileStack.Screen name="EditProfile"        component={EditProfile} />
       <ProfileStack.Screen name="Settings"           component={SettingsScreen} />
       <ProfileStack.Screen name="History"            component={History} />
+      <ProfileStack.Screen name="HistoryStoriesViewer" component={HistoryStoriesViewer} />
 
       {/* ── Settings sub-screens ──────────────────────────────────── */}
       <ProfileStack.Screen name="ChangePassword"     component={ChangePassword} />
@@ -301,9 +312,12 @@ function ProfileStackNav() {
       <ProfileStack.Screen name="LanguagePicker"     component={LanguagePicker} />
       <ProfileStack.Screen name="ThemePicker"        component={ThemePicker} />
       <ProfileStack.Screen name="AboutKFL"           component={AboutKFL} />
+      <ProfileStack.Screen name="FAQScreen"          component={FAQScreen} />
+      <ProfileStack.Screen name="TermsScreen"        component={TermsScreen} />
       <ProfileStack.Screen name="AccessibilitySettings" component={AccessibilitySettings} />
       <ProfileStack.Screen name="FoodJournal"        component={FoodJournal} />
       <ProfileStack.Screen name="JournalStats"       component={JournalStats} />
+      <ProfileStack.Screen name="JournalStoriesViewer" component={JournalStoriesViewer} />
 
       {/* ── Wallet & payment reachable from Profile ────────────────── */}
       <ProfileStack.Screen name="WalletScreen"       component={WalletScreen} />
@@ -355,7 +369,6 @@ function ProfileStackNav() {
       <ProfileStack.Screen name="ManageEvent"        component={ManageEvent} />
       <ProfileStack.Screen name="CreateCourse"       component={CreateCourse} />
       <ProfileStack.Screen name="ManageCommunity"    component={ManageCommunity} />
-      <ProfileStack.Screen name="RestaurantPublicV4" component={RestaurantPublicV4} />
       <ProfileStack.Screen name="OrderMenu"          component={OrderMenu} />
       <ProfileStack.Screen name="OrderSummary"       component={OrderSummary} />
       <ProfileStack.Screen name="OrderPayment"       component={OrderPayment} />
@@ -412,7 +425,12 @@ export function AppNavigator() {
         if (state.index === 2) return null;
         const activeRoute = state.routes[state.index];
         const focusedRouteName = getFocusedRouteNameFromRoute(activeRoute);
-        if (focusedRouteName === 'StoriesViewer') return null;
+        if (
+          focusedRouteName === 'StoriesViewer'
+          || focusedRouteName === 'JournalStoriesViewer'
+          || focusedRouteName === 'HistoryStoriesViewer'
+          || focusedRouteName === 'StoryCreatorCamera'
+        ) return null;
         return (
         <WFBottomNav
           activeTab={TAB_NAMES[state.index] ?? 'home'}

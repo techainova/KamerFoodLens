@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View, ScrollView, TouchableOpacity, TextInput, StatusBar,
 } from 'react-native';
@@ -8,8 +8,8 @@ import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
-
-const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
+import { SHADOW_SM, SHADOW_MD, SHADOW_LG } from '@/constants/theme';
+import { authService } from '@/services/auth.service';
 
 function getStrength(pw: string): 0 | 1 | 2 | 3 | 4 {
   if (!pw) return 0;
@@ -64,6 +64,7 @@ export default function ChangePassword() {
   const [confirm, setConfirm] = useState('');
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
 
   const strength = getStrength(newPw);
   const matches = newPw.length > 0 && newPw === confirm;
@@ -76,14 +77,22 @@ export default function ChangePassword() {
     4: t('changePassword.strength4'),
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!current || !newPw || !confirm || !matches) return;
     setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
+    setError('');
+    try {
+      await authService.changePassword({ currentPassword: current, newPassword: newPw });
       setSuccess(true);
       setTimeout(() => navigation.goBack(), 1600);
-    }, 1200);
+    } catch (err) {
+      if (__DEV__) {
+        console.warn('[KFL][ChangePassword] échec :', err);
+      }
+      setError(t('changePassword.error', 'Mot de passe actuel incorrect ou erreur serveur.'));
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (success) {
@@ -157,6 +166,13 @@ export default function ChangePassword() {
             <Text style={{ fontSize: 12, color: matches ? '#2E7D32' : '#C62828', fontWeight: '600' }}>
               {matches ? t('changePassword.match') : t('changePassword.noMatch')}
             </Text>
+          </View>
+        )}
+
+        {error.length > 0 && (
+          <View style={{ backgroundColor: '#FBDCDC', borderRadius: 10, padding: 10, marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Icon name="AlertCircle" size={15} color="#C62828" />
+            <Text style={{ fontSize: 13, color: '#C62828', flex: 1 }}>{error}</Text>
           </View>
         )}
 

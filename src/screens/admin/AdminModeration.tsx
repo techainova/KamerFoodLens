@@ -1,25 +1,33 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View, ScrollView, TouchableOpacity, StatusBar,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 
-const TABS = ['En attente', 'Approuvés', 'Supprimés'];
-
 const REPORTS = [
-  { type: 'Post',        content: 'Contenu inapproprié signalé 3 fois',          user: 'Sami N.',  time: '2h', reports: 3 },
-  { type: 'Commentaire', content: 'Spam répété sur fil de discussion #Ndolé',    user: 'Inconnu',  time: '5h', reports: 7 },
-  { type: 'Profil',      content: 'Photo de profil non conforme',                user: 'User#4521',time: '1j', reports: 1 },
+  { type: 'post',    content: 'Contenu inapproprié signalé 3 fois',       user: 'Sami N.',   time: '2h', reports: 3 },
+  { type: 'comment', content: 'Spam répété sur fil de discussion #Ndolé', user: 'Inconnu',   time: '5h', reports: 7 },
+  { type: 'profile', content: 'Photo de profil non conforme',             user: 'User#4521', time: '1j', reports: 1 },
 ];
 
 export default function AdminModeration() {
   const navigation = useNavigation<any>();
   const C = useColors();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState(0);
+
+  const TABS = [t('admin.tabPending'), t('admin.tabApproved'), t('admin.tabDeleted')];
+
+  const TYPE_LABEL: Record<string, string> = {
+    post:    t('admin.reportPost'),
+    comment: t('admin.reportComment'),
+    profile: t('admin.reportProfile'),
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -30,7 +38,7 @@ export default function AdminModeration() {
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12, padding: 4 }}>
           <Icon name="ArrowLeft" size={20} color="#fff" />
         </TouchableOpacity>
-        <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700', flex: 1 }}>Modération</Text>
+        <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700', flex: 1 }}>{t('admin.moderation')}</Text>
         <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#C62828', alignItems: 'center', justifyContent: 'center' }}>
           <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>{REPORTS.length}</Text>
         </View>
@@ -43,7 +51,7 @@ export default function AdminModeration() {
             key={i} onPress={() => setActiveTab(i)}
             style={{ flex: 1, paddingVertical: 12, alignItems: 'center', borderBottomWidth: 2, borderColor: i === activeTab ? '#1A237E' : 'transparent' }}
           >
-            <Text style={{ fontSize: 13, fontWeight: i === activeTab ? '600' : '500', color: i === activeTab ? '#1A237E' : '#8C8278' }}>{tab}</Text>
+            <Text style={{ fontSize: 13, fontWeight: i === activeTab ? '600' : '500', color: i === activeTab ? '#1A237E' : C.inkMute }}>{tab}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -55,25 +63,25 @@ export default function AdminModeration() {
               <View key={i} style={{ padding: 16, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                   <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, backgroundColor: C.errorSoft }}>
-                    <Text style={{ color: '#C62828', fontSize: 11, fontWeight: '600' }}>{r.type}</Text>
+                    <Text style={{ color: '#C62828', fontSize: 11, fontWeight: '600' }}>{TYPE_LABEL[r.type] ?? r.type}</Text>
                   </View>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, backgroundColor: C.errorSoft }}>
                     <Icon name="Flag" size={10} color="#C62828" />
-                    <Text style={{ color: '#C62828', fontSize: 11, fontWeight: '600' }}>{r.reports} signalement{r.reports > 1 ? 's' : ''}</Text>
+                    <Text style={{ color: '#C62828', fontSize: 11, fontWeight: '600' }}>{r.reports} {t('admin.reportedBy')}</Text>
                   </View>
                   <Text style={{ color: C.inkMute, fontSize: 11, marginLeft: 'auto' }}>{r.time}</Text>
                 </View>
                 <Text style={{ fontSize: 14, color: C.ink, marginBottom: 4 }}>{r.content}</Text>
-                <Text style={{ fontSize: 12, color: C.inkMute, marginBottom: 12 }}>Utilisateur : {r.user}</Text>
+                <Text style={{ fontSize: 12, color: C.inkMute, marginBottom: 12 }}>{t('admin.userLabel')} : {r.user}</Text>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
                   <TouchableOpacity style={{ flex: 1, height: 32, backgroundColor: C.successSoft, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ color: '#2E7D32', fontSize: 12, fontWeight: '600' }}>Ignorer</Text>
+                    <Text style={{ color: '#2E7D32', fontSize: 12, fontWeight: '600' }}>{t('admin.ignore')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={{ flex: 1, height: 32, backgroundColor: C.errorSoft, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ color: '#C62828', fontSize: 12, fontWeight: '600' }}>Supprimer</Text>
+                    <Text style={{ color: '#C62828', fontSize: 12, fontWeight: '600' }}>{t('common.delete')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={{ flex: 1, height: 32, backgroundColor: C.navySoft, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ color: '#1A237E', fontSize: 12, fontWeight: '600' }}>Suspendre</Text>
+                    <Text style={{ color: '#1A237E', fontSize: 12, fontWeight: '600' }}>{t('admin.suspend')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -82,7 +90,7 @@ export default function AdminModeration() {
         ) : (
           <View style={{ alignItems: 'center', justifyContent: 'center', paddingTop: 64 }}>
             <Icon name="CheckCircle" size={40} color="rgba(46,125,50,0.3)" />
-            <Text style={{ color: C.inkMute, fontSize: 14, marginTop: 12, textAlign: 'center' }}>Aucun élément dans cet onglet.</Text>
+            <Text style={{ color: C.inkMute, fontSize: 14, marginTop: 12, textAlign: 'center' }}>{t('admin.emptyTab')}</Text>
           </View>
         )}
       </ScrollView>

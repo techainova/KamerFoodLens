@@ -1,6 +1,6 @@
 // App.tsx — KmerFoodLens v4.0
 import '@/i18n';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -29,6 +29,8 @@ import {
 } from '@expo-google-fonts/jetbrains-mono';
 
 import { useAuthStore } from '@/store/auth.store';
+import { useUIStore } from '@/store/ui.store';
+import i18n from '@/i18n';
 import Splash     from '@/screens/auth/Splash';
 import Onboarding from '@/screens/auth/Onboarding';
 import Login      from '@/screens/auth/Login';
@@ -42,6 +44,13 @@ const client = new QueryClient();
 
 function RootNavigator() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const language = useUIStore((s) => s.language);
+
+  useEffect(() => {
+    if (language && i18n.language !== language) {
+      i18n.changeLanguage(language);
+    }
+  }, [language]);
 
   return (
     <NavigationContainer>

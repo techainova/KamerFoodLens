@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import {
-  View, TouchableOpacity, TextInput, Pressable, Alert,
+  View, TouchableOpacity, TextInput, Pressable, Alert, ActivityIndicator,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,6 +8,8 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/types';
 import { useAuthStore } from '@/store/auth.store';
+import { authService } from '@/services/auth.service';
+import { isNetworkError } from '@/utils/apiError';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 
@@ -19,11 +21,13 @@ export default function OTP({ navigation, route }: Props) {
     const C = useColors();
   const { t } = useTranslation();
   const [code, setCode] = useState('');
-  const [seconds, setSeconds] = useState(59);
+  const [seconds, setSeconds] = useState(60);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const setUser = useAuthStore((s) => s.setUser);
+  const setTokens = useAuthStore((s) => s.setTokens);
   const inputRef = useRef<TextInput>(null);
   const email = route.params?.email ?? 'am***@gmail.com';
-  const isBusiness = route.params?.isBusiness ?? false;
 
   useEffect(() => {
     if (seconds <= 0) return;
@@ -31,12 +35,39 @@ export default function OTP({ navigation, route }: Props) {
     return () => clearTimeout(timer);
   }, [seconds]);
 
-  function handleVerify() {
+  async function handleVerify() {
     if (code.length < CODE_LENGTH) {
       Alert.alert(t('auth.otpIncompleteTitle', 'Code incomplet'), t('auth.otpIncompleteMsg', 'Veuillez saisir les 6 chiffres reçus par email.'));
       return;
     }
-    setUser({ id: '1', email, firstName: 'Amah', lastName: 'Ndzié', username: 'amah.n', location: 'Yaoundé, Cameroun', bio: "Passionnée de cuisine traditionnelle. J'apprends, je partage, je teste tout ce qui se mijote au Cameroun.", role: isBusiness ? 'pro' : 'standard', xpPoints: 1250, level: 2 });
+    setError('');
+    setLoading(true);
+    try {
+      const res = await authService.verifyOtp({ email, code });
+      setUser(res.user);
+      setTokens(res.accessToken, res.refreshToken);
+    } catch (err) {
+      if (__DEV__) {
+        console.warn('[KFL][OTP] échec de la vérification :', err);
+      }
+      if (isNetworkError(err)) {
+        setError(t('auth.networkError', 'Impossible de joindre le serveur. Vérifiez votre connexion.'));
+      } else {
+        setError(t('auth.otpInvalid', 'Code incorrect ou expiré.'));
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleResend() {
+    setSeconds(60);
+    setError('');
+    try {
+      await authService.resendOtp(email);
+    } catch {
+      // silencieux
+    }
   }
 
   const maskedEmail = email.includes('@')
@@ -130,11 +161,19 @@ export default function OTP({ navigation, route }: Props) {
           />
         </Pressable>
 
+        {/* Erreur */}
+        {error.length > 0 && (
+          <View style={{ backgroundColor: '#FBDCDC', borderRadius: 10, padding: 10, marginTop: 16, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Icon name="AlertCircle" size={15} color="#C62828" />
+            <Text style={{ fontSize: 13, color: '#C62828', flex: 1 }}>{error}</Text>
+          </View>
+        )}
+
         {/* Resend timer */}
         <Text style={{ fontSize: 12, color: C.inkMute, marginTop: 22, textAlign: 'center' }}>
           {seconds > 0
-            ? t('auth.resendIn', { time: `0:${seconds.toString().padStart(2, '0')}` })
-            : <Text style={{ color: C.primary, fontWeight: "600" }}>{t("auth.resendCode")}</Text>
+            ? t('auth.resendIn', { time: `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}` })
+            : <Text onPress={handleResend} style={{ color: C.primary, fontWeight: "600" }}>{t("auth.resendCode")}</Text>
           }
         </Text>
 
@@ -146,10 +185,14 @@ export default function OTP({ navigation, route }: Props) {
           style={{ height: 56, backgroundColor: C.primary, borderRadius: 28, alignItems: 'center', justifyContent: 'center' }}
           onPress={handleVerify}
           activeOpacity={0.85}
+          disabled={loading}
         >
-          <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600', fontFamily: 'Inter-SemiBold' }}>
-            {t('auth.verify')}
-          </Text>
+          {loading
+            ? <ActivityIndicator color="#fff" />
+            : <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600', fontFamily: 'Inter-SemiBold' }}>
+                {t('auth.verify')}
+              </Text>
+          }
         </TouchableOpacity>
         <TouchableOpacity style={{ marginTop: 14, alignItems: 'center' }} onPress={() => navigation.goBack()}>
           <Text style={{ color: C.inkMute, fontSize: 12 }}>

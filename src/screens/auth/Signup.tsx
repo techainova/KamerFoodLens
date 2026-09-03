@@ -1,6 +1,6 @@
 ﻿import React, { useState } from 'react';
 import {
-  View, TouchableOpacity, ScrollView, TextInput,
+  View, TouchableOpacity, ScrollView, TextInput, ActivityIndicator,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +10,8 @@ import type { RootStackParamList } from '@/navigation/types';
 import LangSwitch from '@/components/auth/LangSwitch';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
+import { authService } from '@/services/auth.service';
+import { isNetworkError } from '@/utils/apiError';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Signup'>;
 
@@ -25,7 +27,35 @@ export default function Signup({ navigation }: Props) {
   const [showPw, setShowPw] = useState(false);
   const [accepted, setAccepted] = useState(true);
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
   const pwStrength = password.length >= 12 ? 4 : password.length >= 8 ? 3 : password.length >= 4 ? 2 : password.length > 0 ? 1 : 0;
+
+  async function handleSignup() {
+    setError('');
+    if (!firstName.trim() || !lastName.trim()) { setError(t('auth.firstLastNameRequired', 'Prénom et nom requis.')); return; }
+    if (!email.includes('@')) { setError(t('auth.invalidEmail', 'Email invalide.')); return; }
+    if (password.length < 8) { setError(t('auth.passwordTooShort8', 'Mot de passe minimum 8 caractères.')); return; }
+    if (password !== confirm) { setError(t('auth.passwordsNoMatch', 'Les mots de passe ne correspondent pas.')); return; }
+    if (!accepted) { setError(t('auth.mustAcceptTerms', 'Veuillez accepter les CGU.')); return; }
+    setLoading(true);
+    try {
+      await authService.signup({ firstName, lastName, email: email.toLowerCase().trim(), phone, password });
+      navigation.navigate('OTP', { email: email.toLowerCase().trim() });
+    } catch (err) {
+      if (__DEV__) {
+        console.warn('[KFL][Signup] échec de l\'inscription :', err);
+      }
+      if (isNetworkError(err)) {
+        setError(t('auth.networkError', 'Impossible de joindre le serveur. Vérifiez votre connexion.'));
+      } else {
+        setError(t('auth.signupFailed', 'Erreur lors de l\'inscription. Cet email est peut-être déjà utilisé.'));
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -65,7 +95,7 @@ export default function Signup({ navigation }: Props) {
                 style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, paddingHorizontal: 14, fontSize: 14, color: C.ink }}
                 value={firstName}
                 onChangeText={setFirstName}
-                placeholder="Amah"
+                placeholder={t('auth.firstName')}
                 placeholderTextColor="#8C8278"
               />
             </View>
@@ -77,7 +107,7 @@ export default function Signup({ navigation }: Props) {
                 style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, paddingHorizontal: 14, fontSize: 14, color: C.ink }}
                 value={lastName}
                 onChangeText={setLastName}
-                placeholder="Ndongo"
+                placeholder={t('auth.lastName')}
                 placeholderTextColor="#8C8278"
               />
             </View>
@@ -96,7 +126,7 @@ export default function Signup({ navigation }: Props) {
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                placeholder="amah@example.com"
+                placeholder={t('auth.emailPlaceholder', 'vous@example.com')}
                 placeholderTextColor="#8C8278"
               />
             </View>
@@ -192,15 +222,27 @@ export default function Signup({ navigation }: Props) {
             </Text>
           </TouchableOpacity>
 
+          {/* Erreur */}
+          {error.length > 0 && (
+            <View style={{ backgroundColor: '#FBDCDC', borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Icon name="AlertCircle" size={15} color="#C62828" />
+              <Text style={{ fontSize: 13, color: '#C62828', flex: 1 }}>{error}</Text>
+            </View>
+          )}
+
           {/* CTA */}
           <TouchableOpacity
             style={{ height: 56, backgroundColor: '#E8591A', borderRadius: 28, alignItems: 'center', justifyContent: 'center', marginTop: 6 }}
-            onPress={() => navigation.navigate('OTP', { email })}
+            onPress={handleSignup}
             activeOpacity={0.85}
+            disabled={loading}
           >
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600', fontFamily: 'Inter-SemiBold' }}>
-              {t('auth.signup')}
-            </Text>
+            {loading
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600', fontFamily: 'Inter-SemiBold' }}>
+                  {t('auth.signup')}
+                </Text>
+            }
           </TouchableOpacity>
         </View>
 

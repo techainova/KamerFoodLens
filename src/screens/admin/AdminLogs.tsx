@@ -1,10 +1,11 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View, ScrollView, TouchableOpacity, StatusBar,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 
@@ -21,9 +22,10 @@ type LevelFilter = string | null;
 export default function AdminLogs() {
   const navigation = useNavigation<any>();
   const C = useColors();
+  const { t } = useTranslation();
   const [filter, setFilter] = useState<LevelFilter>(null);
 
-  const filtered = filter ? LOGS.filter(l => l.level === filter) : LOGS;
+  const filtered = filter ? LOGS.filter(log => log.level === filter) : LOGS;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -34,7 +36,7 @@ export default function AdminLogs() {
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12, padding: 4 }}>
           <Icon name="ArrowLeft" size={20} color="#fff" />
         </TouchableOpacity>
-        <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700', flex: 1 }}>Logs & Alertes</Text>
+        <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700', flex: 1 }}>{t('admin.logsAndAlerts')}</Text>
       </View>
 
       {/* Level filters */}
@@ -44,7 +46,7 @@ export default function AdminLogs() {
             key={i} onPress={() => setFilter(level)}
             style={{ height: 28, paddingHorizontal: 10, borderRadius: 14, borderWidth: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: filter === level ? '#1A237E' : '#F5F0EB', borderColor: filter === level ? '#1A237E' : '#E5E0D8' }}
           >
-            <Text style={{ fontSize: 11, fontWeight: '500', color: filter === level ? '#fff' : '#6D4C41' }}>{level ?? 'Tous'}</Text>
+            <Text style={{ fontSize: 11, fontWeight: '500', color: filter === level ? '#fff' : '#6D4C41' }}>{level ?? t('admin.filterAll')}</Text>
           </TouchableOpacity>
         ))}
       </View>

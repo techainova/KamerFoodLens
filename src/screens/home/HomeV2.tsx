@@ -11,6 +11,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { HomeStackParamList } from '@/navigation/types';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
+import { useAuthStore } from '@/store/auth.store';
 import { RECIPES } from '@/data/recipes';
 
 const TRENDING = RECIPES.slice(0, 3);
@@ -19,6 +20,7 @@ export default function HomeV2() {
     const C = useColors();
   const { t } = useTranslation();
   const nav = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
+  const user = useAuthStore((s) => s.user);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -27,7 +29,7 @@ export default function HomeV2() {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
           <View>
             <Text style={{ fontSize: 12, color: C.inkMute, fontFamily: 'Inter-Regular' }}>{t('home.hello')}</Text>
-            <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 22, color: C.ink }}>Amah</Text>
+            <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 22, color: C.ink }}>{user?.firstName ?? ''}</Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
             {/* Layout switcher 6b → 6c */}
@@ -44,8 +46,14 @@ export default function HomeV2() {
               <Icon name="Bell" size={18} color="#6D4C41" />
               <View style={{ position: 'absolute', top: 7, right: 8, width: 8, height: 8, borderRadius: 4, backgroundColor: '#C62828', borderWidth: 1.5, borderColor: '#fff' }} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => nav.navigate('ProfileScreen')} style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700', fontFamily: 'Inter-Bold' }}>AN</Text>
+            <TouchableOpacity onPress={() => nav.navigate('ProfileScreen')} style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+              {user?.avatar ? (
+                <Image source={{ uri: user.avatar }} style={{ width: 38, height: 38 }} resizeMode="cover" />
+              ) : (
+                <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700', fontFamily: 'Inter-Bold' }}>
+                  {((user?.firstName?.charAt(0) ?? '') + (user?.lastName?.charAt(0) ?? '')).toUpperCase() || '?'}
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>

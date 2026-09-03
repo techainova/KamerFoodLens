@@ -3,7 +3,7 @@
 export { colors }                               from './colors';
 export { spacing, spacing2, radius, touchMin }  from './spacing';
 export { fontFamily, fontSize, lineHeight, letterSpacing } from './typography';
-export { shadows }                              from './shadows';
+export { shadows, SHADOW_SM, SHADOW_MD, SHADOW_LG } from './shadows';
 export type { ColorKey }                        from './colors';
 export type { SpacingKey, RadiusKey }           from './spacing';
 export type { FontFamilyKey, FontSizeKey }      from './typography';

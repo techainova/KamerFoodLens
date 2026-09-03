@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import {
-  View, TextInput, ScrollView, TouchableOpacity, StatusBar, Alert,
+  View, TextInput, ScrollView, TouchableOpacity, StatusBar, Alert, Image, ActivityIndicator,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
-import i18n from '@/i18n';
 import { useAuthStore } from '@/store/auth.store';
+import { useUIStore } from '@/store/ui.store';
+import { usersService } from '@/services/users.service';
 
 const FOOD_PREFS = ['prefCamerounais', 'prefEpice', 'prefAfricain', 'prefVegetarien', 'prefSansGluten', 'prefHalal', 'prefInternational'] as const;
 const DEFAULT_ACTIVE_PREFS = ['prefCamerounais', 'prefEpice', 'prefAfricain'];
@@ -29,30 +31,62 @@ export default function EditProfile() {
   const [phone, setPhone]         = useState(user?.phone ?? '');
   const [email, setEmail]         = useState(user?.email ?? '');
   const [location, setLocation]   = useState(user?.location ?? '');
-  const [lang, setLang]           = useState<'fr' | 'en'>(i18n.language === 'en' ? 'en' : 'fr');
+  const setLanguageUI = useUIStore((s) => s.setLanguage);
+  const currentLang = useUIStore((s) => s.language);
+  const [lang, setLang]           = useState<'fr' | 'en'>(currentLang);
   const [activePrefs, setActivePrefs] = useState<string[]>(DEFAULT_ACTIVE_PREFS);
   const [saving, setSaving]       = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const togglePref = (key: string) => {
     setActivePrefs((prev) => prev.includes(key) ? prev.filter((p) => p !== key) : [...prev, key]);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSaving(true);
-    i18n.changeLanguage(lang);
-    setTimeout(() => {
+    if (lang !== currentLang) setLanguageUI(lang);
+    try {
+      const updated = await usersService.updateProfile({ firstName, lastName, username, bio, phone, location });
+      setUser({ ...updated });
+    } catch {
+      // Fallback local
+      if (user) setUser({ ...user, firstName, lastName, username, bio, phone, email, location });
+    } finally {
       setSaving(false);
-      if (user) {
-        setUser({ ...user, firstName, lastName, username, bio, phone, email, location });
-      }
       Alert.alert(t('editProfile.savedTitle'), t('editProfile.savedMsg'), [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
-    }, 600);
+    }
   };
 
-  const handleChangePhoto = () => {
-    Alert.alert(t('editProfile.changePhoto'), undefined);
+  const handleChangePhoto = async () => {
+    if (uploadingAvatar) return;
+
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert(t('editProfile.photoPermissionTitle', 'Permission requise'), t('editProfile.photoPermissionMsg', 'Autorisez l\'accès à vos photos pour changer votre photo de profil.'));
+      return;
+    }
+
+    const pickerResult = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.7,
+      allowsEditing: true,
+      aspect: [1, 1],
+      base64: true,
+    });
+    if (pickerResult.canceled || !pickerResult.assets?.[0]?.base64) return;
+
+    const asset = pickerResult.assets[0];
+    setUploadingAvatar(true);
+    try {
+      const updated = await usersService.uploadAvatar(asset.base64!, asset.mimeType ?? 'image/jpeg');
+      setUser({ ...updated });
+    } catch {
+      Alert.alert(t('editProfile.photoUploadFailedTitle', 'Échec'), t('editProfile.photoUploadFailedMsg', 'La photo n\'a pas pu être envoyée. Réessayez plus tard.'));
+    } finally {
+      setUploadingAvatar(false);
+    }
   };
 
   const handleDeleteAccount = () => {
@@ -86,10 +120,19 @@ export default function EditProfile() {
         {/* Avatar */}
         <View style={{ alignItems: 'center', marginBottom: 24 }}>
           <View style={{ position: 'relative' }}>
-            <View style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: 30, fontWeight: '600', color: C.inkMute }}>{(firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || '?'}</Text>
+            <View style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+              {user?.avatar ? (
+                <Image source={{ uri: user.avatar }} style={{ width: 96, height: 96 }} resizeMode="cover" />
+              ) : (
+                <Text style={{ fontSize: 30, fontWeight: '600', color: C.inkMute }}>{(firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || '?'}</Text>
+              )}
+              {uploadingAvatar && (
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' }}>
+                  <ActivityIndicator color="#fff" />
+                </View>
+              )}
             </View>
-            <TouchableOpacity onPress={handleChangePhoto} style={{ position: 'absolute', bottom: 0, right: 0, width: 32, height: 32, backgroundColor: C.primary, borderRadius: 16, borderWidth: 2, borderColor: C.cream, alignItems: 'center', justifyContent: 'center' }}>
+            <TouchableOpacity onPress={handleChangePhoto} disabled={uploadingAvatar} style={{ position: 'absolute', bottom: 0, right: 0, width: 32, height: 32, backgroundColor: C.primary, borderRadius: 16, borderWidth: 2, borderColor: C.cream, alignItems: 'center', justifyContent: 'center' }}>
               <Icon name="Camera" size={15} color="#fff" />
             </TouchableOpacity>
           </View>

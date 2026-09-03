@@ -1,6 +1,6 @@
-﻿import React from 'react';
+import React from 'react';
 import {
-  View, ScrollView, TouchableOpacity, StatusBar,
+  View, ScrollView, TouchableOpacity, StatusBar, Linking,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,8 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
-
-const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
+import { SHADOW_SM, SHADOW_MD, SHADOW_LG } from '@/constants/theme';
 
 const TECH_CHIPS = ['React Native 0.85', 'Expo SDK 56', 'AI Vision', 'AES-256-GCM', 'TypeScript', 'NativeWind v4'];
 
@@ -25,10 +24,10 @@ export default function AboutKFL() {
   ];
 
   const LINKS = [
-    { icon: 'Mail'     as const, labelKey: 'about.support',      valueKey: 'about.supportEmail', color: '#E8591A' },
+    { icon: 'Mail'     as const, labelKey: 'about.support',      valueKey: 'about.supportEmail', color: '#E8591A', onPress: () => void Linking.openURL('mailto:support@kmerfoodlens.com') },
     { icon: 'Globe'    as const, labelKey: 'about.website',      valueKey: 'about.websiteValue', color: '#1A237E' },
-    { icon: 'FileText' as const, labelKey: 'about.terms',        valueKey: 'about.cguNote',      color: C.inkSoft },
-    { icon: 'Shield'   as const, labelKey: 'about.privacyLink',  valueKey: 'about.privacyNote',  color: '#2E7D32' },
+    { icon: 'FileText' as const, labelKey: 'about.terms',        valueKey: 'about.cguNote',      color: C.inkSoft, onPress: () => navigation.navigate('TermsScreen') },
+    { icon: 'Shield'   as const, labelKey: 'about.privacyLink',  valueKey: 'about.privacyNote',  color: '#2E7D32', onPress: () => navigation.navigate('TermsScreen') },
   ];
 
   return (
@@ -104,8 +103,11 @@ export default function AboutKFL() {
           {/* Links */}
           <View style={{ backgroundColor: C.surface, borderRadius: 18, borderWidth: 1, borderColor: C.border, overflow: 'hidden', ...SHADOW_SM }}>
             {LINKS.map((link, i) => (
-              <View
+              <TouchableOpacity
                 key={i}
+                onPress={link.onPress}
+                disabled={!link.onPress}
+                activeOpacity={link.onPress ? 0.7 : 1}
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: i < LINKS.length - 1 ? 1 : 0, borderColor: C.border }}
               >
                 <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: link.color + '15', alignItems: 'center', justifyContent: 'center' }}>
@@ -115,7 +117,8 @@ export default function AboutKFL() {
                   <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink }}>{t(link.labelKey)}</Text>
                   <Text style={{ fontSize: 12, color: C.inkMute, marginTop: 1 }}>{t(link.valueKey)}</Text>
                 </View>
-              </View>
+                {link.onPress && <Icon name="ChevronRight" size={16} color={C.inkMute} />}
+              </TouchableOpacity>
             ))}
           </View>
 

@@ -1,32 +1,73 @@
-﻿import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View, TextInput, ScrollView, TouchableOpacity, Switch, StatusBar,
+  View, TextInput, ScrollView, TouchableOpacity, Switch, StatusBar, ActivityIndicator, Alert,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
-
-const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
+import { SHADOW_SM } from '@/constants/theme';
+import { proService } from '@/services/pro.service';
 
 type MethodId = 'mtn' | 'orange' | 'card' | 'cash';
-
-const METHODS: { id: MethodId; label: string; color: string; icon: string }[] = [
-  { id: 'mtn',    label: 'MTN Mobile Money',      color: '#F9A825', icon: 'Smartphone' },
-  { id: 'orange', label: 'Orange Money',           color: '#E8591A', icon: 'Smartphone' },
-  { id: 'card',   label: 'Carte bancaire',         color: '#1A237E', icon: 'CreditCard' },
-  { id: 'cash',   label: 'Paiement en espèces',   color: '#2E7D32', icon: 'DollarSign' },
-];
 
 export default function ProPaymentSetup() {
   const navigation = useNavigation<any>();
   const C = useColors();
-  const [mtnPhone, setMtnPhone] = useState('+237 67 00 00 00');
-  const [orangePhone, setOrangePhone] = useState('+237 69 00 00 00');
+  const { t } = useTranslation();
+  const [mtnPhone, setMtnPhone] = useState('');
+  const [orangePhone, setOrangePhone] = useState('');
   const [enabled, setEnabled] = useState<Record<MethodId, boolean>>({
-    mtn: true, orange: true, card: false, cash: true,
+    mtn: false, orange: false, card: false, cash: true,
   });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const methods = await proService.getPaymentMethods();
+        setMtnPhone(methods.mtnPhone ?? '');
+        setOrangePhone(methods.orangePhone ?? '');
+        setEnabled({
+          mtn: methods.acceptsMtn, orange: methods.acceptsOrange,
+          card: methods.acceptsCard, cash: methods.acceptsCash,
+        });
+      } catch {
+        // Not a Pro user yet, or request failed — keep the empty defaults above.
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await proService.updatePaymentMethods({
+        acceptsMtn: enabled.mtn,
+        acceptsOrange: enabled.orange,
+        acceptsCard: enabled.card,
+        acceptsCash: enabled.cash,
+        mtnPhone: mtnPhone || undefined,
+        orangePhone: orangePhone || undefined,
+      });
+      Alert.alert(t('common.saved', 'Enregistré'), t('pro.paymentMethodsSaved', 'Vos moyens de paiement ont été mis à jour.'));
+    } catch {
+      Alert.alert(t('common.error', 'Erreur'), t('pro.paymentMethodsSaveFailed', 'Impossible d\'enregistrer pour le moment. Réessayez plus tard.'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const METHODS: { id: MethodId; label: string; color: string; icon: string }[] = [
+    { id: 'mtn',    label: 'MTN Mobile Money',    color: '#F9A825', icon: 'Smartphone' },
+    { id: 'orange', label: 'Orange Money',         color: '#E8591A', icon: 'Smartphone' },
+    { id: 'card',   label: t('payment.card'),      color: '#1A237E', icon: 'CreditCard' },
+    { id: 'cash',   label: t('payment.cash'),      color: '#2E7D32', icon: 'DollarSign' },
+  ];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -37,21 +78,30 @@ export default function ProPaymentSetup() {
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
           <Icon name="ArrowLeft" size={22} color="#2C1810" />
         </TouchableOpacity>
-        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>Moyens de paiement</Text>
-        <TouchableOpacity style={{ height: 32, paddingHorizontal: 14, backgroundColor: '#F9A825', borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>Enregistrer</Text>
+        <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>{t('pro.paymentMethods')}</Text>
+        <TouchableOpacity
+          onPress={handleSave}
+          disabled={saving || loading}
+          style={{ height: 32, paddingHorizontal: 14, backgroundColor: '#F9A825', borderRadius: 16, alignItems: 'center', justifyContent: 'center', opacity: saving || loading ? 0.6 : 1 }}
+        >
+          {saving ? <ActivityIndicator size="small" color="#fff" /> : <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>{t('common.save')}</Text>}
         </TouchableOpacity>
       </View>
 
+      {loading ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator color={C.primary} />
+        </View>
+      ) : (
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
 
         {/* Info banner */}
         <View style={{ padding: 16, borderRadius: 18, backgroundColor: C.goldSoft, borderWidth: 1, borderColor: 'rgba(249,168,37,0.4)', marginBottom: 20, flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
           <Icon name="Settings" size={16} color="#F9A825" />
-          <Text style={{ flex: 1, fontSize: 14, color: C.ink }}>Configurez les modes de paiement acceptés par votre restaurant.</Text>
+          <Text style={{ flex: 1, fontSize: 14, color: C.ink }}>{t('pro.configurePayments')}</Text>
         </View>
 
-        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 12 }}>Modes acceptés</Text>
+        <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 12 }}>{t('pro.acceptedModes')}</Text>
 
         <View style={{ gap: 10, marginBottom: 20 }}>
           {METHODS.map((method) => (
@@ -70,7 +120,7 @@ export default function ProPaymentSetup() {
               </View>
               {enabled[method.id] && (method.id === 'mtn' || method.id === 'orange') && (
                 <View style={{ paddingHorizontal: 16, paddingBottom: 16, borderTopWidth: 1, borderColor: C.border }}>
-                  <Text style={{ fontSize: 11, color: C.inkMute, marginTop: 8, marginBottom: 6 }}>Numéro de compte</Text>
+                  <Text style={{ fontSize: 11, color: C.inkMute, marginTop: 8, marginBottom: 6 }}>{t('pro.accountNumber')}</Text>
                   <View style={{ height: 40, backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingHorizontal: 12, justifyContent: 'center' }}>
                     <TextInput
                       value={method.id === 'mtn' ? mtnPhone : orangePhone}
@@ -87,14 +137,11 @@ export default function ProPaymentSetup() {
 
         {/* Commission info */}
         <View style={{ padding: 16, borderRadius: 18, backgroundColor: C.navySoft, borderWidth: 1, borderColor: 'rgba(26,35,126,0.2)' }}>
-          <Text style={{ fontSize: 14, fontWeight: '600', color: '#1A237E', marginBottom: 4 }}>Commission KFL</Text>
-          <Text style={{ fontSize: 14, color: C.inkSoft, lineHeight: 20 }}>
-            KFL prélève une commission de{' '}
-            <Text style={{ fontWeight: '700', color: '#1A237E' }}>5%</Text>
-            {' '}sur chaque commande payée via la plateforme.
-          </Text>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: '#1A237E', marginBottom: 4 }}>{t('pro.kflCommission')}</Text>
+          <Text style={{ fontSize: 14, color: C.inkSoft, lineHeight: 20 }}>{t('pro.commissionDesc')}</Text>
         </View>
       </ScrollView>
+      )}
     </SafeAreaView>
   );
 }

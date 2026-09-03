@@ -37,3 +37,23 @@ export const shadows = {
 } as const;
 
 export type ShadowKey = keyof typeof shadows;
+
+// Platform-aware named exports — use these in screens instead of local constants
+// to avoid "shadow* props are deprecated" warnings on web.
+export const SHADOW_SM: object = Platform.select({
+  ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4 },
+  android: { elevation: 2 },
+  default: {},
+}) ?? {};
+
+export const SHADOW_MD: object = Platform.select({
+  ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.10, shadowRadius: 6 },
+  android: { elevation: 4 },
+  default: {},
+}) ?? {};
+
+export const SHADOW_LG: object = Platform.select({
+  ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.14, shadowRadius: 12 },
+  android: { elevation: 8 },
+  default: {},
+}) ?? {};

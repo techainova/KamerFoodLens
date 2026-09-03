@@ -1,10 +1,11 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View, TextInput, ScrollView, TouchableOpacity, StatusBar,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 
@@ -15,21 +16,29 @@ const USERS = [
   { name: 'Maman Pauline',  email: 'pauline@kfl.cm', role: 'Pro',      status: 'active',    joined: '5 Fév' },
 ];
 
-const FILTERS = ['Tous', 'Standard', 'Pro', 'Suspendus'];
+type FilterKey = 'all' | 'standard' | 'pro' | 'suspended';
 
 export default function AdminUsers() {
   const navigation = useNavigation<any>();
   const C = useColors();
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState(0);
+  const [filter, setFilter] = useState<FilterKey>('all');
+
+  const FILTERS: { key: FilterKey; label: string }[] = [
+    { key: 'all',       label: t('admin.filterAll')       },
+    { key: 'standard',  label: t('admin.filterStandard')  },
+    { key: 'pro',       label: t('admin.filterPro')       },
+    { key: 'suspended', label: t('admin.filterSuspended') },
+  ];
 
   const filtered = USERS.filter(u => {
     const matchSearch = !search || u.name.toLowerCase().includes(search.toLowerCase());
     const matchFilter =
-      filter === 0 ||
-      (filter === 1 && u.role === 'Standard') ||
-      (filter === 2 && u.role === 'Pro') ||
-      (filter === 3 && u.status === 'suspended');
+      filter === 'all' ||
+      (filter === 'standard' && u.role === 'Standard') ||
+      (filter === 'pro'      && u.role === 'Pro')      ||
+      (filter === 'suspended'&& u.status === 'suspended');
     return matchSearch && matchFilter;
   });
 
@@ -42,7 +51,7 @@ export default function AdminUsers() {
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12, padding: 4 }}>
           <Icon name="ArrowLeft" size={20} color="#fff" />
         </TouchableOpacity>
-        <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700', flex: 1 }}>Utilisateurs ({USERS.length})</Text>
+        <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700', flex: 1 }}>{t('admin.users')} ({USERS.length})</Text>
       </View>
 
       {/* Search + filters */}
@@ -51,7 +60,7 @@ export default function AdminUsers() {
           <Icon name="Search" size={15} color="#8C8278" />
           <TextInput
             value={search} onChangeText={setSearch}
-            placeholder="Rechercher..." placeholderTextColor="#8C8278"
+            placeholder={t('admin.searchUsers')} placeholderTextColor="#8C8278"
             style={{ flex: 1, fontSize: 14, color: C.ink }}
           />
         </View>
@@ -59,10 +68,10 @@ export default function AdminUsers() {
           <View style={{ flexDirection: 'row', gap: 6 }}>
             {FILTERS.map((f, i) => (
               <TouchableOpacity
-                key={i} onPress={() => setFilter(i)}
-                style={{ height: 28, paddingHorizontal: 12, borderRadius: 14, borderWidth: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: i === filter ? '#1A237E' : '#F5F0EB', borderColor: i === filter ? '#1A237E' : '#E5E0D8' }}
+                key={i} onPress={() => setFilter(f.key)}
+                style={{ height: 28, paddingHorizontal: 12, borderRadius: 14, borderWidth: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: filter === f.key ? '#1A237E' : '#F5F0EB', borderColor: filter === f.key ? '#1A237E' : '#E5E0D8' }}
               >
-                <Text style={{ fontSize: 12, fontWeight: '500', color: i === filter ? '#fff' : '#6D4C41' }}>{f}</Text>
+                <Text style={{ fontSize: 12, fontWeight: '500', color: filter === f.key ? '#fff' : '#6D4C41' }}>{f.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -90,7 +99,7 @@ export default function AdminUsers() {
                 </View>
                 <View style={{ paddingHorizontal: 6, paddingVertical: 1, borderRadius: 8, backgroundColor: user.status === 'active' ? '#E3F0E4' : '#FBDCDC' }}>
                   <Text style={{ fontSize: 10, color: user.status === 'active' ? '#2E7D32' : '#C62828' }}>
-                    {user.status === 'active' ? '● Actif' : '● Suspendu'}
+                    {'● '}{user.status === 'active' ? t('admin.statusActive') : t('admin.statusSuspended')}
                   </Text>
                 </View>
               </View>

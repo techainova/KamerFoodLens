@@ -9,6 +9,9 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/types';
 import { useAuthStore } from '@/store/auth.store';
+import { authService } from '@/services/auth.service';
+import { isNetworkError } from '@/utils/apiError';
+import { useGoogleSignIn } from '@/hooks/useGoogleSignIn';
 import LangSwitch from '@/components/auth/LangSwitch';
 import KFLLogo from '@/components/ui/KFLLogo';
 import Icon from '@/components/ui/Icon';
@@ -50,7 +53,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 export default function Login({ navigation }: Props) {
     const C = useColors();
   const { t } = useTranslation();
-  const [email, setEmail] = useState('amah@example.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -62,31 +65,85 @@ export default function Login({ navigation }: Props) {
   const [forgotLoading, setForgotLoading] = useState(false);
 
   const setUser = useAuthStore((s) => s.setUser);
+  const setTokens = useAuthStore((s) => s.setTokens);
+  const [error, setError] = useState('');
 
   async function handleLogin() {
+    setError('');
+    if (!email.includes('@')) {
+      setError(t('auth.invalidEmail', "Adresse email invalide."));
+      return;
+    }
+    if (password.length < 6) {
+      setError(t('auth.passwordTooShort', "Le mot de passe doit contenir au moins 6 caractères."));
+      return;
+    }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 900));
-    setLoading(false);
-    setUser({ id: '1', email, firstName: 'Amah', lastName: 'Ndzié', username: 'amah.n', location: 'Yaoundé, Cameroun', bio: "Passionnée de cuisine traditionnelle. J'apprends, je partage, je teste tout ce qui se mijote au Cameroun.", role: 'standard', xpPoints: 1250, level: 2 });
+    try {
+      const res = await authService.login({ email: email.toLowerCase().trim(), password });
+      setUser(res.user);
+      setTokens(res.accessToken, res.refreshToken);
+    } catch (err) {
+      if (__DEV__) {
+        console.warn('[KFL][Login] échec de la connexion :', err);
+      }
+      if (isNetworkError(err)) {
+        setError(t('auth.networkError', 'Impossible de joindre le serveur. Vérifiez votre connexion.'));
+      } else {
+        setError(t('auth.loginFailed', "Email ou mot de passe incorrect."));
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleForgotSend() {
     if (!forgotEmail.includes('@')) return;
     setForgotLoading(true);
-    await new Promise(r => setTimeout(r, 1000));
-    setForgotLoading(false);
-    setForgotSent(true);
+    try {
+      await authService.forgotPassword({ email: forgotEmail.toLowerCase().trim() });
+    } catch {
+      // Silencieux — on affiche toujours le succès pour ne pas révéler les comptes existants
+    } finally {
+      setForgotLoading(false);
+      setForgotSent(true);
+    }
   }
 
-  async function handleGoogle() {
+  const { promptGoogleSignIn } = useGoogleSignIn(async (idToken) => {
+    setError('');
     setLoading(true);
-    await new Promise(r => setTimeout(r, 800));
-    setLoading(false);
-    Alert.alert(
-      t('auth.continueWithGoogle'),
-      'OAuth Google — intégration avec expo-auth-session requise.',
-      [{ text: 'OK' }],
-    );
+    try {
+      const res = await authService.loginWithGoogleToken(idToken);
+      setUser(res.user);
+      setTokens(res.accessToken, res.refreshToken);
+    } catch (err) {
+      if (__DEV__) {
+        console.warn('[KFL][Login] échec de la connexion Google :', err);
+      }
+      if (isNetworkError(err)) {
+        setError(t('auth.networkError', 'Impossible de joindre le serveur. Vérifiez votre connexion.'));
+      } else {
+        setError(t('auth.googleFailed', 'Erreur lors de la connexion avec Google.'));
+      }
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  async function handleGoogle() {
+    try {
+      await promptGoogleSignIn();
+    } catch (err) {
+      if (__DEV__) {
+        console.warn('[KFL][Login] Google Sign-In indisponible :', err);
+      }
+      Alert.alert(
+        t('auth.continueWithGoogle'),
+        t('auth.googleUnavailable', 'La connexion Google n\'est pas encore disponible sur cette plateforme.'),
+        [{ text: 'OK' }],
+      );
+    }
   }
 
   async function handleApple() {
@@ -142,7 +199,7 @@ export default function Login({ navigation }: Props) {
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                placeholder="amah@example.com"
+                placeholder={t('auth.emailPlaceholder', 'vous@example.com')}
                 placeholderTextColor="#8C8278"
               />
             </View>
@@ -175,6 +232,14 @@ export default function Login({ navigation }: Props) {
               {t('auth.forgotPassword')}
             </Text>
           </TouchableOpacity>
+
+          {/* Error */}
+          {error.length > 0 && (
+            <View style={{ backgroundColor: '#FBDCDC', borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Icon name="AlertCircle" size={15} color="#C62828" />
+              <Text style={{ fontSize: 13, color: '#C62828', flex: 1 }}>{error}</Text>
+            </View>
+          )}
 
           {/* CTA login */}
           <TouchableOpacity

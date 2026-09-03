@@ -1,21 +1,28 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View, TextInput, ScrollView, TouchableOpacity, StatusBar,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
-
-const TARGETS = ['Tous les utilisateurs', 'Standard seulement', 'Pro seulement', 'Segment personnalisé'];
 
 export default function AdminPush() {
   const navigation = useNavigation<any>();
   const C = useColors();
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [target, setTarget] = useState(0);
+
+  const TARGETS = [
+    t('admin.targetAll'),
+    t('admin.targetStandard'),
+    t('admin.targetPro'),
+    t('admin.targetCustom'),
+  ];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -26,32 +33,32 @@ export default function AdminPush() {
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12, padding: 4 }}>
           <Icon name="ArrowLeft" size={20} color="#fff" />
         </TouchableOpacity>
-        <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700', flex: 1 }}>Notifications Push</Text>
+        <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700', flex: 1 }}>{t('admin.pushTitle')}</Text>
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 90 }} showsVerticalScrollIndicator={false}>
 
         {/* Preview */}
         <View style={{ padding: 16, borderRadius: 18, backgroundColor: '#0D0D0D', marginBottom: 20 }}>
-          <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 10 }}>Aperçu notification</Text>
+          <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 10 }}>{t('admin.notifPreview')}</Text>
           <View style={{ backgroundColor: '#1A1A1A', borderRadius: 14, padding: 12, flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
             <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center' }}>
               <Icon name="ChefHat" size={18} color="#fff" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>{title || 'Titre de la notification'}</Text>
-              <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 2 }}>{body || 'Texte du message...'}</Text>
+              <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>{title || t('admin.notifTitleLabel')}</Text>
+              <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 2 }}>{body || t('admin.notifBodyPlaceholder')}</Text>
             </View>
           </View>
         </View>
 
         {/* Title */}
         <View style={{ marginBottom: 16 }}>
-          <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>Titre</Text>
+          <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>{t('admin.notifTitleLabel')}</Text>
           <View style={{ height: 48, borderWidth: 1, borderColor: C.border, borderRadius: 16, backgroundColor: C.surface, paddingHorizontal: 14, justifyContent: 'center' }}>
             <TextInput
               value={title} onChangeText={setTitle}
-              placeholder="Ex: Nouvelle recette disponible !"
+              placeholder={t('admin.notifTitlePlaceholder')}
               placeholderTextColor="#8C8278"
               style={{ fontSize: 14, color: C.ink }}
             />
@@ -61,11 +68,11 @@ export default function AdminPush() {
 
         {/* Body */}
         <View style={{ marginBottom: 16 }}>
-          <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>Message</Text>
+          <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>{t('admin.notifBody')}</Text>
           <View style={{ borderWidth: 1, borderColor: C.border, borderRadius: 16, backgroundColor: C.surface, paddingHorizontal: 14, paddingVertical: 12, minHeight: 90 }}>
             <TextInput
               value={body} onChangeText={setBody}
-              placeholder="Texte complet de la notification..."
+              placeholder={t('admin.notifBodyPlaceholder')}
               placeholderTextColor="#8C8278"
               multiline numberOfLines={3}
               style={{ fontSize: 14, color: C.ink }}
@@ -76,17 +83,17 @@ export default function AdminPush() {
 
         {/* Target */}
         <View style={{ marginBottom: 20 }}>
-          <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>Audience cible</Text>
+          <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>{t('admin.targetAudience')}</Text>
           <View style={{ gap: 8 }}>
-            {TARGETS.map((t, i) => (
+            {TARGETS.map((label, i) => (
               <TouchableOpacity
                 key={i} onPress={() => setTarget(i)}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, borderWidth: 1.5, borderColor: target === i ? '#1A237E' : '#E5E0D8', backgroundColor: target === i ? '#E8EAF6' : '#fff' }}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, borderWidth: 1.5, borderColor: target === i ? '#1A237E' : '#E5E0D8', backgroundColor: target === i ? '#E8EAF6' : C.surface }}
               >
                 <View style={{ width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: target === i ? '#1A237E' : '#E5E0D8', alignItems: 'center', justifyContent: 'center' }}>
                   {target === i && <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#1A237E' }} />}
                 </View>
-                <Text style={{ fontSize: 14, fontWeight: target === i ? '600' : '400', color: target === i ? '#1A237E' : '#2C1810' }}>{t}</Text>
+                <Text style={{ fontSize: 14, fontWeight: target === i ? '600' : '400', color: target === i ? '#1A237E' : C.ink }}>{label}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -100,7 +107,7 @@ export default function AdminPush() {
           activeOpacity={0.85}
         >
           <Icon name="Megaphone" size={16} color="#fff" />
-          <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>Envoyer la notification</Text>
+          <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>{t('admin.sendNotification')}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

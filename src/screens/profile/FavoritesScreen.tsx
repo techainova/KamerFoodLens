@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  View, ScrollView, TouchableOpacity, StatusBar,
+  View, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator, Image,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,38 +8,48 @@ import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
+import { useFavoritesStore } from '@/store/favorites.store';
+import type { FavoriteItem } from '@/services/users.service';
+import { SHADOW_SM } from '@/constants/theme';
 
-const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
+const FILTER_KEYS = ['all', 'recipe', 'restaurant'] as const;
+type FilterKey = typeof FILTER_KEYS[number];
 
-const CATEGORY_KEYS = ['all', 'sauce', 'meat', 'vegetarian', 'desserts'] as const;
-type CategoryKey = typeof CATEGORY_KEYS[number];
+const DIFFICULTY_COLOR: Record<string, string> = {
+  easy: '#2E7D32',
+  medium: '#F9A825',
+  hard: '#C62828',
+};
 
-const FAVORITES: {
-  id: string; name: string; region: string;
-  difficultyKey: 'difficultyEasy' | 'difficultyMedium' | 'difficultyHard';
-  diffColor: string; time: string; rating: number; category: CategoryKey;
-}[] = [
-  { id: '1', name: 'Ndolé traditionnel', region: 'Littoral',  difficultyKey: 'difficultyMedium', diffColor: '#F9A825', time: '45 min',  rating: 4.9, category: 'vegetarian' },
-  { id: '2', name: 'Poulet DG',          region: 'Centre',    difficultyKey: 'difficultyEasy',   diffColor: '#2E7D32', time: '60 min',  rating: 4.7, category: 'meat' },
-  { id: '3', name: 'Mbongo Tchobi',      region: 'Littoral',  difficultyKey: 'difficultyHard',   diffColor: '#C62828', time: '90 min',  rating: 5.0, category: 'sauce' },
-  { id: '4', name: 'Eru spécial',        region: 'Sud-Ouest', difficultyKey: 'difficultyMedium', diffColor: '#F9A825', time: '55 min',  rating: 4.8, category: 'vegetarian' },
-  { id: '5', name: 'Achu Soup',          region: 'Ouest',     difficultyKey: 'difficultyHard',   diffColor: '#C62828', time: '120 min', rating: 4.9, category: 'sauce' },
-  { id: '6', name: 'Koki haricots',      region: 'Littoral',  difficultyKey: 'difficultyEasy',   diffColor: '#2E7D32', time: '30 min',  rating: 4.5, category: 'vegetarian' },
-];
+function toFilterBucket(type: FavoriteItem['type']): 'recipe' | 'restaurant' {
+  return type === 'restaurant' ? 'restaurant' : 'recipe';
+}
+
+function isNavigable(fav: FavoriteItem): boolean {
+  return fav.type === 'recipe' || fav.type === 'restaurant';
+}
 
 export default function FavoritesScreen() {
   const navigation = useNavigation<any>();
   const C = useColors();
   const { t } = useTranslation();
   const canGoBack = navigation.canGoBack();
-  const [activeCategory, setActiveCategory] = useState<CategoryKey>('all');
-  const [favorites, setFavorites] = useState(FAVORITES);
+  const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
 
-  const filtered = favorites.filter(f => activeCategory === 'all' || f.category === activeCategory);
+  const favorites = useFavoritesStore((s) => s.favorites);
+  const isLoading = useFavoritesStore((s) => s.isLoading);
+  const fetchAll = useFavoritesStore((s) => s.fetchAll);
+  const toggle = useFavoritesStore((s) => s.toggle);
 
-  const toggleSave = (id: string) => {
-    setFavorites(prev => prev.filter(f => f.id !== id));
-  };
+  useEffect(() => {
+    void fetchAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const filtered = useMemo(
+    () => favorites.filter((f) => activeFilter === 'all' || toFilterBucket(f.type) === activeFilter),
+    [favorites, activeFilter],
+  );
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -58,64 +68,93 @@ export default function FavoritesScreen() {
         </View>
       </View>
 
-      {/* Category chips */}
+      {/* Filter chips */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }} style={{ backgroundColor: C.surface, maxHeight: 52, borderBottomWidth: 1, borderColor: C.border }}>
-        {CATEGORY_KEYS.map(cat => (
+        {FILTER_KEYS.map(key => (
           <TouchableOpacity
-            key={cat}
-            onPress={() => setActiveCategory(cat)}
-            style={{ paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, backgroundColor: cat === activeCategory ? C.primary : C.surface2, borderWidth: 1, borderColor: cat === activeCategory ? C.primary : C.border }}
+            key={key}
+            onPress={() => setActiveFilter(key)}
+            style={{ paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, backgroundColor: key === activeFilter ? C.primary : C.surface2, borderWidth: 1, borderColor: key === activeFilter ? C.primary : C.border }}
           >
-            <Text style={{ fontSize: 13, fontWeight: '600', color: cat === activeCategory ? '#fff' : C.inkSoft }}>{t(`favorites.${cat}`)}</Text>
+            <Text style={{ fontSize: 13, fontWeight: '600', color: key === activeFilter ? '#fff' : C.inkSoft }}>{t(`favorites.filter${key.charAt(0).toUpperCase()}${key.slice(1)}`)}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-        {filtered.length === 0 ? (
-          <View style={{ alignItems: 'center', paddingTop: 80 }}>
-            <Icon name="Heart" size={48} color={C.inkMute} />
-            <Text style={{ fontSize: 16, color: C.inkMute, marginTop: 12 }}>{t('favorites.empty')}</Text>
-          </View>
-        ) : (
-          filtered.map(fav => (
-            <TouchableOpacity
-              key={fav.id}
-              style={{ backgroundColor: C.surface, borderRadius: 16, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}
-              activeOpacity={0.85}
-            >
-              <View style={{ width: 70, height: 70, borderRadius: 14, backgroundColor: C.surface2, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name="Camera" size={22} color={C.inkMute} />
-              </View>
+      {isLoading && favorites.length === 0 ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator color="#E8591A" />
+        </View>
+      ) : (
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+          {filtered.length === 0 ? (
+            <View style={{ alignItems: 'center', paddingTop: 80 }}>
+              <Icon name="Heart" size={48} color={C.inkMute} />
+              <Text style={{ fontSize: 16, color: C.inkMute, marginTop: 12 }}>{t('favorites.empty')}</Text>
+            </View>
+          ) : (
+            filtered.map(fav => {
+              const difficultyColor = fav.difficulty ? DIFFICULTY_COLOR[fav.difficulty] : undefined;
+              const navigable = isNavigable(fav);
+              return (
+                <TouchableOpacity
+                  key={fav.id}
+                  activeOpacity={navigable ? 0.85 : 1}
+                  disabled={!navigable}
+                  onPress={() => {
+                    if (fav.type === 'recipe') navigation.navigate('Recipe', { dishId: fav.itemId });
+                    else if (fav.type === 'restaurant') navigation.navigate('Restaurant', { restaurantId: fav.itemId });
+                  }}
+                  style={{ backgroundColor: C.surface, borderRadius: 16, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}
+                >
+                  <View style={{ width: 70, height: 70, borderRadius: 14, backgroundColor: C.surface2, borderWidth: fav.imageUrl ? 0 : 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                    {fav.imageUrl ? (
+                      <Image source={{ uri: fav.imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                    ) : (
+                      <Icon name={fav.type === 'restaurant' ? 'Store' : 'ChefHat'} size={22} color={C.inkMute} />
+                    )}
+                  </View>
 
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 15, fontWeight: '700', color: C.ink, marginBottom: 2 }}>{fav.name}</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                  <Icon name="MapPin" size={11} color={C.inkMute} />
-                  <Text style={{ fontSize: 12, color: C.inkMute }}>{fav.region}</Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View style={{ paddingHorizontal: 7, paddingVertical: 2, borderRadius: 7, backgroundColor: fav.diffColor + '15' }}>
-                    <Text style={{ fontSize: 10, fontWeight: '700', color: fav.diffColor }}>{t(`favorites.${fav.difficultyKey}`)}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 15, fontWeight: '700', color: C.ink, marginBottom: 2 }}>{fav.name}</Text>
+                    {!!fav.region && (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                        <Icon name="MapPin" size={11} color={C.inkMute} />
+                        <Text style={{ fontSize: 12, color: C.inkMute }}>{fav.region}</Text>
+                      </View>
+                    )}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      {!!fav.difficulty && difficultyColor && (
+                        <View style={{ paddingHorizontal: 7, paddingVertical: 2, borderRadius: 7, backgroundColor: difficultyColor + '15' }}>
+                          <Text style={{ fontSize: 10, fontWeight: '700', color: difficultyColor }}>
+                            {t(`favorites.difficulty${fav.difficulty.charAt(0).toUpperCase()}${fav.difficulty.slice(1)}`)}
+                          </Text>
+                        </View>
+                      )}
+                      {fav.durationMin !== null && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                          <Icon name="Clock" size={11} color={C.inkMute} />
+                          <Text style={{ fontSize: 11, color: C.inkMute }}>{fav.durationMin} min</Text>
+                        </View>
+                      )}
+                      {fav.rating !== null && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                          <Icon name="Star" size={11} color={C.gold} fill={C.gold} />
+                          <Text style={{ fontSize: 11, fontWeight: '700', color: C.ink }}>{fav.rating}</Text>
+                        </View>
+                      )}
+                    </View>
                   </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                    <Icon name="Clock" size={11} color={C.inkMute} />
-                    <Text style={{ fontSize: 11, color: C.inkMute }}>{fav.time}</Text>
-                  </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                    <Icon name="Star" size={11} color={C.gold} fill={C.gold} />
-                    <Text style={{ fontSize: 11, fontWeight: '700', color: C.ink }}>{fav.rating}</Text>
-                  </View>
-                </View>
-              </View>
 
-              <TouchableOpacity onPress={() => toggleSave(fav.id)} style={{ padding: 8 }}>
-                <Icon name="Heart" size={20} color={C.primary} fill={C.primary} />
-              </TouchableOpacity>
-            </TouchableOpacity>
-          ))
-        )}
-      </ScrollView>
+                  <TouchableOpacity onPress={() => void toggle(fav.type, fav.itemId)} style={{ padding: 8 }}>
+                    <Icon name="Heart" size={20} color={C.primary} fill={C.primary} />
+                  </TouchableOpacity>
+                </TouchableOpacity>
+              );
+            })
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }

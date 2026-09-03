@@ -1,30 +1,33 @@
-﻿import React from 'react';
+import React from 'react';
 import {
   View, ScrollView, TouchableOpacity, StatusBar,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
+import { SHADOW_SM } from '@/constants/theme';
 
-const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
+type EventStatus = 'published' | 'pending' | 'draft';
 
 const EVENTS = [
-  { title: 'Festival des saveurs',  date: '22 Jun 2026', status: 'published', attendees: 847 },
-  { title: 'Masterclass Ndolé',     date: '25 Jun 2026', status: 'pending',   attendees: 124 },
-  { title: 'Concours de recettes',  date: '28 Jun 2026', status: 'draft',     attendees: 56  },
+  { title: 'Festival des saveurs', date: '22 Jun 2026', status: 'published' as EventStatus, attendees: 847 },
+  { title: 'Masterclass Ndolé',    date: '25 Jun 2026', status: 'pending'   as EventStatus, attendees: 124 },
+  { title: 'Concours de recettes', date: '28 Jun 2026', status: 'draft'     as EventStatus, attendees: 56  },
 ];
-
-const STATUS_CONF: Record<string, { label: string; color: string; bg: string }> = {
-  published: { label: 'Publié',     color: '#2E7D32', bg: '#E3F0E4' },
-  pending:   { label: 'En attente', color: '#F9A825', bg: '#FBF3DC' },
-  draft:     { label: 'Brouillon',  color: '#8C8278', bg: '#F5F0EB' },
-};
 
 export default function AdminEvents() {
   const navigation = useNavigation<any>();
   const C = useColors();
+  const { t } = useTranslation();
+
+  const STATUS_CONF: Record<EventStatus, { label: string; color: string; bg: string }> = {
+    published: { label: t('admin.statusPublished'), color: '#2E7D32', bg: '#E3F0E4' },
+    pending:   { label: t('common.pending'),         color: '#F9A825', bg: '#FBF3DC' },
+    draft:     { label: t('common.draft'),           color: '#8C8278', bg: '#F5F0EB' },
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -35,10 +38,10 @@ export default function AdminEvents() {
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12, padding: 4 }}>
           <Icon name="ArrowLeft" size={20} color="#fff" />
         </TouchableOpacity>
-        <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700', flex: 1 }}>Gestion des événements</Text>
+        <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700', flex: 1 }}>{t('admin.eventsManagement')}</Text>
         <TouchableOpacity style={{ height: 32, paddingHorizontal: 12, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 4 }}>
           <Icon name="Plus" size={12} color="#fff" />
-          <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>Nouveau</Text>
+          <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>{t('admin.new')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -56,25 +59,25 @@ export default function AdminEvents() {
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <Icon name="Calendar" size={12} color="#8C8278" />
+                    <Icon name="Calendar" size={12} color={C.inkMute} />
                     <Text style={{ fontSize: 12, color: C.inkMute }}>{event.date}</Text>
                   </View>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <Icon name="Users" size={12} color="#8C8278" />
-                    <Text style={{ fontSize: 12, color: C.inkMute }}>{event.attendees} inscrits</Text>
+                    <Icon name="Users" size={12} color={C.inkMute} />
+                    <Text style={{ fontSize: 12, color: C.inkMute }}>{event.attendees} {t('admin.attendees')}</Text>
                   </View>
                 </View>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
                   <TouchableOpacity style={{ height: 32, paddingHorizontal: 12, backgroundColor: C.navySoft, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ color: '#1A237E', fontSize: 12, fontWeight: '600' }}>Modifier</Text>
+                    <Text style={{ color: '#1A237E', fontSize: 12, fontWeight: '600' }}>{t('common.edit')}</Text>
                   </TouchableOpacity>
                   {event.status === 'pending' && (
                     <TouchableOpacity style={{ height: 32, paddingHorizontal: 12, backgroundColor: C.successSoft, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
-                      <Text style={{ color: '#2E7D32', fontSize: 12, fontWeight: '600' }}>Approuver</Text>
+                      <Text style={{ color: '#2E7D32', fontSize: 12, fontWeight: '600' }}>{t('admin.approve')}</Text>
                     </TouchableOpacity>
                   )}
                   <TouchableOpacity style={{ height: 32, paddingHorizontal: 12, backgroundColor: C.errorSoft, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ color: '#C62828', fontSize: 12, fontWeight: '600' }}>Supprimer</Text>
+                    <Text style={{ color: '#C62828', fontSize: 12, fontWeight: '600' }}>{t('common.delete')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>

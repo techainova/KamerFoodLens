@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   View, ScrollView, TouchableOpacity, Image,
 } from 'react-native';
@@ -13,19 +13,29 @@ import KFLLogo from '@/components/ui/KFLLogo';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { useStoriesStore, buildStoryGroups } from '@/store/stories.store';
+import { useAuthStore } from '@/store/auth.store';
 import { RECIPES, DIFF_LABELS } from '@/data/recipes';
-import { WEEKLY_EVENTS } from '@/data/events';
+import { useEventsStore } from '@/store/events.store';
 
 export default function HomeV1() {
   const C = useColors();
   const { t } = useTranslation();
   const nav = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
-  const myStories = useStoriesStore((s) => s.myStories);
-  const [registered, setRegistered] = useState(false);
+  const stories = useStoriesStore((s) => s.stories);
+  const fetchStories = useStoriesStore((s) => s.fetchAll);
+  const user = useAuthStore((s) => s.user);
+  const events = useEventsStore((s) => s.getUpcoming());
+  const fetchEvents = useEventsStore((s) => s.fetchAll);
 
-  const event = WEEKLY_EVENTS[0];
+  useEffect(() => {
+    void fetchEvents();
+    void fetchStories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const event = events[0];
   const popular = RECIPES.slice(0, 3);
-  const storyGroups = buildStoryGroups(myStories);
+  const storyGroups = buildStoryGroups(stories, user?.id);
   const myGroup = storyGroups.find((g) => g.isMine);
   const otherGroups = storyGroups.filter((g) => !g.isMine);
 
@@ -50,9 +60,15 @@ export default function HomeV1() {
             <Icon name="Bell" size={18} color="#6D4C41" />
             <View style={{ position: 'absolute', top: 7, right: 8, width: 8, height: 8, borderRadius: 4, backgroundColor: '#C62828', borderWidth: 1.5, borderColor: '#fff' }} />
           </TouchableOpacity>
-          {/* Avatar initials */}
-          <TouchableOpacity onPress={() => nav.navigate('ProfileScreen')} style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700', fontFamily: 'Inter-Bold' }}>AN</Text>
+          {/* Avatar */}
+          <TouchableOpacity onPress={() => nav.navigate('ProfileScreen')} style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            {user?.avatar ? (
+              <Image source={{ uri: user.avatar }} style={{ width: 34, height: 34 }} resizeMode="cover" />
+            ) : (
+              <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700', fontFamily: 'Inter-Bold' }}>
+                {((user?.firstName?.charAt(0) ?? '') + (user?.lastName?.charAt(0) ?? '')).toUpperCase() || '?'}
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -115,22 +131,26 @@ export default function HomeV1() {
             <TouchableOpacity
               style={{ alignItems: 'center', gap: 6 }}
               activeOpacity={0.75}
-              onPress={() => myGroup ? nav.navigate('StoriesViewer', { authorId: 'me' }) : nav.navigate('AddStory')}
+              onPress={() => myGroup ? nav.navigate('StoriesViewer', { authorId: myGroup.authorId }) : nav.navigate('StoryCreatorCamera')}
             >
               <View style={{ width: 66, height: 66, borderRadius: 33, alignItems: 'center', justifyContent: 'center', backgroundColor: C.surface2, borderWidth: 2, borderColor: myGroup ? C.gold : C.border, borderStyle: myGroup ? 'solid' : 'dashed', overflow: 'hidden' }}>
                 {myGroup ? (
-                  <Image
-                    source={{ uri: myGroup.stories[myGroup.stories.length - 1].image as string }}
-                    style={{ width: '100%', height: '100%' }}
-                    resizeMode="cover"
-                  />
+                  myGroup.stories[myGroup.stories.length - 1].imageUrl ? (
+                    <Image
+                      source={{ uri: myGroup.stories[myGroup.stories.length - 1].imageUrl }}
+                      style={{ width: '100%', height: '100%' }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={{ width: '100%', height: '100%', backgroundColor: myGroup.stories[myGroup.stories.length - 1].backgroundColor ?? C.navy }} />
+                  )
                 ) : (
                   <Icon name="Plus" size={22} color="#E8591A" />
                 )}
               </View>
               {myGroup && (
                 <TouchableOpacity
-                  onPress={() => nav.navigate('AddStory')}
+                  onPress={() => nav.navigate('StoryCreatorCamera')}
                   style={{ position: 'absolute', top: 40, right: -2, width: 22, height: 22, borderRadius: 11, backgroundColor: '#E8591A', borderWidth: 2, borderColor: C.cream, alignItems: 'center', justifyContent: 'center' }}
                 >
                   <Icon name="Plus" size={11} color="#fff" />
@@ -149,7 +169,7 @@ export default function HomeV1() {
                   onPress={() => nav.navigate('StoriesViewer', { authorId: g.authorId })}
                 >
                   <View style={{ width: 66, height: 66, borderRadius: 33, padding: 2.5, borderWidth: 2, borderColor: i === 0 ? '#E8591A' : '#E5E0D8', overflow: 'hidden' }}>
-                    <Image source={last.image as number} style={{ width: '100%', height: '100%', borderRadius: 28 }} resizeMode="cover" />
+                    <Image source={{ uri: last.imageUrl }} style={{ width: '100%', height: '100%', borderRadius: 28 }} resizeMode="cover" />
                   </View>
                   <Text style={{ fontSize: 10.5, fontWeight: '500', color: C.inkSoft, maxWidth: 64, textAlign: 'center' }}>{g.authorName}</Text>
                 </TouchableOpacity>
@@ -204,41 +224,46 @@ export default function HomeV1() {
               <Text style={{ fontSize: 11, color: '#E8591A', fontWeight: '600' }}>{t('common.seeAll')}</Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity style={{ backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 16, overflow: 'hidden' }} activeOpacity={0.85} onPress={() => nav.navigate('AllEvents')}>
-            <View style={{ position: 'relative' }}>
-              {event.image ? (
-                <Image source={event.image} style={{ width: '100%', height: 128 }} resizeMode="cover" />
-              ) : (
+          {event ? (
+            <TouchableOpacity style={{ backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 16, overflow: 'hidden' }} activeOpacity={0.85} onPress={() => nav.navigate('EventDetail', { eventId: event.id })}>
+              <View style={{ position: 'relative' }}>
                 <View style={{ height: 128, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center' }}>
                   <Icon name="Calendar" size={40} color="#E5E0D8" />
                 </View>
-              )}
-              <View style={{ position: 'absolute', top: 10, left: 10, backgroundColor: '#C62828', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 }}>
-                <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>{event.dateLabel}</Text>
-              </View>
-            </View>
-            <View style={{ padding: 14 }}>
-              <Text style={{ color: C.ink, fontSize: 14, fontWeight: '700', fontFamily: 'Inter-Bold' }}>{event.title}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
-                <Icon name="MapPin" size={11} color="#8C8278" />
-                <Text style={{ color: C.inkMute, fontSize: 11 }}>{event.location} · {event.timeRange}</Text>
-              </View>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Icon name="Users" size={12} color="#8C8278" />
-                  <Text style={{ color: C.inkMute, fontSize: 11 }}>{event.attendees + (registered ? 1 : 0)} {t('events.registeredCount')}</Text>
-                </View>
-                <TouchableOpacity
-                  onPress={(e) => { e.stopPropagation?.(); setRegistered((r) => !r); }}
-                  style={{ height: 36, paddingHorizontal: 16, backgroundColor: registered ? C.successSoft : '#E8591A', borderRadius: 18, alignItems: 'center', justifyContent: 'center', borderWidth: registered ? 1 : 0, borderColor: C.success }}
-                >
-                  <Text style={{ color: registered ? C.success : '#fff', fontSize: 12, fontWeight: '700' }}>
-                    {registered ? t('events.registered') : t('events.register')}
+                <View style={{ position: 'absolute', top: 10, left: 10, backgroundColor: '#C62828', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 }}>
+                  <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>
+                    {new Date(event.startAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                   </Text>
-                </TouchableOpacity>
+                </View>
               </View>
+              <View style={{ padding: 14 }}>
+                <Text style={{ color: C.ink, fontSize: 14, fontWeight: '700', fontFamily: 'Inter-Bold' }}>{event.title}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                  <Icon name="MapPin" size={11} color="#8C8278" />
+                  <Text style={{ color: C.inkMute, fontSize: 11 }}>{event.location} · {event.time}</Text>
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Icon name="Users" size={12} color="#8C8278" />
+                    <Text style={{ color: C.inkMute, fontSize: 11 }}>{event.registeredCount} {t('events.registeredCount')}</Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={(e) => { e.stopPropagation?.(); void useEventsStore.getState().toggleRegister(event.id); }}
+                    style={{ height: 36, paddingHorizontal: 16, backgroundColor: event.isRegistered ? C.successSoft : '#E8591A', borderRadius: 18, alignItems: 'center', justifyContent: 'center', borderWidth: event.isRegistered ? 1 : 0, borderColor: C.success }}
+                  >
+                    <Text style={{ color: event.isRegistered ? C.success : '#fff', fontSize: 12, fontWeight: '700' }}>
+                      {event.isRegistered ? t('events.registered') : t('events.register')}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </TouchableOpacity>
+          ) : (
+            <View style={{ backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 24, alignItems: 'center' }}>
+              <Icon name="Calendar" size={32} color="#E5E0D8" />
+              <Text style={{ color: C.inkMute, fontSize: 12, marginTop: 8 }}>{t('events.noEvents')}</Text>
             </View>
-          </TouchableOpacity>
+          )}
         </View>
 
         {/* Daily challenge */}

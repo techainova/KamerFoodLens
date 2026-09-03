@@ -4,6 +4,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { createMMKV } from 'react-native-mmkv';
+import i18n from '@/i18n';
 import type { Language } from '@/i18n';
 
 const _mmkv = createMMKV({ id: 'kfl-ui-store' });
@@ -36,7 +37,7 @@ export const useUIStore = create<UIState>()(
       isLoading:  false,
       toastMsg:   null,
 
-      setLanguage:  (language)   => set({ language }),
+      setLanguage:  (language)   => { i18n.changeLanguage(language); set({ language }); },
       setThemeMode: (themeMode)  => set({ themeMode }),
       setLoading:   (isLoading)  => set({ isLoading }),
       showToast:    (toastMsg)   => set({ toastMsg }),

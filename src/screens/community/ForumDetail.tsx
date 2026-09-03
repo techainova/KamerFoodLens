@@ -1,97 +1,99 @@
-﻿import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View, ScrollView, TextInput, TouchableOpacity, StatusBar, KeyboardAvoidingView, Platform,
+  View, ScrollView, TextInput, TouchableOpacity, StatusBar, KeyboardAvoidingView, Platform, ActivityIndicator,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
+import { SHADOW_SM } from '@/constants/theme';
+import { useForumStore } from '@/store/forum.store';
+import { useAuthStore } from '@/store/auth.store';
 
-const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
-
-const REPLIES = [
-  {
-    id: '1',
-    user: 'Chef Amina',
-    initials: 'CA',
-    initColor: '#E8591A',
-    badge: 'Chef certifié',
-    badgeColor: '#E8591A',
-    time: '1h',
-    text: "La clé c'est les écorces fraîches de HK combinées avec le njansang légèrement torréfié. Et la cuisson lente — minimum 2h30 à feu doux pour que la viande s'imbibe bien.",
-    likes: 45,
-    liked: false,
-    isBest: true,
-  },
-  {
-    id: '2',
-    user: 'Pierre Nkolo',
-    initials: 'PN',
-    initColor: '#1A237E',
-    badge: 'Membre',
-    badgecolor: '#8C8278',
-    time: '45min',
-    text: "J'ajoute toujours un peu de poivre de Penja en fin de cuisson, ça change tout ! Et pour le poisson, le capitaine frais de préférence.",
-    likes: 23,
-    liked: false,
-    isBest: false,
-  },
-  {
-    id: '3',
-    user: 'Maman Caro',
-    initials: 'MC',
-    initColor: '#2E7D32',
-    badge: 'Experte',
-    badgeColor: '#2E7D32',
-    time: '20min',
-    text: "Merci pour ces conseils ! J'ai une question : est-ce qu'on peut remplacer les écorces fraîches par des séchées si on n'est pas au Cameroun ?",
-    likes: 8,
-    liked: false,
-    isBest: false,
-  },
-];
+const CAT_COLORS: Record<string, string> = {
+  Recettes:      '#E8591A',
+  Restaurants:   '#1A237E',
+  Ingrédients:   '#2E7D32',
+  Astuces:       '#9C27B0',
+  Événements:    '#F9A825',
+  Général:       '#8C8278',
+};
 
 export default function ForumDetail() {
   const navigation = useNavigation<any>();
   const C = useColors();
+  const { t } = useTranslation();
   const route = useRoute<any>();
-  const thread = route.params?.thread ?? {
-    title: 'Comment reproduire le Mbongo Tchobi authentique à la maison ?',
-    category: 'Recettes',
-    catColor: '#E8591A',
-    user: 'Chef Paul',
-    initials: 'CP',
-    initColor: '#E8591A',
-    time: '2h',
-    replies: 34,
-    views: 428,
-  };
-
-  const [replies, setReplies] = useState(REPLIES);
   const [replyText, setReplyText] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
 
-  const toggleLike = (id: string) => {
-    setReplies(prev => prev.map(r => r.id === id ? { ...r, liked: !r.liked, likes: r.liked ? r.likes - 1 : r.likes + 1 } : r));
+  const threadId: string | undefined = route.params?.threadId;
+
+  const threadDetails = useForumStore(s => s.threadDetails);
+  const fetchThreadDetail = useForumStore(s => s.fetchThreadDetail);
+  const addReply = useForumStore(s => s.addReply);
+  const toggleThreadLike = useForumStore(s => s.toggleThreadLike);
+  const toggleReplyLike = useForumStore(s => s.toggleReplyLike);
+  const user = useAuthStore(s => s.user);
+
+  const thread = threadId ? threadDetails[threadId] : undefined;
+
+  const timeAgo = (iso: string): string => {
+    const diff = Date.now() - new Date(iso).getTime();
+    const h = Math.floor(diff / 3600000);
+    if (h < 1) return t('community.justNow');
+    if (h < 24) return `${h}h`;
+    return `${Math.floor(h / 24)}j`;
   };
 
-  const sendReply = () => {
-    if (!replyText.trim()) return;
-    setReplies(prev => [...prev, {
-      id: String(prev.length + 1),
-      user: 'Moi',
-      initials: 'MO',
-      initColor: '#E8591A',
-      badge: 'Membre',
-      badgecolor: C.inkMute,
-      time: 'maintenant',
-      text: replyText.trim(),
-      likes: 0,
-      liked: false,
-      isBest: false,
-    }]);
-    setReplyText('');
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!threadId) { setLoading(false); return; }
+      setLoading(true);
+      try {
+        await fetchThreadDetail(threadId);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [threadId]);
+
+  const catColor = thread ? (CAT_COLORS[thread.category] ?? '#E8591A') : '#E8591A';
+  const likedByMe = !!user && !!thread && thread.likes.includes(user.id);
+
+  const sendReply = async () => {
+    if (!replyText.trim() || !threadId || sending) return;
+    setSending(true);
+    try {
+      await addReply(threadId, replyText.trim());
+      setReplyText('');
+    } finally {
+      setSending(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: C.cream, alignItems: 'center', justifyContent: 'center' }}>
+        <StatusBar barStyle={C.statusBar} />
+        <ActivityIndicator color="#E8591A" />
+      </SafeAreaView>
+    );
+  }
+
+  if (!thread) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: C.cream, alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ color: C.inkMute }}>{t('community.threadNotFound')}</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -102,12 +104,10 @@ export default function ForumDetail() {
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
           <Icon name="ArrowLeft" size={22} color="#2C1810" />
         </TouchableOpacity>
-        <Text style={{ flex: 1, fontFamily: 'Inter-Bold', fontSize: 15, color: C.ink }} numberOfLines={1}>Discussion</Text>
-        <TouchableOpacity style={{ padding: 4 }}>
-          <Icon name="Share2" size={18} color="#6D4C41" />
-        </TouchableOpacity>
-        <TouchableOpacity style={{ padding: 4 }}>
-          <Icon name="Bookmark" size={18} color="#6D4C41" />
+        <Text style={{ flex: 1, fontFamily: 'Inter-Bold', fontSize: 15, color: C.ink }} numberOfLines={1}>{t('community.discussion')}</Text>
+        <TouchableOpacity onPress={() => void toggleThreadLike(threadId!)} style={{ padding: 4, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <Icon name="Heart" size={18} color={likedByMe ? '#E8591A' : '#6D4C41'} fill={likedByMe ? '#E8591A' : 'none'} />
+          <Text style={{ fontSize: 12, color: likedByMe ? '#E8591A' : '#6D4C41' }}>{thread.likes.length}</Text>
         </TouchableOpacity>
       </View>
 
@@ -117,28 +117,32 @@ export default function ForumDetail() {
           {/* Thread header */}
           <View style={{ backgroundColor: C.surface, padding: 16, borderBottomWidth: 1, borderColor: C.border }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-              <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: thread.catColor + '15' }}>
-                <Text style={{ fontSize: 10, fontWeight: '700', color: thread.catColor }}>{thread.category}</Text>
+              <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: catColor + '15' }}>
+                <Text style={{ fontSize: 10, fontWeight: '700', color: catColor }}>{thread.category}</Text>
               </View>
             </View>
 
-            <Text style={{ fontSize: 18, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, lineHeight: 26, marginBottom: 12 }}>
+            <Text style={{ fontSize: 18, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, lineHeight: 26, marginBottom: 10 }}>
               {thread.title}
             </Text>
 
+            <Text style={{ fontSize: 14, color: C.ink, lineHeight: 22, marginBottom: 12 }}>
+              {thread.content}
+            </Text>
+
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: thread.initColor + '20', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: thread.initColor + '40' }}>
-                <Text style={{ fontSize: 12, fontWeight: '700', color: thread.initColor }}>{thread.initials[0]}</Text>
+              <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: thread.avatarColor + '20', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: thread.avatarColor + '40' }}>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: thread.avatarColor }}>{thread.initials[0]}</Text>
               </View>
               <View>
-                <Text style={{ fontSize: 13, fontWeight: '700', color: C.ink }}>{thread.user}</Text>
-                <Text style={{ fontSize: 11, color: C.inkMute }}>{thread.time}</Text>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: C.ink }}>{thread.authorName}</Text>
+                <Text style={{ fontSize: 11, color: C.inkMute }}>{timeAgo(thread.createdAt)}</Text>
               </View>
               <View style={{ flex: 1 }} />
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                   <Icon name="MessageCircle" size={14} color="#8C8278" />
-                  <Text style={{ fontSize: 12, color: C.inkMute }}>{thread.replies}</Text>
+                  <Text style={{ fontSize: 12, color: C.inkMute }}>{thread.replies.length}</Text>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                   <Icon name="Eye" size={14} color="#8C8278" />
@@ -150,49 +154,44 @@ export default function ForumDetail() {
 
           {/* Replies */}
           <View style={{ paddingHorizontal: 16, paddingTop: 12, gap: 12 }}>
-            <Text style={{ fontSize: 13, fontWeight: '600', color: C.inkSoft, marginBottom: 4 }}>{replies.length} réponses</Text>
+            <Text style={{ fontSize: 13, fontWeight: '600', color: C.inkSoft, marginBottom: 4 }}>{t('community.replyCount', { count: thread.replies.length })}</Text>
 
-            {replies.map(reply => (
-              <View key={reply.id} style={{ backgroundColor: C.surface, borderRadius: 16, padding: 14, borderWidth: reply.isBest ? 1.5 : 1, borderColor: reply.isBest ? '#2E7D32' + '60' : '#E5E0D8', ...SHADOW_SM }}>
-                {reply.isBest && (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 8, paddingBottom: 8, borderBottomWidth: 1, borderColor: '#E3F0E4' }}>
-                    <Icon name="Award" size={13} color="#2E7D32" />
-                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#2E7D32' }}>Meilleure réponse</Text>
-                  </View>
-                )}
+            {thread.replies.length === 0 && (
+              <View style={{ alignItems: 'center', paddingVertical: 32 }}>
+                <Icon name="MessageCircle" size={36} color="rgba(140,130,120,0.3)" />
+                <Text style={{ color: C.inkMute, marginTop: 10 }}>{t('community.beFirstToReply')}</Text>
+              </View>
+            )}
 
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                  <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: reply.initColor + '20', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: reply.initColor + '40' }}>
-                    <Text style={{ fontSize: 12, fontWeight: '700', color: reply.initColor }}>{reply.initials[0]}</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 13, fontWeight: '700', color: C.ink }}>{reply.user}</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <View style={{ paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6, backgroundColor: reply.badgeColor + '15' }}>
-                        <Text style={{ fontSize: 9, fontWeight: '700', color: reply.badgeColor }}>{reply.badge}</Text>
-                      </View>
-                      <Text style={{ fontSize: 11, color: C.inkMute }}>· {reply.time}</Text>
+            {thread.replies.map((reply) => {
+              const replyLikedByMe = !!user && reply.likes.includes(user.id);
+              return (
+                <View key={reply.id} style={{ backgroundColor: C.surface, borderRadius: 16, padding: 14, borderWidth: 1, borderColor: '#E5E0D8', ...SHADOW_SM }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                    <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: reply.avatarColor + '20', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: reply.avatarColor + '40' }}>
+                      <Text style={{ fontSize: 12, fontWeight: '700', color: reply.avatarColor }}>{reply.initials[0]}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 13, fontWeight: '700', color: C.ink }}>{reply.authorName}</Text>
+                      <Text style={{ fontSize: 11, color: C.inkMute }}>{timeAgo(reply.createdAt)}</Text>
                     </View>
                   </View>
-                  <TouchableOpacity style={{ padding: 4 }}>
-                    <Icon name="MoreHorizontal" size={16} color="#8C8278" />
-                  </TouchableOpacity>
-                </View>
 
-                <Text style={{ fontSize: 14, color: C.ink, lineHeight: 21, marginBottom: 10 }}>{reply.text}</Text>
+                  <Text style={{ fontSize: 14, color: C.ink, lineHeight: 21, marginBottom: 10 }}>{reply.content}</Text>
 
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-                  <TouchableOpacity onPress={() => toggleLike(reply.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                    <Icon name="Heart" size={16} color={reply.liked ? '#E8591A' : '#8C8278'} fill={reply.liked ? '#E8591A' : 'none'} />
-                    <Text style={{ fontSize: 13, color: reply.liked ? '#E8591A' : '#8C8278', fontWeight: '500' }}>{reply.likes}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                    <Icon name="MessageCircle" size={16} color="#8C8278" />
-                    <Text style={{ fontSize: 13, color: C.inkMute, fontWeight: '500' }}>Répondre</Text>
-                  </TouchableOpacity>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+                    <TouchableOpacity onPress={() => void toggleReplyLike(threadId!, reply.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                      <Icon name="Heart" size={16} color={replyLikedByMe ? '#E8591A' : '#8C8278'} fill={replyLikedByMe ? '#E8591A' : 'none'} />
+                      <Text style={{ fontSize: 13, color: replyLikedByMe ? '#E8591A' : '#8C8278', fontWeight: '500' }}>{reply.likes.length}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setReplyText(`@${reply.authorName} `)} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                      <Icon name="MessageCircle" size={16} color="#8C8278" />
+                      <Text style={{ fontSize: 13, color: C.inkMute, fontWeight: '500' }}>{t('community.replyAction')}</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         </ScrollView>
 
@@ -202,18 +201,18 @@ export default function ForumDetail() {
             <TextInput
               value={replyText}
               onChangeText={setReplyText}
-              placeholder="Votre réponse..."
+              placeholder={t('community.replyPlaceholder')}
               placeholderTextColor="#8C8278"
               multiline
               style={{ fontSize: 14, color: C.ink, maxHeight: 100 }}
             />
           </View>
           <TouchableOpacity
-            onPress={sendReply}
+            onPress={() => void sendReply()}
             style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: replyText.trim() ? '#E8591A' : '#E5E0D8', alignItems: 'center', justifyContent: 'center' }}
-            disabled={!replyText.trim()}
+            disabled={!replyText.trim() || sending}
           >
-            <Icon name="Send" size={18} color="#fff" />
+            {sending ? <ActivityIndicator size="small" color="#fff" /> : <Icon name="Send" size={18} color="#fff" />}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

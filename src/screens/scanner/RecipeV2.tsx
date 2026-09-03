@@ -1,10 +1,11 @@
-﻿import React from 'react';
+import React from 'react';
 import {
   View, ScrollView, TouchableOpacity, StatusBar,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 
@@ -25,6 +26,7 @@ const INGREDIENTS = [
 export default function RecipeV2() {
   const navigation = useNavigation<any>();
   const C = useColors();
+  const { t } = useTranslation();
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -34,7 +36,7 @@ export default function RecipeV2() {
       <View style={{ height: 240, position: 'relative' }}>
         <View style={{ flex: 1, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center' }}>
           <Icon name="ChefHat" size={56} color="rgba(140,130,120,0.25)" />
-          <Text style={{ fontSize: 12, color: C.inkMute, fontStyle: 'italic', marginTop: 8 }}>Ndolé éditorial</Text>
+          <Text style={{ fontSize: 12, color: C.inkMute, fontStyle: 'italic', marginTop: 8 }}>Ndolé</Text>
         </View>
         <View style={{ position: 'absolute', top: 14, left: 16, right: 16, flexDirection: 'row', justifyContent: 'space-between' }}>
           <TouchableOpacity onPress={() => navigation.goBack()}
@@ -53,12 +55,17 @@ export default function RecipeV2() {
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: 80 }} showsVerticalScrollIndicator={false}>
-        <Text style={{ fontSize: 11, color: '#E8591A', textTransform: 'uppercase', fontWeight: '700', letterSpacing: 1.2 }}>Recette du Littoral</Text>
-        <Text style={{ fontSize: 28, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginTop: 6, marginBottom: 14, lineHeight: 34 }}>Ndolé traditionnel</Text>
+        <Text style={{ fontSize: 11, color: '#E8591A', textTransform: 'uppercase', fontWeight: '700', letterSpacing: 1.2 }}>Littoral</Text>
+        <Text style={{ fontSize: 28, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginTop: 6, marginBottom: 14, lineHeight: 34 }}>Ndolé</Text>
 
         {/* Meta row */}
         <View style={{ flexDirection: 'row', borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.border, paddingVertical: 10, marginBottom: 20 }}>
-          {[{ v: '1h30', l: 'Durée' }, { v: '4', l: 'Pers.' }, { v: '480', l: 'Kcal' }, { v: '4.6', l: '(312)' }].map((m, i) => (
+          {[
+            { v: '1h30', l: t('recipe.duration') },
+            { v: '4',    l: t('recipe.servings') },
+            { v: '480',  l: t('recipe.calories') },
+            { v: '4.6',  l: '(312)' },
+          ].map((m, i) => (
             <View key={i} style={{ flex: 1, alignItems: 'center', borderLeftWidth: i > 0 ? 1 : 0, borderColor: C.border }}>
               <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink }}>{m.v}</Text>
               <Text style={{ fontSize: 11, color: C.inkMute }}>{m.l}</Text>
@@ -67,7 +74,7 @@ export default function RecipeV2() {
         </View>
 
         {/* Ingredients */}
-        <Text style={{ fontSize: 20, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 8 }}>Ingrédients <Text style={{ fontSize: 14, fontWeight: '400', fontStyle: 'italic', color: C.inkMute }}>/ Ingredients</Text></Text>
+        <Text style={{ fontSize: 20, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 8 }}>{t('recipe.ingredients')}</Text>
         <View style={{ marginBottom: 20, paddingLeft: 16 }}>
           {INGREDIENTS.map((item, i) => (
             <Text key={i} style={{ fontSize: 14, color: C.inkSoft, marginBottom: 4, lineHeight: 22 }}>• {item}</Text>
@@ -75,7 +82,7 @@ export default function RecipeV2() {
         </View>
 
         {/* Steps */}
-        <Text style={{ fontSize: 20, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 8 }}>Étapes <Text style={{ fontSize: 14, fontWeight: '400', fontStyle: 'italic', color: C.inkMute }}>/ Steps</Text></Text>
+        <Text style={{ fontSize: 20, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 8 }}>{t('recipe.steps')}</Text>
         <View style={{ gap: 10 }}>
           {STEPS.map((step, i) => (
             <View key={i} style={{ flexDirection: 'row', gap: 12 }}>
@@ -91,7 +98,7 @@ export default function RecipeV2() {
       {/* Bottom CTA */}
       <View style={{ position: 'absolute', bottom: 16, left: 16, right: 16 }}>
         <TouchableOpacity style={{ height: 48, backgroundColor: '#E8591A', borderRadius: 24, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }} activeOpacity={0.85}>
-          <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>Mode cuisson</Text>
+          <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>{t('recipe.cookMode')}</Text>
           <Icon name="ChevronRight" size={18} color="#fff" />
         </TouchableOpacity>
       </View>

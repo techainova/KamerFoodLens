@@ -1,56 +1,105 @@
-﻿import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View, ScrollView, TouchableOpacity, StatusBar,
+  View, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
+import { SHADOW_SM } from '@/constants/theme';
+import { useEventsStore, type KflEvent } from '@/store/events.store';
 
-const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
-
-const DEFAULT_EVENT = {
-  id: '1',
-  title: 'Masterclass Mbongo Tchobi avec Chef Amina',
-  type: 'En ligne',
-  typeColor: '#1A237E',
-  date: '22 Juin 2024',
-  time: '14h00',
-  duration: '2h',
-  location: 'Zoom (lien envoyé après inscription)',
-  price: 0,
-  seats: 12,
-  registered: false,
-  organizer: 'Chef Amina Fouda',
-  organizerInitials: 'CA',
-  organizerColor: '#E8591A',
-  organizerBio: 'Chef certifiée, spécialiste de la cuisine du Littoral camerounais. 15 ans d\'expérience.',
-  tag: 'Technique',
-  tagColor: '#2E7D32',
-  description: 'Rejoignez Chef Amina pour une masterclass exclusive sur le Mbongo Tchobi traditionnel. Vous apprendrez les secrets des épices, la technique de cuisson longue et les variantes régionales.',
-  program: [
-    { time: '14h00', label: 'Introduction & présentation des ingrédients' },
-    { time: '14h20', label: 'Préparation des épices : njansang, écorces HK' },
-    { time: '14h50', label: 'Démonstration de cuisson — sauce noire' },
-    { time: '15h20', label: 'Assemblage & ajustement des saveurs' },
-    { time: '15h50', label: 'Q&R & dégustation virtuelle' },
-  ],
-  attendees: 38,
-  totalSeats: 50,
+const CATEGORY_COLORS: Record<string, string> = {
+  'Festival': '#E8591A',
+  'Atelier': '#2E7D32',
+  'Dégustation': '#1A237E',
+  'Concours': '#F9A825',
+  'Conférence': '#00796B',
 };
+const DEFAULT_CATEGORY_COLOR = '#6D4C41';
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+}
 
 export default function EventDetail() {
   const navigation = useNavigation<any>();
   const C = useColors();
+  const { t } = useTranslation();
   const route = useRoute<any>();
-  const event = { ...DEFAULT_EVENT, ...(route.params?.event ?? {}) };
+  const eventId: string | undefined = route.params?.eventId;
 
-  const [registered, setRegistered] = useState(event.registered);
+  const fetchById = useEventsStore((s) => s.fetchById);
+  const toggleRegister = useEventsStore((s) => s.toggleRegister);
+
+  const [event, setEvent] = useState<KflEvent | null>(null);
+  const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
+  const [registering, setRegistering] = useState(false);
 
-  const progress = Math.min((event.attendees / event.totalSeats) * 100, 100);
-  const remaining = event.totalSeats - event.attendees;
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!eventId) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      const detail = await fetchById(eventId);
+      if (!cancelled) {
+        setEvent(detail ?? null);
+        setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventId]);
+
+  // Keep local view in sync with the store after registration toggles
+  const storeEvent = useEventsStore((s) => (eventId ? s.getById(eventId) : undefined));
+  useEffect(() => {
+    if (storeEvent) {
+      setEvent(storeEvent);
+    }
+  }, [storeEvent]);
+
+  const handleToggleRegister = async () => {
+    if (!eventId) return;
+    setRegistering(true);
+    try {
+      await toggleRegister(eventId);
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: C.cream, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color="#E8591A" />
+      </SafeAreaView>
+    );
+  }
+
+  if (!event) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: C.cream, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <Text style={{ fontSize: 15, color: C.inkSoft, textAlign: 'center' }}>
+          {t('events.notFound', 'Événement introuvable.')}
+        </Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 16 }}>
+          <Text style={{ color: '#E8591A', fontWeight: '600' }}>{t('common.goBack', 'Retour')}</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
+  const color = CATEGORY_COLORS[event.category] ?? DEFAULT_CATEGORY_COLOR;
+  const remaining = Math.max(event.maxAttendees - event.registeredCount, 0);
+  const progress = event.maxAttendees > 0 ? Math.min((event.registeredCount / event.maxAttendees) * 100, 100) : 0;
+  const initials = event.organizer.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -58,31 +107,23 @@ export default function EventDetail() {
 
       {/* Hero */}
       <View style={{ height: 220, backgroundColor: '#2C1810', justifyContent: 'flex-end', padding: 20 }}>
-        {/* Back & actions */}
         <View style={{ position: 'absolute', top: 16, left: 0, right: 0, flexDirection: 'row', paddingHorizontal: 16, alignItems: 'center' }}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="ArrowLeft" size={20} color="#fff" />
           </TouchableOpacity>
           <View style={{ flex: 1 }} />
-          <TouchableOpacity onPress={() => setSaved(s => !s)} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
+          <TouchableOpacity onPress={() => setSaved(s => !s)} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="Bookmark" size={18} color={saved ? '#F9A825' : '#fff'} fill={saved ? '#F9A825' : 'none'} />
-          </TouchableOpacity>
-          <TouchableOpacity style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name="Share2" size={18} color="#fff" />
           </TouchableOpacity>
         </View>
 
-        {/* Badges */}
         <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
-          <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, backgroundColor: event.typeColor }}>
-            <Text style={{ fontSize: 11, fontWeight: '700', color: '#fff' }}>{event.type}</Text>
+          <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, backgroundColor: event.isOnline ? '#1A237E' : color }}>
+            <Text style={{ fontSize: 11, fontWeight: '700', color: '#fff' }}>{event.isOnline ? 'En ligne' : event.category}</Text>
           </View>
-          <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, backgroundColor: event.tagColor }}>
-            <Text style={{ fontSize: 11, fontWeight: '700', color: '#fff' }}>{event.tag}</Text>
-          </View>
-          {event.price === 0 && (
+          {event.isFree && (
             <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, backgroundColor: '#2E7D32' }}>
-              <Text style={{ fontSize: 11, fontWeight: '700', color: '#fff' }}>Gratuit</Text>
+              <Text style={{ fontSize: 11, fontWeight: '700', color: '#fff' }}>{t('events.free')}</Text>
             </View>
           )}
         </View>
@@ -98,69 +139,57 @@ export default function EventDetail() {
             <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#E8591A15', alignItems: 'center', justifyContent: 'center' }}>
               <Icon name="Calendar" size={15} color="#E8591A" />
             </View>
-            <Text style={{ fontSize: 14, color: C.ink, fontWeight: '600' }}>{event.date} · {event.time}</Text>
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#E8591A15', alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name="Clock" size={15} color="#E8591A" />
-            </View>
-            <Text style={{ fontSize: 14, color: C.inkSoft }}>Durée : {event.duration}</Text>
+            <Text style={{ fontSize: 14, color: C.ink, fontWeight: '600' }}>{formatDate(event.startAt)} · {event.time}</Text>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#E8591A15', alignItems: 'center', justifyContent: 'center' }}>
               <Icon name="MapPin" size={15} color="#E8591A" />
             </View>
-            <Text style={{ fontSize: 14, color: C.inkSoft }} numberOfLines={1}>{event.location}</Text>
+            <Text style={{ fontSize: 14, color: C.inkSoft }} numberOfLines={1}>{event.location}{event.city ? ` · ${event.city}` : ''}</Text>
           </View>
         </View>
 
         {/* Seats progress */}
-        <View style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: C.surface, borderRadius: 16, padding: 14, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-            <Text style={{ fontSize: 13, fontWeight: '600', color: C.ink }}>Places disponibles</Text>
-            <Text style={{ fontSize: 13, fontWeight: '700', color: remaining <= 5 ? '#C62828' : '#2E7D32' }}>
-              {remaining} restantes
-            </Text>
+        {event.maxAttendees > 0 && (
+          <View style={{ marginHorizontal: 16, marginTop: 16, backgroundColor: C.surface, borderRadius: 16, padding: 14, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: C.ink }}>{t('events.availableSeats')}</Text>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: remaining <= 5 ? '#C62828' : '#2E7D32' }}>
+                {remaining} {t('events.seatsRemaining')}
+              </Text>
+            </View>
+            <View style={{ height: 6, backgroundColor: C.surface2, borderRadius: 3, overflow: 'hidden' }}>
+              <View style={{ height: '100%', width: `${progress}%`, backgroundColor: progress >= 80 ? '#C62828' : '#E8591A', borderRadius: 3 }} />
+            </View>
+            <Text style={{ fontSize: 11, color: C.inkMute, marginTop: 6 }}>{event.registeredCount}/{event.maxAttendees} {t('events.registeredCount')}</Text>
           </View>
-          <View style={{ height: 6, backgroundColor: C.surface2, borderRadius: 3, overflow: 'hidden' }}>
-            <View style={{ height: '100%', width: `${progress}%`, backgroundColor: progress >= 80 ? '#C62828' : '#E8591A', borderRadius: 3 }} />
-          </View>
-          <Text style={{ fontSize: 11, color: C.inkMute, marginTop: 6 }}>{event.attendees}/{event.totalSeats} inscrits</Text>
-        </View>
+        )}
 
         {/* Description */}
         <View style={{ paddingHorizontal: 16, paddingTop: 20 }}>
-          <Text style={{ fontSize: 16, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 10 }}>Description</Text>
+          <Text style={{ fontSize: 16, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 10 }}>{t('events.description')}</Text>
           <Text style={{ fontSize: 14, color: C.inkSoft, lineHeight: 22 }}>{event.description}</Text>
         </View>
 
-        {/* Programme */}
-        <View style={{ paddingHorizontal: 16, paddingTop: 20 }}>
-          <Text style={{ fontSize: 16, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 12 }}>Programme</Text>
-          <View style={{ gap: 0 }}>
-            {event.program.map((item: { time: string; label: string }, i: number) => (
-              <View key={i} style={{ flexDirection: 'row', gap: 12 }}>
-                <View style={{ alignItems: 'center', width: 20 }}>
-                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#E8591A', marginTop: 4 }} />
-                  {i < event.program.length - 1 && <View style={{ width: 1.5, flex: 1, backgroundColor: '#E5E0D8', marginTop: 2 }} />}
-                </View>
-                <View style={{ paddingBottom: 16 }}>
-                  <Text style={{ fontSize: 12, fontWeight: '700', color: '#E8591A', marginBottom: 2 }}>{item.time}</Text>
-                  <Text style={{ fontSize: 14, color: C.ink }}>{item.label}</Text>
-                </View>
+        {/* Tags */}
+        {event.tags.length > 0 && (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 16, paddingTop: 16 }}>
+            {event.tags.map((tag) => (
+              <View key={tag} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: color + '15' }}>
+                <Text style={{ fontSize: 11, fontWeight: '600', color }}>{tag}</Text>
               </View>
             ))}
           </View>
-        </View>
+        )}
 
         {/* Organizer */}
-        <View style={{ marginHorizontal: 16, marginTop: 20, backgroundColor: C.surface, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: C.border, flexDirection: 'row', gap: 12, alignItems: 'flex-start', ...SHADOW_SM }}>
-          <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: event.organizerColor + '20', borderWidth: 2, borderColor: event.organizerColor + '40', alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ fontSize: 18, fontWeight: '700', color: event.organizerColor }}>{event.organizerInitials[0]}</Text>
+        <View style={{ marginHorizontal: 16, marginTop: 20, backgroundColor: C.surface, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: C.border, flexDirection: 'row', gap: 12, alignItems: 'center', ...SHADOW_SM }}>
+          <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: color + '20', borderWidth: 2, borderColor: color + '40', alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={{ fontSize: 18, fontWeight: '700', color }}>{initials}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink, marginBottom: 2 }}>{event.organizer}</Text>
-            <Text style={{ fontSize: 12, color: C.inkSoft, lineHeight: 18 }}>{event.organizerBio}</Text>
+            <Text style={{ fontSize: 11, color: C.inkMute, marginBottom: 2 }}>{t('events.organizedBy', 'Organisé par')}</Text>
+            <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink }}>{event.organizer}</Text>
           </View>
         </View>
       </ScrollView>
@@ -173,14 +202,21 @@ export default function EventDetail() {
           </Text>
         )}
         <TouchableOpacity
-          onPress={() => setRegistered((r: boolean) => !r)}
-          style={{ height: 52, borderRadius: 16, backgroundColor: registered ? '#E3F0E4' : '#E8591A', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
+          onPress={() => void handleToggleRegister()}
+          disabled={registering}
+          style={{ height: 52, borderRadius: 16, backgroundColor: event.isRegistered ? '#E3F0E4' : '#E8591A', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
           activeOpacity={0.85}
         >
-          <Icon name={registered ? 'Check' : 'Calendar'} size={18} color={registered ? '#2E7D32' : '#fff'} />
-          <Text style={{ fontSize: 16, fontWeight: '700', color: registered ? '#2E7D32' : '#fff' }}>
-            {registered ? 'Inscription confirmée' : "S'inscrire"}
-          </Text>
+          {registering ? (
+            <ActivityIndicator color={event.isRegistered ? '#2E7D32' : '#fff'} />
+          ) : (
+            <>
+              <Icon name={event.isRegistered ? 'Check' : 'Calendar'} size={18} color={event.isRegistered ? '#2E7D32' : '#fff'} />
+              <Text style={{ fontSize: 16, fontWeight: '700', color: event.isRegistered ? '#2E7D32' : '#fff' }}>
+                {event.isRegistered ? t('events.confirmedRegistration') : t('events.register')}
+              </Text>
+            </>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>

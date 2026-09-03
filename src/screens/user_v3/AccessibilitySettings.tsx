@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import i18n from '@/i18n';
+import { SHADOW_SM, SHADOW_MD, SHADOW_LG } from '@/constants/theme';
 import {
   useAccessibilityStore,
   type TextSize, type ContrastMode, type BodyFont,
@@ -22,8 +23,6 @@ const SectionHeader = ({ fr, en, C }: { fr: string; en: string; C: ReturnType<ty
     </Text>
   </View>
 );
-
-const SHADOW_SM = { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 };
 
 export default function AccessibilitySettings() {
   const navigation = useNavigation<any>();
