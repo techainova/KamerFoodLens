@@ -10,6 +10,7 @@ interface FeedState {
   toggleLike: (postId: string) => Promise<void>;
   addComment: (postId: string, text: string) => Promise<void>;
   createPost: (payload: CreatePostPayload) => Promise<void>;
+  receivePost: (post: FeedPost) => void;
 }
 
 export const useFeedStore = create<FeedState>((set, get) => ({
@@ -55,4 +56,13 @@ export const useFeedStore = create<FeedState>((set, get) => ({
     const created = await communityService.createPost(payload);
     set((s) => ({ posts: [created, ...s.posts] }));
   },
+
+  // Appelé sur réception de l'événement socket 'post:new' — déduplication par
+  // id car l'auteur reçoit aussi sa propre diffusion (déjà ajoutée par
+  // createPost() de manière optimiste).
+  receivePost: (post) => set((s) => (
+    s.posts.some((existing) => existing.id === post.id)
+      ? s
+      : { posts: [post, ...s.posts] }
+  )),
 }));

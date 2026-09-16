@@ -12,6 +12,7 @@ import type { IconName } from '@/components/ui/Icon';
 import { useAccessibilityStore } from '@/store/accessibility.store';
 import { useAuthStore } from '@/store/auth.store';
 import { useNotificationsStore } from '@/store/notifications.store';
+import { authService } from '@/services/auth.service';
 
 type ToggleItem  = { labelKey: string; icon: IconName; type: 'toggle'; toggleKey: string };
 type NavItem     = { labelKey: string; icon: IconName; type: 'nav'; valueKey?: string; valueParams?: Record<string, unknown>; screen?: string; danger?: boolean };
@@ -84,6 +85,7 @@ export default function ProfileSettings() {
   const { themeMode } = useAppTheme();
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
+  const refreshToken = useAuthStore((s) => s.refreshToken);
   const clearAuth = useAuthStore((s) => s.clearAuth);
 
   const themeValueKey =
@@ -130,7 +132,19 @@ export default function ProfileSettings() {
   const handleLogout = () => {
     Alert.alert(t('settings.logout'), undefined, [
       { text: t('common.cancel'), style: 'cancel' },
-      { text: t('settings.logout'), style: 'destructive', onPress: () => clearAuth() },
+      {
+        text: t('settings.logout'),
+        style: 'destructive',
+        onPress: () => {
+          // Révoque le refresh token côté serveur avant de vider l'état local —
+          // sans ça le token restait valide indéfiniment côté backend.
+          if (refreshToken) void authService.logout(refreshToken).catch(() => {});
+          clearAuth();
+          // L'app reste toujours montée (navigation invité) — on ramène juste
+          // vers l'accueil, Profil/Réglages supposant un utilisateur connecté.
+          navigation.navigate('HomeTab', { screen: 'HomeScreen' });
+        },
+      },
     ]);
   };
 

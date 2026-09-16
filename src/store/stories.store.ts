@@ -23,6 +23,7 @@ interface StoriesState {
   highlights: StoryHighlightSummary[];
   fetchAll: () => Promise<void>;
   addStory: (payload: CreateStoryPayload) => Promise<void>;
+  receiveStory: (story: Story) => void;
   removeStory: (storyId: string) => Promise<void>;
   viewStory: (storyId: string) => Promise<void>;
   reactToStory: (storyId: string, emoji: string) => Promise<void>;
@@ -59,6 +60,15 @@ export const useStoriesStore = create<StoriesState>((set, get) => ({
     const created = await communityService.createStory(payload);
     set((s) => ({ stories: [created, ...s.stories] }));
   },
+
+  // Appelé sur réception de l'événement socket 'story:new' — diffusé à tous
+  // les comptes connectés, y compris l'auteur, d'où la déduplication par id
+  // (son propre addStory() l'a déjà insérée de manière optimiste).
+  receiveStory: (story) => set((s) => (
+    s.stories.some((existing) => existing.id === story.id)
+      ? s
+      : { stories: [story, ...s.stories] }
+  )),
 
   removeStory: async (storyId) => {
     const previous = get().stories;

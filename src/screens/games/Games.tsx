@@ -11,6 +11,7 @@ import { useColors } from '@/hooks/useAppTheme';
 import { SHADOW_SM, SHADOW_MD } from '@/constants/theme';
 import { gamesService, type LeaderboardEntry, type Badge } from '@/services/games.service';
 import { useAuthStore } from '@/store/auth.store';
+import { useAuthGate } from '@/hooks/useAuthGate';
 
 const XP_PER_LEVEL = 100;
 const AVATAR_COLORS = ['#F9A825', '#8C8278', '#E8591A', '#2E7D32', '#1A237E', '#C62828'];
@@ -24,6 +25,8 @@ export default function Games() {
   const C = useColors();
   const { t } = useTranslation();
   const user = useAuthStore(s => s.user);
+  const isAuthenticated = useAuthStore(s => s.isAuthenticated);
+  const { requireAuth } = useAuthGate();
 
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [badges, setBadges] = useState<Badge[]>([]);
@@ -33,9 +36,12 @@ export default function Games() {
     let cancelled = false;
     (async () => {
       try {
+        // /users/badges exige un compte — inutile de l'appeler pour un
+        // invité, il 401rait et déclencherait la redirection Login de
+        // l'intercepteur même si l'erreur est ici catchée localement.
         const [lb, myBadges] = await Promise.all([
           gamesService.getLeaderboard('week'),
-          gamesService.getMyBadges().catch(() => []),
+          isAuthenticated ? gamesService.getMyBadges().catch(() => []) : Promise.resolve([]),
         ]);
         if (!cancelled) {
           setLeaderboard(lb.slice(0, 4));
@@ -46,7 +52,7 @@ export default function Games() {
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [isAuthenticated]);
 
   const points = user?.xpPoints ?? 0;
   const level = user?.level ?? 1;
@@ -105,7 +111,7 @@ export default function Games() {
             {gameModes.map((mode) => (
               <TouchableOpacity
                 key={mode.title}
-                onPress={() => navigation.navigate(mode.screen)}
+                onPress={() => requireAuth(() => navigation.navigate(mode.screen))}
                 style={{ width: '47.5%', backgroundColor: mode.color + '12', borderWidth: 1.5, borderColor: mode.color + '30', borderRadius: 18, padding: 16, ...SHADOW_SM }}
                 activeOpacity={0.85}
               >

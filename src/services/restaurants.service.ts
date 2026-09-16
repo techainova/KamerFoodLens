@@ -22,6 +22,7 @@ export interface Restaurant {
   hoursLabel?: string;
   isVerified: boolean;
   openingHours?: Record<string, string>;
+  ownerId: string;
 }
 
 export interface MenuItem {

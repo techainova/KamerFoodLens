@@ -12,6 +12,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { authService } from '@/services/auth.service';
 import { isNetworkError } from '@/utils/apiError';
 import { useGoogleSignIn } from '@/hooks/useGoogleSignIn';
+import { resetToRoute } from '@/navigation/navigationRef';
 import LangSwitch from '@/components/auth/LangSwitch';
 import KFLLogo from '@/components/ui/KFLLogo';
 import Icon from '@/components/ui/Icon';
@@ -83,6 +84,9 @@ export default function Login({ navigation }: Props) {
       const res = await authService.login({ email: email.toLowerCase().trim(), password });
       setUser(res.user);
       setTokens(res.accessToken, res.refreshToken);
+      // Vide la pile racine (Login/Signup/OTP) et repart sur l'app — via le
+      // ref de navigation, voir Splash.tsx pour pourquoi pas navigation.replace/navigate.
+      resetToRoute('App');
     } catch (err) {
       if (__DEV__) {
         console.warn('[KFL][Login] échec de la connexion :', err);
@@ -117,6 +121,7 @@ export default function Login({ navigation }: Props) {
       const res = await authService.loginWithGoogleToken(idToken);
       setUser(res.user);
       setTokens(res.accessToken, res.refreshToken);
+      resetToRoute('App');
     } catch (err) {
       if (__DEV__) {
         console.warn('[KFL][Login] échec de la connexion Google :', err);
@@ -285,7 +290,7 @@ export default function Login({ navigation }: Props) {
         </View>
 
         {/* Signup link */}
-        <TouchableOpacity style={{ marginTop: 24, alignItems: 'center' }} onPress={() => navigation.navigate('Signup')}>
+        <TouchableOpacity style={{ marginTop: 24, alignItems: 'center' }} onPress={() => navigation.navigate('SignupProAware')}>
           <Text style={{ color: C.inkMute, fontSize: 12 }}>
             {t('auth.noAccount')}{' '}
             <Text style={{ color: '#2E7D32', fontWeight: '600', textDecorationLine: 'underline' }}>

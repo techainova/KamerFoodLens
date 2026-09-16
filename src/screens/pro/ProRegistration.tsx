@@ -1,11 +1,11 @@
 // src/screens/pro/ProRegistration.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View, TextInput, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator, Alert,
+  View, TextInput, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator, Alert, BackHandler,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
@@ -15,8 +15,18 @@ const BUSINESS_TYPES = ['Restaurant', 'Food court', 'École hôtelière', 'Chef 
 
 export default function ProRegistration() {
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
   const C = useColors();
   const { t } = useTranslation();
+  // Venant de l'inscription "compte établissement" : cette étape est requise,
+  // pas juste l'écran suivant — pas de retour possible avant de la valider.
+  const isMandatory: boolean = route.params?.fromSignup === true;
+
+  useEffect(() => {
+    if (!isMandatory) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
+    return () => sub.remove();
+  }, [isMandatory]);
 
   const [businessName, setBusinessName] = useState('');
   const [businessType, setBusinessType] = useState(BUSINESS_TYPES[0]!);
@@ -29,6 +39,24 @@ export default function ProRegistration() {
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
+
+    if (isMandatory) {
+      // Pas encore de compte vérifié à ce stade (l'OTP n'a pas encore été
+      // saisi, donc pas de token) — on ne peut pas encore appeler
+      // /pro/upgrade. On transmet les champs à OTP, qui soumettra la demande
+      // dès qu'il aura obtenu le token, avant d'afficher la confirmation.
+      navigation.navigate('OTP', {
+        email: route.params?.email,
+        isBusiness: true,
+        businessName: businessName.trim(),
+        businessType,
+        businessPhone: phone.trim(),
+        businessAddress: address.trim(),
+        businessDescription: description.trim() || undefined,
+      });
+      return;
+    }
+
     setSubmitting(true);
     try {
       await proService.upgrade({
@@ -50,16 +78,20 @@ export default function ProRegistration() {
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
       <StatusBar barStyle={C.statusBar} />
 
-      {/* AppBar */}
+      {/* AppBar — pas de bouton retour quand cette étape est requise (inscription établissement) */}
       <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
-          <Icon name="ArrowLeft" size={22} color={C.ink} />
-        </TouchableOpacity>
+        {!isMandatory && (
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
+            <Icon name="ArrowLeft" size={22} color={C.ink} />
+          </TouchableOpacity>
+        )}
         <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>{t('proRegistration.title')}</Text>
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
-        <Text style={{ fontSize: 13, color: C.inkSoft, lineHeight: 19, marginBottom: 20 }}>{t('proRegistration.intro')}</Text>
+        <Text style={{ fontSize: 13, color: C.inkSoft, lineHeight: 19, marginBottom: 20 }}>
+          {t(isMandatory ? 'proRegistration.introMandatory' : 'proRegistration.intro')}
+        </Text>
 
         <View style={{ gap: 14 }}>
           <FieldLabel C={C} text={t('proRegistration.businessName')} />
@@ -102,7 +134,7 @@ export default function ProRegistration() {
           disabled={!canSubmit || submitting}
           style={{ height: 50, borderRadius: 25, backgroundColor: canSubmit ? C.primary : C.border, alignItems: 'center', justifyContent: 'center' }}
         >
-          {submitting ? <ActivityIndicator color="#fff" /> : <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>{t('proRegistration.submit')}</Text>}
+          {submitting ? <ActivityIndicator color="#fff" /> : <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>{t(isMandatory ? 'common.next' : 'proRegistration.submit')}</Text>}
         </TouchableOpacity>
       </View>
     </SafeAreaView>

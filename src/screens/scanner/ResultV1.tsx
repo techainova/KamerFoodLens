@@ -14,6 +14,7 @@ import { getDishDescription } from '@/ai/dishDescriptions';
 import { UNKNOWN_CLASS } from '@/ai/interpretResult';
 import { useFavoritesStore } from '@/store/favorites.store';
 import { useJournalStore } from '@/store/journal.store';
+import { useAuthGate } from '@/hooks/useAuthGate';
 
 type ResultNav = NativeStackNavigationProp<ScannerStackParams, 'Result'>;
 type ResultRoute = RouteProp<ScannerStackParams, 'Result'>;
@@ -43,6 +44,7 @@ export default function ResultV1() {
   const isSaved = useFavoritesStore((s) => s.isSaved);
   const toggleFavorite = useFavoritesStore((s) => s.toggle);
   const fetchFavorites = useFavoritesStore((s) => s.fetchAll);
+  const { requireAuth } = useAuthGate();
   const journalToday = useJournalStore((s) => s.getToday);
   const addJournalEntry = useJournalStore((s) => s.addEntry);
   const fetchJournal = useJournalStore((s) => s.fetchAll);
@@ -72,13 +74,20 @@ export default function ResultV1() {
 
   const handleToggleBookmark = () => {
     if (isUnknown) return;
-    void toggleFavorite('dish', classId).catch(() => {
-      Alert.alert(t('common.error'), t('scanner.favoriteError'));
+    requireAuth(() => {
+      void toggleFavorite('dish', classId).catch(() => {
+        Alert.alert(t('common.error'), t('scanner.favoriteError'));
+      });
     });
   };
 
   const handleAddToJournal = () => {
     if (isUnknown || !dish || savedToJournal || savingToJournal) return;
+    requireAuth(() => addToJournalNow());
+  };
+
+  const addToJournalNow = () => {
+    if (!dish) return;
     setSavingToJournal(true);
     addJournalEntry({
       dishId: classId,

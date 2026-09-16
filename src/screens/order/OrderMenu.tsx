@@ -10,6 +10,7 @@ import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { useCartStore } from '@/store/cart.store';
 import { useRestaurantStore } from '@/store/restaurant.store';
+import { useAuthGate } from '@/hooks/useAuthGate';
 
 type MenuCatId = 'all' | 'Entrées' | 'Plats' | 'Accompagnements' | 'Boissons';
 
@@ -20,6 +21,7 @@ export default function OrderMenu() {
   const { t } = useTranslation();
   const [activeCat, setActiveCat] = useState<MenuCatId>('all');
   const [search, setSearch] = useState('');
+  const { requireAuth } = useAuthGate();
 
   const restaurantId: string | undefined = route.params?.restaurantId;
   const fetchById = useRestaurantStore((s) => s.fetchById);
@@ -186,7 +188,7 @@ export default function OrderMenu() {
 
       {cartCount > 0 && (
         <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 16, paddingVertical: 14, backgroundColor: C.surface, borderTopWidth: 1, borderColor: C.border }}>
-          <TouchableOpacity onPress={() => navigation.navigate('OrderSummary')} style={{ height: 48, backgroundColor: '#E8591A', borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 }} activeOpacity={0.85}>
+          <TouchableOpacity onPress={() => requireAuth(() => navigation.navigate('OrderSummary'))} style={{ height: 48, backgroundColor: '#E8591A', borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 }} activeOpacity={0.85}>
             <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}>
               <Text style={{ color: '#E8591A', fontSize: 11, fontWeight: '700' }}>{cartCount}</Text>
             </View>

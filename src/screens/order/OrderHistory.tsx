@@ -12,6 +12,7 @@ import { useColors } from '@/hooks/useAppTheme';
 import { SHADOW_SM } from '@/constants/theme';
 import { ordersService, type Order, type OrderStatus } from '@/services/orders.service';
 import { useRestaurantStore } from '@/store/restaurant.store';
+import { getOrderStatusVisual } from '@/utils/orderStatus';
 
 type TabId = 0 | 1 | 2 | 3;
 
@@ -20,19 +21,6 @@ const STATUS_TAB: Record<OrderStatus, TabId> = {
   completed: 2,
   cancelled: 3,
 };
-
-function statusStyle(status: OrderStatus): { color: string; bg: string } {
-  switch (status) {
-    case 'pending':
-    case 'confirmed':  return { color: '#E8591A', bg: '#FEF3EC' };
-    case 'preparing':  return { color: '#F9A825', bg: '#FBF3DC' };
-    case 'ready':
-    case 'delivering': return { color: '#2E7D32', bg: '#E3F0E4' };
-    case 'completed':  return { color: '#2E7D32', bg: '#E3F0E4' };
-    case 'cancelled':  return { color: '#C62828', bg: '#FBDCDC' };
-    default:           return { color: '#8C8278', bg: '#F5F0EB' };
-  }
-}
 
 export default function OrderHistory() {
   const navigation = useNavigation<any>();
@@ -140,7 +128,7 @@ export default function OrderHistory() {
             </View>
           )}
           {filtered.map((order) => {
-            const s = statusStyle(order.status);
+            const s = getOrderStatusVisual(order.status, C);
             const label = STATUS_LABEL[order.status];
             const dateStr = new Date(order.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
             const itemsStr = order.items.map(i => `${i.name} ×${i.qty}`).join(', ');

@@ -13,6 +13,9 @@ import { useRestaurantStore, type Restaurant as RestaurantData, type MenuItem } 
 import { useFavoritesStore } from '@/store/favorites.store';
 import { useCartStore } from '@/store/cart.store';
 import { restaurantsService, type RestaurantReview } from '@/services/restaurants.service';
+import { useAuthGate } from '@/hooks/useAuthGate';
+import { useMessagesStore } from '@/store/messages.store';
+import { useAuthStore } from '@/store/auth.store';
 
 const TABS = [
   { key: 'menu',    label: 'Menu' },
@@ -54,6 +57,23 @@ export default function Restaurant() {
   const toggleFavorite = useFavoritesStore((s) => s.toggle);
   const fetchFavorites = useFavoritesStore((s) => s.fetchAll);
   const { addItem, items: cartItems, restaurantId: cartRestaurantId, count } = useCartStore();
+  const { requireAuth } = useAuthGate();
+  const openConversation = useMessagesStore((s) => s.openConversation);
+  const myId = useAuthStore((s) => s.user?.id);
+  const [contacting, setContacting] = useState(false);
+
+  const handleContact = async () => {
+    if (!restaurant || restaurant.ownerId === myId) return;
+    setContacting(true);
+    try {
+      const conversation = await openConversation(restaurant.ownerId);
+      navigation.navigate('ChatThread', { conversationId: conversation.id, otherUser: conversation.otherUser });
+    } catch {
+      Alert.alert(t('common.error'), t('messages.contactError', 'Impossible de démarrer la conversation.'));
+    } finally {
+      setContacting(false);
+    }
+  };
 
   const [restaurant, setRestaurant] = useState<RestaurantData | null>(null);
   const [reviews, setReviews] = useState<RestaurantReview[]>([]);
@@ -167,8 +187,17 @@ export default function Restaurant() {
               <Icon name="ArrowLeft" size={18} color="#fff" />
             </TouchableOpacity>
             <View style={{ flexDirection: 'row', gap: 8 }}>
+              {restaurant.ownerId !== myId && (
+                <TouchableOpacity
+                  onPress={() => requireAuth(() => void handleContact())}
+                  disabled={contacting}
+                  style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.4)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  {contacting ? <ActivityIndicator size="small" color="#fff" /> : <Icon name="MessageCircle" size={17} color="#fff" />}
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
-                onPress={() => restaurantId && void toggleFavorite('restaurant', restaurantId)}
+                onPress={() => restaurantId && requireAuth(() => void toggleFavorite('restaurant', restaurantId))}
                 style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: bookmarked ? 'rgba(232,89,26,0.5)' : 'rgba(0,0,0,0.4)', borderWidth: 1, borderColor: bookmarked ? '#E8591A' : 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }}
               >
                 <Icon name="Bookmark" size={17} color="#fff" fill={bookmarked ? '#fff' : 'none'} />
@@ -315,7 +344,7 @@ export default function Restaurant() {
                 style={{ minHeight: 80, backgroundColor: C.surface2, borderRadius: 12, padding: 12, fontSize: 13, color: C.ink, textAlignVertical: 'top', lineHeight: 20 }}
               />
               <TouchableOpacity
-                onPress={submitReview}
+                onPress={() => requireAuth(submitReview)}
                 style={{ height: 44, borderRadius: 22, backgroundColor: myRating > 0 && reviewText.length > 5 ? '#E8591A' : '#E5E0D8', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
                 disabled={myRating === 0 || reviewText.length <= 5 || submittingReview}
               >

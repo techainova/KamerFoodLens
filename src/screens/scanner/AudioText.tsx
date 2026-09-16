@@ -1,6 +1,6 @@
 ﻿import React, { useState, useRef, useEffect } from 'react';
 import {
-  View, TouchableOpacity, TextInput, ScrollView, Animated, Easing,
+  View, TouchableOpacity, TextInput, ScrollView, Animated, Easing, Alert,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,6 +12,8 @@ import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { useVoiceToText } from '@/hooks/useVoiceToText';
 import { matchDishByDescription } from '@/ai/text/matchDishByDescription';
+import { useAuthStore } from '@/store/auth.store';
+import { useGuestStore, FREE_SCAN_LIMIT } from '@/store/guest.store';
 
 type Nav = NativeStackNavigationProp<ScannerStackParams, 'AudioText'>;
 
@@ -55,6 +57,9 @@ export default function AudioText() {
   const [activeTab, setActiveTab] = useState<'audio' | 'text'>('audio');
   const [textInput, setTextInput] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const anonymousScanCount = useGuestStore((s) => s.anonymousScanCount);
+  const registerAnonymousScan = useGuestStore((s) => s.registerAnonymousScan);
   const {
     isRecording, isProcessing, transcript, error: voiceError,
     startRecording, stopRecording,
@@ -83,11 +88,26 @@ export default function AudioText() {
   };
 
   const handleAnalyze = async () => {
+    // Même quota partagé que le scan photo (Camera.tsx) — un seul scan gratuit
+    // au total avant inscription, quelle que soit la modalité utilisée.
+    if (!isAuthenticated && anonymousScanCount >= FREE_SCAN_LIMIT) {
+      Alert.alert(
+        t('scanner.guestLimitTitle'),
+        t('scanner.guestLimitMsg'),
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('auth.signup'), onPress: () => nav.navigate('Login' as never) },
+        ],
+      );
+      return;
+    }
+
     const description = activeTab === 'audio' ? transcript : textInput;
     setAnalyzing(true);
     await new Promise(r => setTimeout(r, 800)); // léger délai pour matérialiser l'analyse à l'écran
     const { classId, confidence } = matchDishByDescription(description);
     setAnalyzing(false);
+    if (!isAuthenticated) registerAnonymousScan();
     nav.navigate('Result', {
       scanId: `text-scan-${Date.now()}`,
       classId,

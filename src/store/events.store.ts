@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { createMMKV } from 'react-native-mmkv';
 import { eventsService, type KflEvent as KflEventDto } from '@/services/events.service';
+import { useAuthStore } from '@/store/auth.store';
 
 const _mmkv = createMMKV({ id: 'kfl-events-store' });
 const mmkvStorage = {
@@ -59,6 +60,7 @@ interface EventsState {
   events:         KflEvent[];
   isLoading:      boolean;
   fetchAll:       () => Promise<void>;
+  receiveEvent:   (dto: KflEventDto) => void;
   toggleRegister: (eventId: string) => Promise<void>;
   fetchById:      (eventId: string) => Promise<KflEvent | undefined>;
   getById:        (eventId: string) => KflEvent | undefined;
@@ -82,9 +84,13 @@ export const useEventsStore = create<EventsState>()(
       fetchAll: async () => {
         set({ isLoading: true });
         try {
+          // /events/my exige un compte — inutile de l'appeler pour un invité,
+          // il 401rait (et l'intercepteur global renvoie tout 401 vers Login,
+          // même quand l'appelant a son propre .catch()).
+          const isAuthenticated = useAuthStore.getState().isAuthenticated;
           const [list, mine] = await Promise.all([
             eventsService.getList(),
-            eventsService.getMyRegistrations().catch(() => []),
+            isAuthenticated ? eventsService.getMyRegistrations().catch(() => []) : Promise.resolve([]),
           ]);
           const registeredIds = new Set(mine.map((e) => e.id));
           set({ events: list.map((dto) => toStoreEvent(dto, registeredIds.has(dto.id))) });
@@ -93,15 +99,25 @@ export const useEventsStore = create<EventsState>()(
         }
       },
 
+      // Appelé sur réception de l'événement socket 'event:new' — diffusé à
+      // tous les comptes connectés ; déduplication par id au cas où l'auteur
+      // (organisateur pro) le recevrait aussi en écho de sa propre création.
+      receiveEvent: (dto) => set((s) => (
+        s.events.some((existing) => existing.id === dto.id)
+          ? s
+          : { events: [toStoreEvent(dto, false), ...s.events] }
+      )),
+
       fetchById: async (eventId) => {
         const existing = get().events.find((e) => e.id === eventId);
         if (existing) {
           return existing;
         }
 
+        const isAuthenticated = useAuthStore.getState().isAuthenticated;
         const [dto, mine] = await Promise.all([
           eventsService.getDetail(eventId),
-          eventsService.getMyRegistrations().catch(() => []),
+          isAuthenticated ? eventsService.getMyRegistrations().catch(() => []) : Promise.resolve([]),
         ]);
         const isRegistered = mine.some((e) => e.id === eventId);
         const event = toStoreEvent(dto, isRegistered);

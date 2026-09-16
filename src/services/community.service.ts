@@ -19,7 +19,7 @@ export interface FeedPost extends AuthorInfo {
   id: string;
   content: string;
   imageUrl?: string;
-  type: 'post' | 'recipe' | 'review';
+  type: 'post' | 'recipe' | 'review' | 'event';
   likes: string[];
   comments: PostComment[];
   createdAt: string;
@@ -125,7 +125,7 @@ export interface Story extends AuthorInfo {
 
 export interface CreatePostPayload {
   content: string;
-  type: 'post' | 'recipe' | 'review';
+  type: 'post' | 'recipe' | 'review' | 'event';
   imageBase64?: string;
   mimeType?: string;
 }

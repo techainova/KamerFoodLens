@@ -11,6 +11,7 @@ import { useColors } from '@/hooks/useAppTheme';
 import { SHADOW_SM } from '@/constants/theme';
 import { useForumStore, FORUM_CATEGORIES } from '@/store/forum.store';
 import { useAuthStore } from '@/store/auth.store';
+import { useAuthGate } from '@/hooks/useAuthGate';
 
 const CAT_COLORS: Record<string, string> = {
   Recettes:      '#E8591A',
@@ -38,6 +39,7 @@ export default function Forum() {
   const CATEGORIES = [allLabel, ...FORUM_CATEGORIES];
   const [activeCategory, setActiveCategory] = useState(allLabel);
   const [search, setSearch] = useState('');
+  const { requireAuth } = useAuthGate();
 
   const threads = useForumStore(s => s.threads);
   const isLoading = useForumStore(s => s.isLoading);
@@ -139,7 +141,7 @@ export default function Forum() {
                   </View>
                   <Text style={{ flex: 1, fontSize: 12, color: C.inkSoft }}>{thread.authorName} · {timeAgo(thread.createdAt)}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                    <TouchableOpacity onPress={() => void toggleThreadLike(thread.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <TouchableOpacity onPress={() => requireAuth(() => void toggleThreadLike(thread.id))} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                       <Icon name="Heart" size={13} color={likedByMe ? '#E8591A' : '#8C8278'} fill={likedByMe ? '#E8591A' : 'none'} />
                       <Text style={{ fontSize: 12, color: C.inkMute }}>{thread.likes.length}</Text>
                     </TouchableOpacity>
@@ -161,7 +163,7 @@ export default function Forum() {
 
       {/* FAB */}
       <TouchableOpacity
-        onPress={() => navigation.navigate('CreateThread')}
+        onPress={() => requireAuth(() => navigation.navigate('CreateThread'))}
         style={{ position: 'absolute', bottom: 24, right: 20, width: 52, height: 52, borderRadius: 26, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center', shadowColor: '#E8591A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 6 }}
         activeOpacity={0.85}
       >

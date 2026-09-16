@@ -146,6 +146,13 @@
     "noResults": "Aucun résultat",
     "filterByRegion": "Filtrer par région",
     "yourStory": "Votre histoire",
+    "shortcutScan": "Nouveau scan",
+    "shortcutMessages": "Messagerie",
+    "shortcutHistory": "Mon historique",
+    "shortcutRestaurants": "Restaurants",
+    "shortcutEvents": "Événements",
+    "gamesTeaser": "Quiz, tombola et badges vous attendent",
+    "gamesTeaserAuthed": "Vous êtes niveau {{level}} — continuez à jouer",
     "addStoryTitle": "Ajouter une histoire",
     "addStoryPlaceholder": "Prenez une photo de votre plat",
     "addStoryCaptionLabel": "Légende",
@@ -224,6 +231,16 @@
     "tombola": "Tirage tombola dans 2 jours",
     "tombolaDesc": "Vous avez 3 tickets en jeu"
   },
+  "quickActions": {
+    "scanPhoto": "Scanner une photo",
+    "scanPhotoDesc": "Prenez ou choisissez une photo de votre plat",
+    "scanVoice": "Décrire à l'oral ou en texte",
+    "scanVoiceDesc": "Dites-nous ce que vous mangez",
+    "addStory": "Ajouter une histoire",
+    "addStoryDesc": "Partagez un plat avec la communauté",
+    "history": "Voir mon historique",
+    "historyDesc": "Retrouvez vos plats scannés récemment"
+  },
   "scanner": {
     "title": "Scanner un plat",
     "photo": "Photo",
@@ -244,6 +261,8 @@
     "addToJournal": "Ajouter au journal",
     "favoriteError": "Impossible d'enregistrer le favori.",
     "journalError": "Impossible d'ajouter au journal.",
+    "guestLimitTitle": "Créez votre compte gratuit",
+    "guestLimitMsg": "Vous avez utilisé votre scan gratuit. Créez un compte pour continuer à scanner vos plats.",
     "history": "Historique des scans",
     "frame": "Cadrez le plat dans le cadre",
     "gallery": "Galerie",
@@ -477,6 +496,7 @@
   },
   "community": {
     "feed": "Food Feed",
+    "feedEmpty": "Aucune publication pour l'instant — soyez le premier à partager quelque chose !",
     "forum": "Forum",
     "forYou": "Pour vous",
     "following": "Abonnements",
@@ -508,6 +528,8 @@
     "postTypeRecipe": "Recette",
     "postTypeQuestion": "Question",
     "postTypeReview": "Avis",
+    "postTypeEvent": "Événement",
+    "postPlaceholderEvent": "Annoncez votre événement — quoi, quand, où...",
     "audiencePublic": "Public",
     "audienceSubscribers": "Abonnés",
     "audienceFriends": "Amis",
@@ -530,6 +552,13 @@
     "newThreadTitle": "Nouvelle discussion",
     "postError": "Impossible de publier. Réessayez.",
     "actionError": "Une erreur est survenue. Réessayez."
+  },
+  "messages": {
+    "title": "Messagerie",
+    "empty": "Aucune conversation pour l'instant. Contactez un restaurant depuis sa page pour démarrer une discussion.",
+    "noMessagesYet": "Aucun message pour l'instant",
+    "placeholder": "Écrivez un message...",
+    "contactError": "Impossible de démarrer la conversation."
   },
   "events": {
     "title": "Événements",
@@ -1536,6 +1565,7 @@
   "proRegistration": {
     "title": "Compte Pro",
     "intro": "Parlez-nous de votre établissement. Notre équipe examinera votre demande et activera votre compte Pro sous quelques jours ouvrés.",
+    "introMandatory": "Dernière étape pour un compte établissement : ces informations sont nécessaires pour envoyer votre demande. Notre équipe l'examinera et activera votre compte Pro sous quelques jours ouvrés.",
     "businessName": "Nom de l'établissement",
     "businessType": "Type",
     "businessPhone": "Téléphone pro",

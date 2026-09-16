@@ -10,6 +10,7 @@ import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { useStoriesStore, buildStoryGroups } from '@/store/stories.store';
 import { useAuthStore } from '@/store/auth.store';
+import { useAuthGate } from '@/hooks/useAuthGate';
 import { SHADOW_SM } from '@/constants/theme';
 
 function timeAgo(iso: string): string {
@@ -27,11 +28,14 @@ export default function AllStories() {
   const isLoading = useStoriesStore((s) => s.isLoading);
   const fetchAll = useStoriesStore((s) => s.fetchAll);
   const user = useAuthStore((s) => s.user);
+  const { requireAuth } = useAuthGate();
 
   useEffect(() => {
-    void fetchAll();
+    // Les histoires exigent un compte côté backend (personnalisation par
+    // spectateur) — inutile d'appeler l'endpoint pour un invité, il 401ra.
+    if (user) void fetchAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user]);
 
   const groups = useMemo(() => buildStoryGroups(stories, user?.id), [stories, user?.id]);
 
@@ -44,7 +48,7 @@ export default function AllStories() {
           <Icon name="ArrowLeft" size={22} color={C.ink} />
         </TouchableOpacity>
         <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>{t('home.dishStories')}</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('StoryCreatorCamera')} style={{ padding: 4 }}>
+        <TouchableOpacity onPress={() => requireAuth(() => navigation.navigate('StoryCreatorCamera'))} style={{ padding: 4 }}>
           <Icon name="Plus" size={22} color={C.primary} />
         </TouchableOpacity>
       </View>

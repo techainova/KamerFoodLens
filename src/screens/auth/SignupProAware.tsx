@@ -45,15 +45,24 @@ export default function SignupProAware({ navigation }: Props) {
     }
     setLoading(true);
     try {
+      const normalizedEmail = email.toLowerCase().trim();
       await authService.signup({
         firstName,
         lastName,
-        email: email.toLowerCase().trim(),
+        email: normalizedEmail,
         phone,
         password,
         isBusiness,
       });
-      navigation.navigate('OTP', { email: email.toLowerCase().trim(), isBusiness });
+      // Compte établissement : étape obligatoire "infos établissement" avant
+      // l'OTP (voir ProRegistration.tsx) — le compte existe déjà (email de
+      // vérification envoyé), mais la demande Pro n'est envoyée qu'une fois
+      // le token obtenu à la vérification.
+      if (isBusiness) {
+        navigation.navigate('ProRegistration', { fromSignup: true, email: normalizedEmail });
+      } else {
+        navigation.navigate('OTP', { email: normalizedEmail, isBusiness: false });
+      }
     } catch (err) {
       if (__DEV__) {
         console.warn('[KFL][SignupProAware] échec de l\'inscription :', err);

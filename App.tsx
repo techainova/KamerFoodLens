@@ -2,8 +2,6 @@
 import '@/i18n';
 import React, { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -28,50 +26,39 @@ import {
   JetBrainsMono_700Bold,
 } from '@expo-google-fonts/jetbrains-mono';
 
-import { useAuthStore } from '@/store/auth.store';
 import { useUIStore } from '@/store/ui.store';
+import { useAuthStore } from '@/store/auth.store';
 import i18n from '@/i18n';
-import Splash     from '@/screens/auth/Splash';
-import Onboarding from '@/screens/auth/Onboarding';
-import Login      from '@/screens/auth/Login';
-import Signup     from '@/screens/auth/Signup';
-import OTP        from '@/screens/auth/OTP';
-import { AppNavigator } from '@/navigation/AppNavigator';
-import type { RootStackParamList } from '@/navigation/types';
+import { RootNavigator } from '@/navigation/RootNavigator';
+import { socketService } from '@/services/socket.service';
 
-const Stack  = createNativeStackNavigator<RootStackParamList>();
 const client = new QueryClient();
 
-function RootNavigator() {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+export default function App() {
+  // Langue persistée (réglages) -> i18n, indépendant de la navigation.
   const language = useUIStore((s) => s.language);
-
   useEffect(() => {
     if (language && i18n.language !== language) {
       i18n.changeLanguage(language);
     }
   }, [language]);
 
-  return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {isAuthenticated ? (
-          <Stack.Screen name="App" component={AppNavigator} />
-        ) : (
-          <>
-            <Stack.Screen name="Splash"     component={Splash}     options={{ animation: 'fade' }} />
-            <Stack.Screen name="Onboarding" component={Onboarding} />
-            <Stack.Screen name="Login"      component={Login} />
-            <Stack.Screen name="Signup"     component={Signup} />
-            <Stack.Screen name="OTP"        component={OTP as any} />
-          </>
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
-}
+  // Diffusion temps réel (nouvelles stories/événements) pour toute la durée
+  // de vie de l'app, invités compris — voir socket.service.ts#connectContentFeed.
+  useEffect(() => {
+    socketService.connectContentFeed();
+    return () => socketService.disconnectContentFeed();
+  }, []);
 
-export default function App() {
+  // Messagerie : exige un compte (contrairement au fil ci-dessus) — connectée
+  // dès la connexion de l'utilisateur, coupée à la déconnexion.
+  const userId = useAuthStore((s) => s.user?.id);
+  useEffect(() => {
+    if (!userId) { socketService.disconnectMessaging(); return; }
+    socketService.connectMessaging(userId);
+    return () => socketService.disconnectMessaging();
+  }, [userId]);
+
   const [fontsLoaded] = useFonts({
     'Inter-Regular':              Inter_400Regular,
     'Inter-Medium':               Inter_500Medium,

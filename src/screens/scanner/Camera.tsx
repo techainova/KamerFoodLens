@@ -13,6 +13,8 @@ import * as ImagePicker from 'expo-image-picker';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { useFoodScanner } from '@/hooks/useFoodScanner';
+import { useAuthStore } from '@/store/auth.store';
+import { useGuestStore, FREE_SCAN_LIMIT } from '@/store/guest.store';
 
 type CameraNav = NativeStackNavigationProp<ScannerStackParams, 'Camera'>;
 type Mode = 'photo' | 'audio' | 'text';
@@ -56,6 +58,9 @@ export default function Camera() {
   const C = useColors();
   const { t } = useTranslation();
   const { isLoading, scanImage } = useFoodScanner();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const anonymousScanCount = useGuestStore((s) => s.anonymousScanCount);
+  const registerAnonymousScan = useGuestStore((s) => s.registerAnonymousScan);
 
   const [mode, setMode]         = useState<Mode>('photo');
   const [flashOn, setFlashOn]   = useState(false);
@@ -112,8 +117,23 @@ export default function Camera() {
   }, [isLoading, pulseAnim]);
 
   const handleScanResult = async (imageUri: string) => {
+    // Un scan gratuit avant inscription — au-delà, on invite à créer un compte
+    // plutôt que de bloquer silencieusement.
+    if (!isAuthenticated && anonymousScanCount >= FREE_SCAN_LIMIT) {
+      Alert.alert(
+        t('scanner.guestLimitTitle'),
+        t('scanner.guestLimitMsg'),
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('auth.signup'), onPress: () => navigation.navigate('Login' as never) },
+        ],
+      );
+      return;
+    }
+
     try {
       const result = await scanImage(imageUri);
+      if (!isAuthenticated) registerAnonymousScan();
       navigation.navigate('Result', {
         scanId: `scan-${Date.now()}`,
         classId: result.classId,

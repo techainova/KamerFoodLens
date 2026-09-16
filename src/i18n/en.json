@@ -146,6 +146,13 @@
     "noResults": "No results",
     "filterByRegion": "Filter by region",
     "yourStory": "Your story",
+    "shortcutScan": "New scan",
+    "shortcutMessages": "Messages",
+    "shortcutHistory": "My history",
+    "shortcutRestaurants": "Restaurants",
+    "shortcutEvents": "Events",
+    "gamesTeaser": "Quiz, tombola and badges await",
+    "gamesTeaserAuthed": "You're level {{level}} — keep playing",
     "addStoryTitle": "Add a story",
     "addStoryPlaceholder": "Take a photo of your dish",
     "addStoryCaptionLabel": "Caption",
@@ -224,6 +231,16 @@
     "tombola": "Lottery draw in 2 days",
     "tombolaDesc": "You have 3 tickets in play"
   },
+  "quickActions": {
+    "scanPhoto": "Scan a photo",
+    "scanPhotoDesc": "Take or pick a photo of your dish",
+    "scanVoice": "Describe by voice or text",
+    "scanVoiceDesc": "Tell us what you're eating",
+    "addStory": "Add a story",
+    "addStoryDesc": "Share a dish with the community",
+    "history": "View my history",
+    "historyDesc": "Find your recently scanned dishes"
+  },
   "scanner": {
     "title": "Scan a dish",
     "photo": "Photo",
@@ -244,6 +261,8 @@
     "addToJournal": "Add to journal",
     "favoriteError": "Could not save this favorite.",
     "journalError": "Could not add to journal.",
+    "guestLimitTitle": "Create your free account",
+    "guestLimitMsg": "You've used your free scan. Create an account to keep scanning your dishes.",
     "history": "Scan history",
     "frame": "Frame the dish in the viewfinder",
     "gallery": "Gallery",
@@ -477,6 +496,7 @@
   },
   "community": {
     "feed": "Food Feed",
+    "feedEmpty": "No posts yet — be the first to share something!",
     "forum": "Forum",
     "forYou": "For you",
     "following": "Following",
@@ -508,6 +528,8 @@
     "postTypeRecipe": "Recipe",
     "postTypeQuestion": "Question",
     "postTypeReview": "Review",
+    "postTypeEvent": "Event",
+    "postPlaceholderEvent": "Announce your event — what, when, where...",
     "audiencePublic": "Public",
     "audienceSubscribers": "Followers",
     "audienceFriends": "Friends",
@@ -530,6 +552,13 @@
     "newThreadTitle": "New discussion",
     "postError": "Could not publish. Please try again.",
     "actionError": "Something went wrong. Please try again."
+  },
+  "messages": {
+    "title": "Messages",
+    "empty": "No conversations yet. Contact a restaurant from its page to start a chat.",
+    "noMessagesYet": "No messages yet",
+    "placeholder": "Write a message...",
+    "contactError": "Could not start the conversation."
   },
   "events": {
     "title": "Events",
@@ -1536,6 +1565,7 @@
   "proRegistration": {
     "title": "Pro Account",
     "intro": "Tell us about your business. Our team will review your request and activate your Pro account within a few business days.",
+    "introMandatory": "Last step for a business account: we need these details to submit your request. Our team will review it and activate your Pro account within a few business days.",
     "businessName": "Business name",
     "businessType": "Type",
     "businessPhone": "Business phone",

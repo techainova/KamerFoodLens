@@ -95,7 +95,14 @@ export default function EditProfile() {
       t('editProfile.deleteConfirmMsg'),
       [
         { text: t('editProfile.deleteConfirmCancel'), style: 'cancel' },
-        { text: t('editProfile.deleteConfirmAction'), style: 'destructive', onPress: () => clearAuth() },
+        {
+          text: t('editProfile.deleteConfirmAction'),
+          style: 'destructive',
+          onPress: () => {
+            clearAuth();
+            navigation.navigate('HomeTab', { screen: 'HomeScreen' });
+          },
+        },
       ],
     );
   };

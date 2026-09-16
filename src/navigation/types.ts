@@ -48,6 +48,8 @@ export type HomeStackParams = {
   Tombola:            undefined;
   Badges:             undefined;
   MapScreen:          undefined;
+  ConversationsList:  undefined;
+  ChatThread:         { conversationId: string; otherUser: { id: string; name: string; avatar?: string; role: 'standard' | 'pro' | 'admin' } };
   ProfileScreen:      undefined;
   EditProfile:        undefined;
   Settings:           undefined;
@@ -154,17 +156,25 @@ export type UserV3StackParams = {
   HomeProAware:           undefined;
 };
 
-export type RootStackParams = {
-  Auth: undefined;
-  App:  undefined;
-};
-
+// Racine unique : l'app (onglets) est toujours montée, les écrans d'auth sont
+// des modaux atteignables depuis n'importe où via navigation.navigate('Login').
 export type RootStackParamList = {
   Splash:          undefined;
   Onboarding:      undefined;
   Login:           undefined;
-  Signup:          undefined;
   SignupProAware:  undefined;
-  OTP:             { email: string; isBusiness?: boolean };
+  // Étape établissement, avant l'OTP : le compte n'a pas encore de token, donc
+  // ce formulaire ne peut pas encore appeler /pro/upgrade — il transmet ses
+  // champs à OTP, qui les soumettra une fois le token obtenu.
+  ProRegistration: { fromSignup: true; email: string } | undefined;
+  OTP: {
+    email: string;
+    isBusiness?: boolean;
+    businessName?: string;
+    businessType?: string;
+    businessPhone?: string;
+    businessAddress?: string;
+    businessDescription?: string;
+  };
   App:             undefined;
 };

@@ -10,6 +10,7 @@ import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { useAuthStore } from '@/store/auth.store';
 import { SHADOW_SM, SHADOW_MD, SHADOW_LG } from '@/constants/theme';
+import { onTabBarScroll } from '@/navigation/tabBarScroll';
 
 const TAB_KEYS = ['tabPublications', 'tabEvents', 'tabFormations', 'tabReviews'] as const;
 const POST_COLORS = ['#E8591A', '#2E7D32', '#F9A825', '#1A237E', '#E8591A', '#2E7D32', '#F9A825', '#1A237E', '#E8591A'];
@@ -46,7 +47,13 @@ export default function ProfilePro() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
+        onScroll={onTabBarScroll}
+        scrollEventThrottle={16}
+      >
 
         {/* Avatar & identity */}
         <View style={{ alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16 }}>

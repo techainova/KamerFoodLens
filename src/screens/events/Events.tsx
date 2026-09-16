@@ -11,6 +11,7 @@ import { useColors } from '@/hooks/useAppTheme';
 import { SHADOW_MD, SHADOW_SM } from '@/constants/theme';
 import { useEventsStore } from '@/store/events.store';
 import type { KflEvent } from '@/store/events.store';
+import { useAuthGate } from '@/hooks/useAuthGate';
 
 type FilterId = 'all' | 'free' | 'week' | 'festival' | 'workshop' | 'contest';
 
@@ -51,6 +52,7 @@ export default function Events() {
   const isLoading = useEventsStore(s => s.isLoading);
   const fetchAll = useEventsStore(s => s.fetchAll);
   const toggleRegister = useEventsStore(s => s.toggleRegister);
+  const { requireAuth } = useAuthGate();
 
   useEffect(() => {
     void fetchAll();
@@ -148,7 +150,7 @@ export default function Events() {
                     </View>
 
                     <TouchableOpacity
-                      onPress={() => void toggleRegister(event.id)}
+                      onPress={() => requireAuth(() => void toggleRegister(event.id))}
                       style={{ paddingVertical: 9, borderRadius: 12, backgroundColor: event.isRegistered ? '#E3F0E4' : '#E8591A', alignItems: 'center' }}
                     >
                       <Text style={{ fontSize: 13, fontWeight: '700', color: event.isRegistered ? '#2E7D32' : '#fff' }}>
@@ -214,7 +216,7 @@ export default function Events() {
                     </View>
 
                     <TouchableOpacity
-                      onPress={() => void toggleRegister(event.id)}
+                      onPress={() => requireAuth(() => void toggleRegister(event.id))}
                       style={{ paddingRight: 14, justifyContent: 'center' }}
                     >
                       <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: event.isRegistered ? '#E3F0E4' : '#E8591A15', borderWidth: 1.5, borderColor: event.isRegistered ? '#2E7D32' : '#E8591A40', alignItems: 'center', justifyContent: 'center' }}>

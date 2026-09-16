@@ -4,6 +4,13 @@
 import { io, type Socket } from 'socket.io-client';
 import { API_CONFIG } from './config';
 import { useAuthStore } from '@/store/auth.store';
+import { useStoriesStore } from '@/store/stories.store';
+import { useEventsStore } from '@/store/events.store';
+import { useFeedStore } from '@/store/feed.store';
+import { useMessagesStore } from '@/store/messages.store';
+import type { Story, FeedPost } from './community.service';
+import type { KflEvent as KflEventDto } from './events.service';
+import type { KflMessage } from './messages.service';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface OrderStatusUpdate {
@@ -33,6 +40,13 @@ function socketOptions() {
 class SocketService {
   private orders: Socket | null = null;
   private events: Socket | null = null;
+  // Connexions distinctes de `events` ci-dessus : celui-là ne vit que le temps
+  // d'un écran d'événement live (join/leave room) ; celles-ci restent ouvertes
+  // pour toute la session app, pour recevoir les diffusions globales
+  // 'story:new'/'event:new' même en dehors de l'écran concerné.
+  private communityFeed: Socket | null = null;
+  private eventsFeed: Socket | null = null;
+  private messages: Socket | null = null;
 
   // ── Namespace /orders ──────────────────────────────────────────────────────
   connectOrders(onUpdate: (payload: OrderStatusUpdate) => void): void {
@@ -90,10 +104,71 @@ class SocketService {
     this.events = null;
   }
 
+  // ── Diffusion globale (stories, événements) ────────────────────────────────
+  // Connexion unique pour toute la durée de vie de l'app — invités compris
+  // (browse-first : voir les nouveautés en direct ne demande pas de compte).
+  connectContentFeed(): void {
+    if (!this.communityFeed) {
+      this.communityFeed = io(`${API_CONFIG.SOCKET_URL}/community`, socketOptions());
+      this.communityFeed.on('story:new', (story: Story) => {
+        useStoriesStore.getState().receiveStory(story);
+      });
+      this.communityFeed.on('post:new', (post: FeedPost) => {
+        useFeedStore.getState().receivePost(post);
+      });
+      this.communityFeed.on('connect_error', (err: Error) => {
+        console.warn('[Socket/community] connect_error:', err.message);
+      });
+    }
+
+    if (!this.eventsFeed) {
+      this.eventsFeed = io(`${API_CONFIG.SOCKET_URL}/events`, socketOptions());
+      this.eventsFeed.on('event:new', (event: KflEventDto) => {
+        useEventsStore.getState().receiveEvent(event);
+      });
+      this.eventsFeed.on('connect_error', (err: Error) => {
+        console.warn('[Socket/events-feed] connect_error:', err.message);
+      });
+    }
+  }
+
+  disconnectContentFeed(): void {
+    this.communityFeed?.disconnect();
+    this.communityFeed = null;
+    this.eventsFeed?.disconnect();
+    this.eventsFeed = null;
+  }
+
+  // ── Namespace /messages ─────────────────────────────────────────────────────
+  // Contrairement au fil (accessible en invité), la messagerie exige un
+  // compte : on ne se connecte qu'avec un userId réel, pour rejoindre sa
+  // propre room et recevoir les messages entrants même écran fermé.
+  connectMessaging(userId: string): void {
+    if (this.messages?.connected) return;
+
+    this.messages = io(`${API_CONFIG.SOCKET_URL}/messages`, socketOptions());
+    this.messages.on('connect', () => {
+      this.messages?.emit('message:join', userId);
+    });
+    this.messages.on('message:new', (message: KflMessage) => {
+      useMessagesStore.getState().receiveMessage(message);
+    });
+    this.messages.on('connect_error', (err: Error) => {
+      console.warn('[Socket/messages] connect_error:', err.message);
+    });
+  }
+
+  disconnectMessaging(): void {
+    this.messages?.disconnect();
+    this.messages = null;
+  }
+
   // ── Utilitaires ────────────────────────────────────────────────────────────
   disconnectAll(): void {
     this.disconnectOrders();
     this.leaveEventLive();
+    this.disconnectContentFeed();
+    this.disconnectMessaging();
   }
 }
 

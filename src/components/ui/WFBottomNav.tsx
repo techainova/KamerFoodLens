@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
-  View, Pressable, Platform,
+  Animated, View, Pressable, Platform,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { colors, shadows } from '@/constants/theme';
 import { useColors } from '@/hooks/useAppTheme';
 import { useFontScale, useBoldText } from '@/hooks/useAccessibility';
+import { tabBarTranslateY, resetTabBarVisibility } from '@/navigation/tabBarScroll';
 import Icon, { type IconName } from './Icon';
 
 export type TabName = 'home' | 'search' | 'scanner' | 'favorites' | 'pro' | 'profile';
@@ -51,17 +52,34 @@ export function WFBottomNav({ activeTab, onTabPress, isPro = false }: Props) {
   const boldText = useBoldText();
   const TABS = isPro ? TABS_PRO : TABS_STANDARD;
 
+  // La barre ne se (dé)monte qu'en arrivant/quittant la racine d'un onglet —
+  // elle doit toujours réapparaître visible, jamais figée hors-écran si le
+  // défilement l'avait cachée avant de naviguer ailleurs puis de revenir.
+  useEffect(() => {
+    tabBarTranslateY.setValue(0);
+    resetTabBarVisibility();
+  }, []);
+
   return (
-    <View style={[
+    <Animated.View style={[
       {
+        position: 'absolute',
+        left: 16,
+        right: 16,
+        bottom: insets.bottom + 14,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: C.surface,
+        // Îlot flottant, nettement transparent, bouts arrondis — décalé du
+        // bord bas plutôt que collé dessus.
+        backgroundColor: `${C.surface}B3`,
+        borderRadius: 32,
+        paddingHorizontal: 8,
         paddingTop: 8,
-        paddingBottom: insets.bottom + 8,
-        minHeight: 64,
-        borderTopWidth: 1,
-        borderTopColor: C.border,
+        paddingBottom: 8,
+        minHeight: 60,
+        borderWidth: 1,
+        borderColor: `${C.border}80`,
+        transform: [{ translateY: tabBarTranslateY }],
       },
       shadows.md,
     ]}>
@@ -142,6 +160,6 @@ export function WFBottomNav({ activeTab, onTabPress, isPro = false }: Props) {
           </Pressable>
         );
       })}
-    </View>
+    </Animated.View>
   );
 }

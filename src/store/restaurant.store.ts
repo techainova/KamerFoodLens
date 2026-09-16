@@ -42,6 +42,7 @@ export interface Restaurant {
   address:      string;
   phone:        string;
   imageUrl?:    string;
+  ownerId:      string;
 }
 
 function priceRangeToSymbol(priceRange: 1 | 2 | 3): '€' | '€€' | '€€€' {
@@ -85,6 +86,7 @@ function toStoreRestaurant(dto: RestaurantDto, menuItems: MenuItemDto[]): Restau
     address: dto.address,
     phone: dto.phone ?? '',
     imageUrl: dto.imageUrl,
+    ownerId: dto.ownerId,
     menu: menuItems.map(toStoreMenuItem),
   };
 }

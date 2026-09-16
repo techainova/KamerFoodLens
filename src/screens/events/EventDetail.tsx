@@ -10,6 +10,7 @@ import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { SHADOW_SM } from '@/constants/theme';
 import { useEventsStore, type KflEvent } from '@/store/events.store';
+import { useAuthGate } from '@/hooks/useAuthGate';
 
 const CATEGORY_COLORS: Record<string, string> = {
   'Festival': '#E8591A',
@@ -33,6 +34,7 @@ export default function EventDetail() {
 
   const fetchById = useEventsStore((s) => s.fetchById);
   const toggleRegister = useEventsStore((s) => s.toggleRegister);
+  const { requireAuth } = useAuthGate();
 
   const [event, setEvent] = useState<KflEvent | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,14 +67,16 @@ export default function EventDetail() {
     }
   }, [storeEvent]);
 
-  const handleToggleRegister = async () => {
+  const handleToggleRegister = () => {
     if (!eventId) return;
-    setRegistering(true);
-    try {
-      await toggleRegister(eventId);
-    } finally {
-      setRegistering(false);
-    }
+    requireAuth(async () => {
+      setRegistering(true);
+      try {
+        await toggleRegister(eventId);
+      } finally {
+        setRegistering(false);
+      }
+    });
   };
 
   if (loading) {

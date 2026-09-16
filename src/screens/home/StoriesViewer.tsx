@@ -20,6 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Icon from '@/components/ui/Icon';
 import { useStoriesStore, buildStoryGroups, type StoryGroup } from '@/store/stories.store';
 import { useAuthStore } from '@/store/auth.store';
+import { useAuthGate } from '@/hooks/useAuthGate';
 import StoryPollSticker from './story-stickers/StoryPollSticker';
 import StoryQuizSticker from './story-stickers/StoryQuizSticker';
 import StorySliderSticker from './story-stickers/StorySliderSticker';
@@ -57,6 +58,7 @@ export default function StoriesViewer() {
   const getStoryReplies = useStoriesStore((s) => s.getStoryReplies);
   const getHighlightDetail = useStoriesStore((s) => s.getHighlightDetail);
   const user = useAuthStore((s) => s.user);
+  const { requireAuth } = useAuthGate();
 
   const [highlightGroup, setHighlightGroup] = useState<StoryGroup | null>(null);
 
@@ -271,18 +273,23 @@ export default function StoriesViewer() {
     );
   };
 
-  const handleSendReply = async () => {
+  const handleSendReply = () => {
     if (!story || !replyText.trim() || sendingReply) return;
-    const text = replyText.trim();
-    setSendingReply(true);
-    try {
-      await replyToStory(story.id, text);
-      setReplyText('');
-    } catch {
-      Alert.alert(t('common.error'), t('community.postError'));
-    } finally {
-      setSendingReply(false);
-    }
+    // Répondre exige un compte — sans cette vérification, l'appel 401 pour un
+    // invité et l'intercepteur global le renvoie brutalement vers Login sans
+    // explication au lieu de lui proposer de se connecter.
+    requireAuth(async () => {
+      const text = replyText.trim();
+      setSendingReply(true);
+      try {
+        await replyToStory(story.id, text);
+        setReplyText('');
+      } catch {
+        Alert.alert(t('common.error'), t('community.postError'));
+      } finally {
+        setSendingReply(false);
+      }
+    });
   };
 
   if (!group || !story) return null;
@@ -353,6 +360,8 @@ export default function StoriesViewer() {
                   <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>{story.initials[0]}</Text>
                 </View>
                 <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700' }}>{group.authorName}</Text>
+                {/* Compte pro = admin-approuvé, certifie un vrai restaurant/établissement. */}
+                {story.authorRole === 'pro' && <Text style={{ fontSize: 12 }}>✅</Text>}
                 {!!highlightId && <Icon name="Award" size={14} color="#F9A825" />}
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -381,13 +390,13 @@ export default function StoriesViewer() {
             pointerEvents="box-none"
           >
             {story.poll && (
-              <StoryPollSticker poll={story.poll} onVote={(optionIndex) => void voteStoryPoll(story.id, optionIndex)} />
+              <StoryPollSticker poll={story.poll} onVote={(optionIndex) => requireAuth(() => void voteStoryPoll(story.id, optionIndex))} />
             )}
             {story.quiz && (
-              <StoryQuizSticker quiz={story.quiz} onAnswer={(optionIndex) => void answerStoryQuiz(story.id, optionIndex)} />
+              <StoryQuizSticker quiz={story.quiz} onAnswer={(optionIndex) => requireAuth(() => void answerStoryQuiz(story.id, optionIndex))} />
             )}
             {story.slider && (
-              <StorySliderSticker slider={story.slider} onRate={(value) => void rateStorySlider(story.id, value)} />
+              <StorySliderSticker slider={story.slider} onRate={(value) => requireAuth(() => void rateStorySlider(story.id, value))} />
             )}
           </View>
         )}
@@ -438,7 +447,7 @@ export default function StoriesViewer() {
                   {QUICK_REACTIONS.map((emoji) => (
                     <TouchableOpacity
                       key={emoji}
-                      onPress={() => void reactToStory(story.id, emoji)}
+                      onPress={() => requireAuth(() => void reactToStory(story.id, emoji))}
                       style={{
                         width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center',
                         backgroundColor: story.myReactionEmoji === emoji ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.3)',

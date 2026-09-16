@@ -12,6 +12,7 @@ import { useColors } from '@/hooks/useAppTheme';
 import { recipesService, type Recipe } from '@/services/recipes.service';
 import { useFavoritesStore } from '@/store/favorites.store';
 import { useAccessibilityStore } from '@/store/accessibility.store';
+import { useAuthGate } from '@/hooks/useAuthGate';
 
 const TAB_KEYS = ['ingredients', 'steps', 'nutrition', 'reviews'] as const;
 type TabKey = typeof TAB_KEYS[number];
@@ -40,6 +41,7 @@ export default function RecipeV1() {
   const isSaved = useFavoritesStore((s) => s.isSaved);
   const toggleFavorite = useFavoritesStore((s) => s.toggle);
   const fetchFavorites = useFavoritesStore((s) => s.fetchAll);
+  const { requireAuth } = useAuthGate();
   const ttsEnabled = useAccessibilityStore((s) => s.ttsEnabled);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
@@ -161,7 +163,7 @@ export default function RecipeV1() {
           </TouchableOpacity>
         )}
         <TouchableOpacity
-          onPress={() => void toggleFavorite('recipe', recipe.id)}
+          onPress={() => requireAuth(() => void toggleFavorite('recipe', recipe.id))}
           style={{ width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: bookmarked ? '#E8591A' : C.border, backgroundColor: bookmarked ? '#FEF0E8' : C.surface, alignItems: 'center', justifyContent: 'center' }}
         >
           <Icon name="Bookmark" size={16} color={bookmarked ? '#E8591A' : '#6D4C41'} fill={bookmarked ? '#E8591A' : 'none'} />

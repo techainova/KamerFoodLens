@@ -8,7 +8,9 @@ import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/types';
 import { useAuthStore } from '@/store/auth.store';
+import { resetToRoute, resetToProConfirmation } from '@/navigation/navigationRef';
 import { authService } from '@/services/auth.service';
+import { proService } from '@/services/pro.service';
 import { isNetworkError } from '@/utils/apiError';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
@@ -46,6 +48,34 @@ export default function OTP({ navigation, route }: Props) {
       const res = await authService.verifyOtp({ email, code });
       setUser(res.user);
       setTokens(res.accessToken, res.refreshToken);
+      // Vide la pile racine (Login/Signup/ProRegistration/OTP) et repart sur
+      // l'app — via le ref de navigation, voir Splash.tsx pour pourquoi pas
+      // navigation.replace/navigate.
+      // "Établissement" coché à l'inscription -> le formulaire Pro rempli
+      // avant l'OTP (voir ProRegistration.tsx) est envoyé maintenant qu'on a
+      // un token, puis on ouvre directement l'écran de confirmation.
+      if (route.params?.isBusiness) {
+        const {
+          businessName, businessType, businessPhone, businessAddress, businessDescription,
+        } = route.params;
+        try {
+          if (businessName && businessType && businessPhone && businessAddress) {
+            await proService.upgrade({
+              businessName,
+              businessType,
+              phone: businessPhone,
+              address: businessAddress,
+              description: businessDescription,
+            });
+          }
+        } catch {
+          // Le compte est bien vérifié malgré tout — la demande Pro pourra
+          // être renvoyée plus tard depuis les réglages si l'envoi échoue ici.
+        }
+        resetToProConfirmation(businessName ?? '');
+      } else {
+        resetToRoute('App');
+      }
     } catch (err) {
       if (__DEV__) {
         console.warn('[KFL][OTP] échec de la vérification :', err);

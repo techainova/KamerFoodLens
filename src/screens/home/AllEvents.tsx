@@ -10,6 +10,7 @@ import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { useEventsStore } from '@/store/events.store';
 import { SHADOW_SM } from '@/constants/theme';
+import { useAuthGate } from '@/hooks/useAuthGate';
 
 function formatDateLabel(iso: string): string {
   return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
@@ -24,6 +25,7 @@ export default function AllEvents() {
   const isLoading = useEventsStore(s => s.isLoading);
   const fetchAll = useEventsStore(s => s.fetchAll);
   const toggleRegister = useEventsStore(s => s.toggleRegister);
+  const { requireAuth } = useAuthGate();
 
   useEffect(() => {
     void fetchAll();
@@ -74,7 +76,7 @@ export default function AllEvents() {
                     <Text style={{ color: C.inkMute, fontSize: 11 }}>{ev.registeredCount} {t('events.registeredCount')}</Text>
                   </View>
                   <TouchableOpacity
-                    onPress={() => void toggleRegister(ev.id)}
+                    onPress={() => requireAuth(() => void toggleRegister(ev.id))}
                     style={{ height: 36, paddingHorizontal: 16, backgroundColor: ev.isRegistered ? C.successSoft : C.primary, borderRadius: 18, alignItems: 'center', justifyContent: 'center', borderWidth: ev.isRegistered ? 1 : 0, borderColor: C.success }}
                   >
                     <Text style={{ color: ev.isRegistered ? C.success : '#fff', fontSize: 12, fontWeight: '700' }}>

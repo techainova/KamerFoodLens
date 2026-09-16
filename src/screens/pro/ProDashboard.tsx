@@ -12,6 +12,7 @@ import { useColors } from '@/hooks/useAppTheme';
 import { SHADOW_SM, SHADOW_MD } from '@/constants/theme';
 import { proService, type ProOrderSummary } from '@/services/pro.service';
 import { useAuthStore } from '@/store/auth.store';
+import { onTabBarScroll } from '@/navigation/tabBarScroll';
 
 type QuickAction = {
   icon: 'ShoppingBag' | 'DollarSign' | 'ChefHat' | 'Tag' | 'Users' | 'BarChart2';
@@ -139,7 +140,12 @@ export default function ProDashboard() {
         </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        onScroll={onTabBarScroll}
+        scrollEventThrottle={16}
+      >
 
         {/* Revenue hero */}
         <View style={{ paddingHorizontal: 16, paddingTop: 20 }}>

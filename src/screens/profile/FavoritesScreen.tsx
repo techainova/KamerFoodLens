@@ -11,6 +11,7 @@ import { useColors } from '@/hooks/useAppTheme';
 import { useFavoritesStore } from '@/store/favorites.store';
 import type { FavoriteItem } from '@/services/users.service';
 import { SHADOW_SM } from '@/constants/theme';
+import { onTabBarScroll } from '@/navigation/tabBarScroll';
 
 const FILTER_KEYS = ['all', 'recipe', 'restaurant'] as const;
 type FilterKey = typeof FILTER_KEYS[number];
@@ -86,7 +87,13 @@ export default function FavoritesScreen() {
           <ActivityIndicator color="#E8591A" />
         </View>
       ) : (
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 100 }}
+          showsVerticalScrollIndicator={false}
+          onScroll={onTabBarScroll}
+          scrollEventThrottle={16}
+        >
           {filtered.length === 0 ? (
             <View style={{ alignItems: 'center', paddingTop: 80 }}>
               <Icon name="Heart" size={48} color={C.inkMute} />

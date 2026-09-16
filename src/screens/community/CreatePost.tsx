@@ -10,6 +10,7 @@ import * as ImagePicker from 'expo-image-picker';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { useFeedStore } from '@/store/feed.store';
+import { useAuthStore } from '@/store/auth.store';
 import type { CreatePostPayload } from '@/services/community.service';
 
 const SUGGESTED_TAGS = ['#Mbongo', '#Ndolé', '#PouletDG', '#Kpwem', '#Achu', '#Cameroun', '#Recette'];
@@ -19,10 +20,15 @@ export default function CreatePost() {
   const C = useColors();
   const { t } = useTranslation();
 
+  const isPro = useAuthStore((s) => s.user?.role === 'pro');
+
+  // "Événement" réservé aux comptes pro (vérifié aussi côté serveur) — une
+  // annonce légère dans le fil, distincte du module Events complet.
   const POST_TYPES: { key: CreatePostPayload['type']; label: string }[] = [
     { key: 'post', label: t('community.postTypePost') },
     { key: 'recipe', label: t('community.postTypeRecipe') },
     { key: 'review', label: t('community.postTypeReview') },
+    ...(isPro ? [{ key: 'event' as const, label: t('community.postTypeEvent') }] : []),
   ];
 
   const [postType, setPostType] = useState<CreatePostPayload['type']>('post');
@@ -112,7 +118,11 @@ export default function CreatePost() {
             <TextInput
               value={text}
               onChangeText={setText}
-              placeholder={postType === 'recipe' ? t('community.postPlaceholderRecipe') : t('community.postPlaceholderPost')}
+              placeholder={
+                postType === 'recipe' ? t('community.postPlaceholderRecipe')
+                : postType === 'event' ? t('community.postPlaceholderEvent')
+                : t('community.postPlaceholderPost')
+              }
               placeholderTextColor="#8C8278"
               multiline
               style={{ fontSize: 15, color: C.ink, lineHeight: 24, minHeight: 140, textAlignVertical: 'top' }}

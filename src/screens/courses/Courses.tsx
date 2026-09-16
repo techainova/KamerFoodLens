@@ -10,6 +10,7 @@ import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { SHADOW_SM, SHADOW_MD } from '@/constants/theme';
 import { useCoursesStore } from '@/store/courses.store';
+import { useAuthStore } from '@/store/auth.store';
 import type { CourseLevel } from '@/services/courses.service';
 
 type FilterId = 'all' | CourseLevel;
@@ -47,12 +48,15 @@ export default function Courses() {
   const isLoading = useCoursesStore((s) => s.isLoading);
   const fetchAll = useCoursesStore((s) => s.fetchAll);
   const fetchMyCourses = useCoursesStore((s) => s.fetchMyCourses);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   useEffect(() => {
     void fetchAll();
-    void fetchMyCourses();
+    // "Mes formations" exige un compte — inutile d'appeler l'endpoint pour un
+    // invité, il 401rait et déclencherait la redirection Login de l'intercepteur.
+    if (isAuthenticated) void fetchMyCourses();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isAuthenticated]);
 
   const inProgress = useMemo(
     () => myCourses.filter((c) => c.progressPct > 0 && c.progressPct < 100),

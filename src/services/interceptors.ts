@@ -3,6 +3,7 @@
 
 import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/store/auth.store';
+import { navigateToLogin } from '@/navigation/navigationRef';
 import { API_CONFIG, ENDPOINTS } from './config';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -150,7 +151,7 @@ export function applyInterceptors(instance: AxiosInstance): void {
       const alreadyRetried  = originalConfig?._retry === true;
 
       if (!is401 || isRefreshRoute || alreadyRetried) {
-        if (is401) useAuthStore.getState().clearAuth();
+        if (is401) { useAuthStore.getState().clearAuth(); navigateToLogin(); }
         return Promise.reject(error);
       }
 
@@ -193,6 +194,7 @@ export function applyInterceptors(instance: AxiosInstance): void {
 
       } catch {
         useAuthStore.getState().clearAuth();
+        navigateToLogin();
         drainQueue(null);
         return Promise.reject(error);
 

@@ -9,6 +9,8 @@ import { useColors } from '@/hooks/useAppTheme';
 import KFLLogo from '@/components/ui/KFLLogo';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/types';
+import { useGuestStore } from '@/store/guest.store';
+import { resetToRoute } from '@/navigation/navigationRef';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Onboarding'>;
 
@@ -20,14 +22,24 @@ const SLIDE_IMAGES = {
   slide3: require('../../../assets/onboarding/slide3.jpg'),
 } as const;
 
-export default function Onboarding({ navigation }: Props) {
+export default function Onboarding(_props: Props) {
     const C = useColors();
   const { t } = useTranslation();
   const [current, setCurrent] = useState(0);
+  const setHasSeenOnboarding = useGuestStore((s) => s.setHasSeenOnboarding);
+
+  // Onboarding ne mène plus à l'inscription forcée — on entre directement dans
+  // l'app en tant qu'invité ; l'inscription n'est demandée qu'au moment d'une
+  // action qui la nécessite réellement (voir useAuthGate). Passe par le ref de
+  // navigation racine plutôt que le `navigation` de l'écran — voir Splash.tsx.
+  const enterApp = () => {
+    setHasSeenOnboarding();
+    resetToRoute('App');
+  };
 
   const next = () => {
     if (current < SLIDE_KEYS.length - 1) setCurrent(current + 1);
-    else navigation.navigate('Login');
+    else enterApp();
   };
   const prev = () => { if (current > 0) setCurrent(current - 1); };
 
@@ -42,7 +54,7 @@ export default function Onboarding({ navigation }: Props) {
           <KFLLogo size={24} />
           <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 13, color: C.ink, fontWeight: '700' }}>KmerFoodLens</Text>
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+        <TouchableOpacity onPress={enterApp}>
           <Text style={{ fontSize: 13, color: C.inkMute, fontWeight: '500' }}>
             {t('common.skip')}
           </Text>

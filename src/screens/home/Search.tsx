@@ -11,6 +11,7 @@ import { useColors } from '@/hooks/useAppTheme';
 import { useSearchStore } from '@/store/search.store';
 import type { SearchResult } from '@/store/search.store';
 import { useRestaurantStore } from '@/store/restaurant.store';
+import { onTabBarScroll } from '@/navigation/tabBarScroll';
 
 const TABS = ['Plats', 'Restaurants', 'Tous'];
 
@@ -107,7 +108,13 @@ export default function Search() {
         ))}
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
+        onScroll={onTabBarScroll}
+        scrollEventThrottle={16}
+      >
 
         {/* Empty query → show history */}
         {!query.trim() && (

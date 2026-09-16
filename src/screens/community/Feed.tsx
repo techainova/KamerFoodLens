@@ -11,16 +11,10 @@ import { useColors } from '@/hooks/useAppTheme';
 import { useFeedStore } from '@/store/feed.store';
 import { useStoriesStore, buildStoryGroups } from '@/store/stories.store';
 import { useAuthStore } from '@/store/auth.store';
+import { useAuthGate } from '@/hooks/useAuthGate';
+import { timeAgo } from '@/utils/timeAgo';
 
 const TABS = ['Pour vous', 'Trending'];
-
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const h = Math.floor(diff / 3600000);
-  if (h < 1) return 'À l\'instant';
-  if (h < 24) return `${h}h`;
-  return `${Math.floor(h / 24)}j`;
-}
 
 export default function Feed() {
   const { t } = useTranslation();
@@ -32,6 +26,7 @@ export default function Feed() {
   const isLoading = useFeedStore(s => s.isLoading);
   const fetchPosts = useFeedStore(s => s.fetchAll);
   const toggleLike = useFeedStore(s => s.toggleLike);
+  const { requireAuth } = useAuthGate();
 
   const stories = useStoriesStore(s => s.stories);
   const fetchStories = useStoriesStore(s => s.fetchAll);
@@ -41,9 +36,11 @@ export default function Feed() {
 
   useEffect(() => {
     void fetchPosts();
-    void fetchStories();
+    // Les histoires exigent un compte côté backend (personnalisation par
+    // spectateur) — inutile d'appeler l'endpoint pour un invité, il 401ra.
+    if (user) void fetchStories();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user]);
 
   const sorted = [...posts].sort((a, b) => {
     if (activeTab === 1) return b.likes.length - a.likes.length;
@@ -80,7 +77,7 @@ export default function Feed() {
 
         {/* Stories */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 14, gap: 12 }}>
-          <TouchableOpacity onPress={() => navigation.navigate('StoryCreatorCamera')} style={{ alignItems: 'center', gap: 6 }}>
+          <TouchableOpacity onPress={() => requireAuth(() => navigation.navigate('StoryCreatorCamera'))} style={{ alignItems: 'center', gap: 6 }}>
             <View style={{ width: 62, height: 62, borderRadius: 31, padding: 2, borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#E5E0D8' }}>
               <View style={{ flex: 1, borderRadius: 28, backgroundColor: '#F5F0EB', alignItems: 'center', justifyContent: 'center' }}>
                 <Icon name="Plus" size={20} color="#8C8278" />
@@ -127,7 +124,11 @@ export default function Feed() {
                       <Text style={{ fontSize: 14, fontWeight: '700', color: post.avatarColor, fontFamily: 'Inter-Bold' }}>{post.initials[0]}</Text>
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink, fontFamily: 'Inter-Bold' }}>{post.authorName}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink, fontFamily: 'Inter-Bold' }}>{post.authorName}</Text>
+                        {/* Compte pro = admin-approuvé (cf. approveProRequest) — certifie que c'est un vrai restaurant/établissement. */}
+                        {post.authorRole === 'pro' && <Text style={{ fontSize: 13 }}>✅</Text>}
+                      </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 1 }}>
                         <View style={{ paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8, backgroundColor: badgeColor + '15' }}>
                           <Text style={{ fontSize: 10, fontWeight: '700', color: badgeColor, fontFamily: 'Inter-Bold' }}>{badge}</Text>
@@ -149,7 +150,7 @@ export default function Feed() {
 
                   {/* Actions */}
                   <View style={{ paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-                    <TouchableOpacity onPress={() => void toggleLike(post.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                    <TouchableOpacity onPress={() => requireAuth(() => void toggleLike(post.id))} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                       <Icon name="Heart" size={20} color={likedByMe ? '#E8591A' : '#8C8278'} fill={likedByMe ? '#E8591A' : 'none'} />
                       <Text style={{ fontSize: 13, color: likedByMe ? '#E8591A' : '#8C8278', fontWeight: '500' }}>{post.likes.length}</Text>
                     </TouchableOpacity>
@@ -167,7 +168,7 @@ export default function Feed() {
 
       {/* FAB */}
       <TouchableOpacity
-        onPress={() => navigation.navigate('CreatePost')}
+        onPress={() => requireAuth(() => navigation.navigate('CreatePost'))}
         style={{ position: 'absolute', bottom: 24, right: 20, width: 52, height: 52, borderRadius: 26, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center', shadowColor: '#E8591A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 6 }}
         activeOpacity={0.85}
       >

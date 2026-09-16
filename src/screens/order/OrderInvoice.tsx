@@ -9,22 +9,11 @@ import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { SHADOW_MD } from '@/constants/theme';
-import { ordersService, type Order, type OrderStatus } from '@/services/orders.service';
+import { ordersService, type Order } from '@/services/orders.service';
 import { useRestaurantStore } from '@/store/restaurant.store';
 import { socketService } from '@/services/socket.service';
-
-function statusStyle(status: OrderStatus, C: ReturnType<typeof useColors>): { icon: 'Check' | 'Clock' | 'X'; color: string; bg: string; border: string } {
-  switch (status) {
-    case 'pending':    return { icon: 'Clock', color: C.gold,    bg: C.goldSoft,    border: C.gold };
-    case 'confirmed':
-    case 'preparing':  return { icon: 'Clock', color: C.navy,    bg: C.navySoft,    border: C.navy };
-    case 'ready':
-    case 'delivering': return { icon: 'Check', color: C.success, bg: C.successSoft, border: C.success };
-    case 'completed':  return { icon: 'Check', color: C.success, bg: C.successSoft, border: C.success };
-    case 'cancelled':  return { icon: 'X',     color: C.error,   bg: C.errorSoft,   border: C.error };
-    default:           return { icon: 'Clock', color: C.inkMute, bg: C.surface2,    border: C.border };
-  }
-}
+import { getOrderStatusVisual } from '@/utils/orderStatus';
+import OrderStatusStepper from '@/components/ui/OrderStatusStepper';
 
 export default function OrderInvoice() {
   const navigation = useNavigation<any>();
@@ -90,7 +79,7 @@ export default function OrderInvoice() {
   }
 
   const dateStr = new Date(order.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-  const status = statusStyle(order.status, C);
+  const status = getOrderStatusVisual(order.status, C);
   const subtotalXAF = order.items.reduce((sum, i) => sum + i.priceXAF * i.qty, 0);
 
   return (
@@ -121,6 +110,10 @@ export default function OrderInvoice() {
             </View>
             <Text style={{ fontSize: 18, fontFamily: 'PlayfairDisplay-Bold', color: C.ink }}>{t(`order.statuses.${order.status}`)}</Text>
             <Text style={{ fontSize: 12, color: C.inkMute }}>{dateStr}</Text>
+          </View>
+
+          <View style={{ paddingVertical: 8, marginBottom: 8, borderTopWidth: 1, borderColor: C.border }}>
+            <OrderStatusStepper status={order.status} />
           </View>
 
           {[

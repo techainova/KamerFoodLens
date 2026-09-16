@@ -1,11 +1,12 @@
 // src/navigation/AppNavigator.tsx — Navigation complète KFL (phases 3–9 + sous-écrans)
 
-import React from 'react';
+import React, { useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StackActions, getFocusedRouteNameFromRoute } from '@react-navigation/native';
+import { StackActions, getFocusedRouteNameFromRoute, useNavigation } from '@react-navigation/native';
 import type { AppTabParams } from './types';
 import { useAuthStore } from '@/store/auth.store';
+import QuickActionsSheet, { type QuickAction } from '@/components/ui/QuickActionsSheet';
 
 // ── Core ────────────────────────────────────────────────────────────────────
 import HomeV1        from '@/screens/home/HomeV1';
@@ -32,6 +33,10 @@ import SignupProAware  from '@/screens/auth/SignupProAware';
 
 // ── Map ─────────────────────────────────────────────────────────────────────
 import MapScreen from '@/screens/map/MapScreen';
+
+// ── Messagerie ──────────────────────────────────────────────────────────────
+import ConversationsList from '@/screens/messages/ConversationsList';
+import ChatThread from '@/screens/messages/ChatThread';
 
 // ── Community ───────────────────────────────────────────────────────────────
 import Feed        from '@/screens/community/Feed';
@@ -141,6 +146,7 @@ import HomeProAware          from '@/screens/user_v3/HomeProAware';
 
 import { WFBottomNav } from '@/components/ui';
 import type { TabName } from '@/components/ui';
+import { resetTabBarVisibility } from './tabBarScroll';
 
 const Tab = createBottomTabNavigator<AppTabParams>();
 const HomeStack    = createNativeStackNavigator();
@@ -170,6 +176,10 @@ function HomeStackNav() {
       <HomeStack.Screen name="Courses"       component={Courses} />
       <HomeStack.Screen name="Games"         component={Games} />
       <HomeStack.Screen name="MapScreen"     component={MapScreen} />
+
+      {/* ── Messagerie ────────────────────────────────────────────── */}
+      <HomeStack.Screen name="ConversationsList" component={ConversationsList} />
+      <HomeStack.Screen name="ChatThread"        component={ChatThread} />
 
       {/* ── Recherche (accessible via navigate depuis HomeStack) ────── */}
       <HomeStack.Screen name="Search"        component={Search} />
@@ -408,6 +418,20 @@ function ProStackNav() {
 const TAB_NAMES_STANDARD: TabName[] = ['home', 'search', 'scanner', 'favorites', 'profile'];
 const ROUTE_NAMES_STANDARD = ['HomeTab', 'SearchTab', 'ScannerTab', 'FavoritesTab', 'ProfileTab'];
 
+// Écran racine de chaque onglet — la barre ne s'affiche que là. Dès qu'on
+// pousse un écran par-dessus (Settings, EditProfile, ProDashboard...), cet
+// écran a son propre bouton retour dans son en-tête, donc la barre de menu
+// flottante n'a plus sa place par-dessus.
+const TAB_ROOT_SCREEN: Record<string, string> = {
+  HomeTab: 'HomeScreen',
+  ScannerTab: 'Camera',
+  ProTab: 'ProDashboard',
+  ProfileTab: 'ProfileScreen',
+  // SearchTab et FavoritesTab rendent un écran plat (pas de stack imbriqué) :
+  // getFocusedRouteNameFromRoute y renvoie toujours undefined, donc absent
+  // de cette table = toujours considéré "à la racine".
+};
+
 // Compte Pro actif : 6 onglets — Favoris reste, « Pro » s'ajoute entre Favoris et Profil
 // (cf. design Module C5 — la barre standard n'est jamais réduite pour les comptes Pro).
 const TAB_NAMES_PRO: TabName[] = ['home', 'search', 'scanner', 'favorites', 'pro', 'profile'];
@@ -417,25 +441,60 @@ export function AppNavigator() {
   const isPro = useAuthStore((s) => s.user?.role === 'pro');
   const TAB_NAMES = isPro ? TAB_NAMES_PRO : TAB_NAMES_STANDARD;
   const ROUTE_NAMES = isPro ? ROUTE_NAMES_PRO : ROUTE_NAMES_STANDARD;
+  const [quickActionsVisible, setQuickActionsVisible] = useState(false);
+  // Navigation du stack racine (parent du Tab.Navigator) — utilisée pour les
+  // raccourcis de la feuille, atteint n'importe quel écran imbriqué depuis ici.
+  const rootNavigation = useNavigation<any>();
+
+  const handleQuickAction = (action: QuickAction) => {
+    setQuickActionsVisible(false);
+    switch (action) {
+      case 'scanPhoto':
+        rootNavigation.navigate('App', { screen: 'ScannerTab', params: { screen: 'Camera' } });
+        return;
+      case 'scanVoice':
+        rootNavigation.navigate('App', { screen: 'ScannerTab', params: { screen: 'AudioText' } });
+        return;
+      case 'history':
+        rootNavigation.navigate('App', { screen: 'HomeTab', params: { screen: 'History' } });
+        return;
+      case 'addStory':
+        // Créer une histoire exige un compte — vérifié ici plutôt que dans le
+        // composant de la feuille, qui ne connaît pas la navigation racine.
+        if (!useAuthStore.getState().isAuthenticated) {
+          rootNavigation.navigate('Login');
+          return;
+        }
+        rootNavigation.navigate('App', { screen: 'HomeTab', params: { screen: 'StoryCreatorCamera' } });
+        return;
+    }
+  };
 
   return (
+    <>
     <Tab.Navigator
       screenOptions={{ headerShown: false }}
       tabBar={({ navigation, state }) => {
         if (state.index === 2) return null;
         const activeRoute = state.routes[state.index];
         const focusedRouteName = getFocusedRouteNameFromRoute(activeRoute);
-        if (
-          focusedRouteName === 'StoriesViewer'
-          || focusedRouteName === 'JournalStoriesViewer'
-          || focusedRouteName === 'HistoryStoriesViewer'
-          || focusedRouteName === 'StoryCreatorCamera'
-        ) return null;
+        const expectedRoot = TAB_ROOT_SCREEN[activeRoute.name];
+        const isAtTabRoot = focusedRouteName === undefined || focusedRouteName === expectedRoot;
+        if (!isAtTabRoot) return null;
         return (
         <WFBottomNav
           activeTab={TAB_NAMES[state.index] ?? 'home'}
           isPro={isPro}
           onTabPress={(tab) => {
+            // Le bouton scanner central ouvre un menu de raccourcis plutôt que
+            // de naviguer directement — voir QuickActionsSheet.
+            if (tab === 'scanner') {
+              setQuickActionsVisible(true);
+              return;
+            }
+            // Le nouvel onglet démarre en haut de son contenu : la barre ne
+            // doit pas rester cachée à cause du défilement de l'onglet précédent.
+            resetTabBarVisibility();
             const idx = TAB_NAMES.indexOf(tab);
             if (idx < 0) return;
             const routeName = ROUTE_NAMES[idx]!;
@@ -461,5 +520,11 @@ export function AppNavigator() {
       {isPro && <Tab.Screen name="ProTab" component={ProStackNav} />}
       <Tab.Screen name="ProfileTab"   component={ProfileStackNav} />
     </Tab.Navigator>
+    <QuickActionsSheet
+      visible={quickActionsVisible}
+      onClose={() => setQuickActionsVisible(false)}
+      onSelect={handleQuickAction}
+    />
+    </>
   );
 }
