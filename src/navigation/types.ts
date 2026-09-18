@@ -10,13 +10,19 @@ export type AuthStackParams = {
   OTP:             { email: string; isBusiness?: boolean };
 };
 
+// Compte standard (5 onglets icônes) : Accueil / Restaurant / Scanner / Vidéo / Profil.
+// Compte Pro (5 onglets distincts) : Tableau / Commandes / Créer / Offres / Ma page.
 export type AppTabParams = {
-  HomeTab:      undefined;
-  SearchTab:    undefined;
-  ScannerTab:   undefined;
-  FavoritesTab: undefined;
-  ProTab:       undefined;
-  ProfileTab:   undefined;
+  HomeTab:    undefined;
+  RestoTab:   undefined;
+  ScanTab:    undefined;
+  VideoTab:   undefined;
+  ProfileTab: undefined;
+  DashTab:    undefined;
+  OrdersTab:  undefined;
+  CreateTab:  undefined;
+  OffersTab:  undefined;
+  PageTab:    undefined;
 };
 
 export type HomeStackParams = {
@@ -35,7 +41,7 @@ export type HomeStackParams = {
   Forum:              undefined;
   ForumDetail:        { threadId: string };
   CreateThread:       undefined;
-  CreatePost:         undefined;
+  CreatePost:         { imageUri?: string; imageBase64?: string; mimeType?: string; classId?: string; confidence?: number } | undefined;
   Restaurant:         { restaurantId?: string } | undefined;
   Events:             undefined;
   EventDetail:        { eventId?: string } | undefined;
@@ -90,10 +96,15 @@ export type HomeStackParams = {
 export type HomeStackParamList = HomeStackParams;
 
 export type ScannerStackParams = {
+  ScannerHome: undefined;
   Camera:    undefined;
   AudioText: undefined;
-  Result:    { scanId: string; classId?: string; confidence?: number; imageUri?: string };
+  Result:    { scanId: string; classId?: string; confidence?: number; imageUri?: string; query?: string };
   Recipe:    { dishId: string };
+  MapScreen: undefined;
+  Restaurant: { restaurantId?: string } | undefined;
+  CreatePost: { imageUri?: string; imageBase64?: string; mimeType?: string; classId?: string; confidence?: number } | undefined;
+  Login:      undefined;
 };
 
 export type MapStackParams = {
@@ -109,9 +120,32 @@ export type OrderStackParams = {
   OrderHistory:  undefined;
 };
 
+// ── Onglet Restaurant (compte standard) ──────────────────────────────────────
+export type RestoStackParams = {
+  Restos:        undefined;
+  Restaurant:    { restaurantId?: string } | undefined;
+  OrderMenu:     { restaurantId: string };
+  OrderSummary:  undefined;
+  OrderPayment:  undefined;
+  OrderInvoice:  { orderId: string };
+  OrderHistory:  undefined;
+  MapScreen:     undefined;
+};
+
+// ── Onglet Vidéo (compte standard) ───────────────────────────────────────────
+export type VideoStackParams = {
+  VideoFeed:     { startId?: string } | undefined;
+  VideoComments: { videoId: string };
+  CreateVideo:   undefined;
+  CourseDetail:  { courseId?: string } | undefined;
+  Login:         undefined;
+};
+
 export type ProStackParams = {
   UpgradePro:         undefined;
   ProDashboard:       undefined;
+  ProCreateHub:       undefined;
+  ProOffers:          undefined;
   RestaurantMenu:     undefined;
   RestaurantMenuEdit: { restaurantId: string; itemId?: string };
   ProRevenues:        undefined;

@@ -42,6 +42,7 @@ export default function OrderPayment() {
     total = 0,
     note = '',
     deliveryMode = 'delivery',
+    reservationAt = undefined as string | undefined,
     restaurantId = '',
     restaurantName = '',
     items = [] as RouteItem[],
@@ -60,8 +61,9 @@ export default function OrderPayment() {
       const order = await ordersService.create({
         restaurantId,
         items: items.map((i: RouteItem) => ({ menuItemId: i.id, qty: i.qty })),
-        mode: (deliveryMode === 'delivery' ? 'delivery' : 'pickup') as OrderMode,
+        mode: deliveryMode as OrderMode,
         note: note || undefined,
+        reservationAt,
       });
 
       const result = await paymentsService.initiate({ orderId: order.id, method: toBackendMethod(method) });

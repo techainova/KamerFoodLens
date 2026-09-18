@@ -53,7 +53,6 @@ export default function Restaurant() {
   const restaurantId: string | undefined = route.params?.restaurantId;
 
   const fetchById = useRestaurantStore((s) => s.fetchById);
-  const isSaved = useFavoritesStore((s) => s.isSaved);
   const toggleFavorite = useFavoritesStore((s) => s.toggle);
   const fetchFavorites = useFavoritesStore((s) => s.fetchAll);
   const { addItem, items: cartItems, restaurantId: cartRestaurantId, count } = useCartStore();
@@ -113,8 +112,24 @@ export default function Restaurant() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantId]);
 
-  const bookmarked = restaurantId ? isSaved(restaurantId) : false;
+  const bookmarked = useFavoritesStore((s) => !!restaurantId && s.favorites.some((f) => f.itemId === restaurantId));
   const totalCart = cartRestaurantId === restaurantId ? count() : 0;
+  const toggleFollow = useRestaurantStore((s) => s.toggleFollow);
+  const [followBusy, setFollowBusy] = useState(false);
+
+  const handleToggleFollow = () => {
+    if (!restaurantId) return;
+    requireAuth(async () => {
+      setFollowBusy(true);
+      try {
+        await toggleFollow(restaurantId);
+        const refreshed = await fetchById(restaurantId);
+        if (refreshed) setRestaurant(refreshed);
+      } finally {
+        setFollowBusy(false);
+      }
+    });
+  };
 
   const addToCart = (item: MenuItem) => {
     if (!restaurant) return;
@@ -189,6 +204,22 @@ export default function Restaurant() {
             <View style={{ flexDirection: 'row', gap: 8 }}>
               {restaurant.ownerId !== myId && (
                 <TouchableOpacity
+                  onPress={handleToggleFollow}
+                  disabled={followBusy}
+                  style={{
+                    height: 40, paddingHorizontal: 14, borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 6,
+                    backgroundColor: restaurant.isFollowing ? 'rgba(232,89,26,0.5)' : 'rgba(0,0,0,0.4)',
+                    borderWidth: 1, borderColor: restaurant.isFollowing ? '#E8591A' : 'rgba(255,255,255,0.2)',
+                  }}
+                >
+                  <Icon name="Heart" size={15} color="#fff" fill={restaurant.isFollowing ? '#fff' : 'none'} />
+                  <Text style={{ color: '#fff', fontSize: 12.5, fontWeight: '700' }}>
+                    {restaurant.isFollowing ? 'Suivi' : 'Suivre'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              {restaurant.ownerId !== myId && (
+                <TouchableOpacity
                   onPress={() => requireAuth(() => void handleContact())}
                   disabled={contacting}
                   style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.4)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }}
@@ -216,7 +247,7 @@ export default function Restaurant() {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <Stars rating={restaurant.rating} />
             <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12 }}>
-              {restaurant.rating.toFixed(1)} ({restaurant.reviewCount} avis) · {restaurant.price}
+              {restaurant.rating.toFixed(1)} ({restaurant.reviewCount} avis) · {restaurant.price} · {restaurant.followers} abonnés
             </Text>
           </View>
         </View>
@@ -454,15 +485,17 @@ export default function Restaurant() {
 
       {/* Bottom CTA */}
       <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 16, paddingVertical: 14, paddingBottom: 28, backgroundColor: C.surface, borderTopWidth: 1, borderColor: C.border, flexDirection: 'row', gap: 10 }}>
-        <TouchableOpacity
-          onPress={() => Alert.alert(t('settings.comingSoonTitle', 'Bientôt disponible'), t('settings.comingSoonMsg', 'Cette fonctionnalité arrive dans une prochaine mise à jour.'))}
-          style={{ flex: 1, height: 52, borderWidth: 2, borderColor: '#E8591A', borderRadius: 26, alignItems: 'center', justifyContent: 'center' }}
-          activeOpacity={0.85}
-        >
-          <Text style={{ color: '#E8591A', fontSize: 14, fontWeight: '700', fontFamily: 'Inter-Bold' }}>
-            {t('restaurant.reserve', 'Réserver')}
-          </Text>
-        </TouchableOpacity>
+        {restaurant.acceptsReservations && (
+          <TouchableOpacity
+            onPress={() => navigation.navigate(totalCart > 0 ? 'OrderSummary' : 'OrderMenu', { restaurantId: restaurant.id, intent: 'reservation' })}
+            style={{ flex: 1, height: 52, borderWidth: 2, borderColor: '#E8591A', borderRadius: 26, alignItems: 'center', justifyContent: 'center' }}
+            activeOpacity={0.85}
+          >
+            <Text style={{ color: '#E8591A', fontSize: 14, fontWeight: '700', fontFamily: 'Inter-Bold' }}>
+              {t('restaurant.reserve', 'Réserver')}
+            </Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity
           onPress={() => navigation.navigate(totalCart > 0 ? 'OrderSummary' : 'OrderMenu', { restaurantId: restaurant.id })}
           style={{ flex: 2, height: 52, backgroundColor: '#E8591A', borderRadius: 26, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}

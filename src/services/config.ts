@@ -121,6 +121,12 @@ export const ENDPOINTS = {
   STORIES:       '/community/stories',
   HIGHLIGHTS:    '/community/highlights',
 
+  // Vidéos (fil vertical façon Reels)
+  VIDEOS:        '/videos',
+  VIDEO_LIKE:    '/videos',                       // + /:id/like
+  VIDEO_COMMENT: '/videos',                       // + /:id/comments
+  VIDEO_VIEW:    '/videos',                       // + /:id/view
+
   // Pro
   PRO_DASHBOARD:    '/pro/dashboard',
   PRO_UPGRADE:      '/pro/upgrade',

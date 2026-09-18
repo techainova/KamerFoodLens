@@ -1,6 +1,8 @@
+// KFL Lens — résultat affiché comme un tour de conversation (photo/question de
+// l'utilisateur, puis réponse de l'assistant), à la façon de Claude.
 import React, { useEffect, useState } from 'react';
 import {
-  View, ScrollView, TouchableOpacity, StatusBar, Image, Alert,
+  View, ScrollView, TouchableOpacity, Image, Alert,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,24 +17,12 @@ import { UNKNOWN_CLASS } from '@/ai/interpretResult';
 import { useFavoritesStore } from '@/store/favorites.store';
 import { useJournalStore } from '@/store/journal.store';
 import { useAuthGate } from '@/hooks/useAuthGate';
+import { matchDishByDescription } from '@/ai/text/matchDishByDescription';
+import { scannerService } from '@/services/scanner.service';
+import ScanHistoryDrawer from './ScanHistoryDrawer';
 
 type ResultNav = NativeStackNavigationProp<ScannerStackParams, 'Result'>;
 type ResultRoute = RouteProp<ScannerStackParams, 'Result'>;
-
-function ConfidenceBadge({ value, t }: { value: number; t: (k: string) => string }) {
-  const pct    = Math.round(value * 100);
-  const color  = pct >= 80 ? '#2E7D32' : pct >= 60 ? '#F9A825' : '#C62828';
-  const bgColor = pct >= 80 ? '#E3F0E4' : pct >= 60 ? '#FBF3DC' : '#FBDCDC';
-  const labelKey = pct >= 80 ? 'scanner.highConfidence' : pct >= 60 ? 'scanner.mediumConfidence' : 'scanner.lowConfidence';
-  return (
-    <View style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: bgColor }}>
-      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />
-      <Text style={{ fontSize: 13, fontWeight: '700', color, fontFamily: 'Inter-Bold' }}>
-        {pct}% — {t(labelKey)}
-      </Text>
-    </View>
-  );
-}
 
 export default function ResultV1() {
   const navigation = useNavigation<ResultNav>();
@@ -40,8 +30,8 @@ export default function ResultV1() {
   const C = useColors();
   const { t } = useTranslation();
   const [savingToJournal, setSavingToJournal] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
-  const isSaved = useFavoritesStore((s) => s.isSaved);
   const toggleFavorite = useFavoritesStore((s) => s.toggle);
   const fetchFavorites = useFavoritesStore((s) => s.fetchAll);
   const { requireAuth } = useAuthGate();
@@ -49,11 +39,13 @@ export default function ResultV1() {
   const addJournalEntry = useJournalStore((s) => s.addEntry);
   const fetchJournal = useJournalStore((s) => s.fetchAll);
 
-  const classId     = route.params?.classId ?? UNKNOWN_CLASS;
-  const confidence  = route.params?.confidence ?? 0;
-  const imageUri    = route.params?.imageUri;
-  const isUnknown = classId === UNKNOWN_CLASS;
+  const classId    = route.params?.classId ?? UNKNOWN_CLASS;
+  const confidence = route.params?.confidence ?? 0;
+  const imageUri   = route.params?.imageUri;
+  const query      = (route.params as { query?: string } | undefined)?.query;
+  const isUnknown  = classId === UNKNOWN_CLASS;
   const dish = isUnknown ? null : getDishDescription(classId);
+  const pct = Math.round(confidence * 100);
 
   useEffect(() => {
     void fetchFavorites();
@@ -61,7 +53,7 @@ export default function ResultV1() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const bookmarked = !isUnknown && isSaved(classId);
+  const bookmarked = useFavoritesStore((s) => !isUnknown && s.favorites.some((f) => f.itemId === classId));
   const savedToJournal = !isUnknown && journalToday().some((e) => e.dishId === classId);
 
   const inferMealType = (): 'breakfast' | 'lunch' | 'dinner' | 'snack' => {
@@ -83,228 +75,187 @@ export default function ResultV1() {
 
   const handleAddToJournal = () => {
     if (isUnknown || !dish || savedToJournal || savingToJournal) return;
-    requireAuth(() => addToJournalNow());
+    requireAuth(() => {
+      setSavingToJournal(true);
+      addJournalEntry({
+        dishId: classId,
+        dishName: dish.nomFR,
+        imageUrl: imageUri,
+        mealType: inferMealType(),
+        date: new Date().toISOString(),
+      })
+        .catch(() => Alert.alert(t('common.error'), t('scanner.journalError')))
+        .finally(() => setSavingToJournal(false));
+    });
   };
 
-  const addToJournalNow = () => {
-    if (!dish) return;
-    setSavingToJournal(true);
-    addJournalEntry({
-      dishId: classId,
-      dishName: dish.nomFR,
-      imageUrl: imageUri,
-      mealType: inferMealType(),
-      date: new Date().toISOString(),
-    })
-      .catch(() => {
-        Alert.alert(t('common.error'), t('scanner.journalError'));
-      })
-      .finally(() => setSavingToJournal(false));
+  const followUp = async (label: string, description: string) => {
+    try {
+      const apiResult = await scannerService.analyzeText({ text: description });
+      navigation.push('Result', { scanId: apiResult.scanId, classId: apiResult.classId, confidence: apiResult.confidence, query: label } as never);
+    } catch {
+      const m = matchDishByDescription(description);
+      navigation.push('Result', { scanId: `text-scan-${Date.now()}`, classId: m.classId, confidence: m.confidence, query: label } as never);
+    }
   };
+
+  const userLine = query ?? "C'est quoi ce plat ?";
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#2C1810' }}>
-      <StatusBar barStyle="light-content" />
-
-      {/* Hero image slot */}
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 440 }}>
-        {imageUri ? (
-          <Image source={{ uri: imageUri }} style={{ flex: 1 }} resizeMode="cover" />
-        ) : (
-          <View style={{ flex: 1, backgroundColor: '#3D2418' }} />
-        )}
-        <View style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(44,24,16,0.15)' }} />
-        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 180, backgroundColor: 'rgba(44,24,16,0.7)' }} />
-        {!imageUri && (
-          <View style={{ position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name="ChefHat" size={80} color="rgba(255,255,255,0.12)" />
-          </View>
-        )}
-      </View>
-
-      {/* Top controls */}
-      <SafeAreaView style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
-        <View style={{ paddingHorizontal: 16, paddingTop: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <TouchableOpacity
-            style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.35)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }}
-            onPress={() => navigation.goBack()}
-          >
-            <Icon name="ArrowLeft" size={18} color="#fff" />
+    <View style={{ flex: 1, backgroundColor: C.cream }}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+        {/* Barre du haut */}
+        <View style={{ height: 50, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="ArrowLeft" size={20} color={C.ink} />
           </TouchableOpacity>
-          {!isUnknown && (
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              <TouchableOpacity style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.35)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name="Share2" size={17} color="#fff" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: bookmarked ? 'rgba(232,89,26,0.5)' : 'rgba(0,0,0,0.35)', borderWidth: 1, borderColor: bookmarked ? '#E8591A' : 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }}
-                onPress={handleToggleBookmark}
-              >
-                <Icon name="Bookmark" size={17} color="#fff" fill={bookmarked ? '#fff' : 'none'} />
-              </TouchableOpacity>
-            </View>
-          )}
+          <Text numberOfLines={1} style={{ flex: 1, textAlign: 'center', fontSize: 12.5, fontWeight: '700', color: C.inkMute }}>
+            {isUnknown ? 'Identification' : `${dish?.nomFR ?? ''} · identification`}
+          </Text>
+          <TouchableOpacity onPress={() => setHistoryOpen(true)} style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="Menu" size={20} color={C.ink} />
+          </TouchableOpacity>
         </View>
+
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingTop: 6 }} showsVerticalScrollIndicator={false}>
+          {/* Message utilisateur */}
+          <View style={{ alignItems: 'flex-end', marginBottom: 18 }}>
+            <View style={{ maxWidth: '82%' }}>
+              {imageUri && (
+                <View style={{ borderRadius: 18, borderBottomRightRadius: 6, overflow: 'hidden', borderWidth: 1, borderColor: C.border, marginBottom: 6 }}>
+                  <Image source={{ uri: imageUri }} style={{ width: 220, aspectRatio: 4 / 3 }} resizeMode="cover" />
+                </View>
+              )}
+              <View style={{ paddingHorizontal: 14, paddingVertical: 9, borderRadius: 18, borderBottomRightRadius: 6, backgroundColor: C.primary }}>
+                <Text style={{ color: '#fff', fontSize: 13.5 }}>{userLine}</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Réponse assistant */}
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View style={{ width: 28, height: 28, borderRadius: 9, marginTop: 2, alignItems: 'center', justifyContent: 'center', backgroundColor: C.primary }}>
+              <Icon name="Sparkles" size={16} color="#fff" fill="#fff" />
+            </View>
+            <View style={{ flex: 1 }}>
+              {isUnknown || !dish ? (
+                <View>
+                  <Text style={{ fontSize: 16, fontWeight: '700', color: C.ink, marginBottom: 6 }}>{t('scanner.notRecognized')}</Text>
+                  <Text style={{ fontSize: 13, color: C.inkSoft, lineHeight: 20 }}>{t('scanner.notRecognizedDesc')}</Text>
+                  <TouchableOpacity
+                    onPress={() => navigation.goBack()}
+                    style={{ marginTop: 14, alignSelf: 'flex-start', height: 42, paddingHorizontal: 18, borderRadius: 21, backgroundColor: C.primary, flexDirection: 'row', alignItems: 'center', gap: 8 }}
+                  >
+                    <Icon name="RefreshCw" size={15} color="#fff" />
+                    <Text style={{ color: '#fff', fontSize: 13.5, fontWeight: '700' }}>{t('scanner.tryAgain')}</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 14, backgroundColor: C.successSoft }}>
+                    <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: C.success }} />
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: C.success }}>Confiance {pct}%</Text>
+                  </View>
+
+                  <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 24, color: C.ink, marginTop: 9 }}>{dish.nomFR}</Text>
+                  <Text style={{ fontSize: 12, color: C.inkMute, marginTop: 1 }}>{dish.region} · plat camerounais 🇨🇲</Text>
+
+                  <Text style={{ fontSize: 13.5, lineHeight: 21, color: C.inkSoft, marginTop: 12 }}>{dish.description}</Text>
+
+                  {/* Ingrédients */}
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginTop: 12 }}>
+                    {dish.ingredients.map((ing) => (
+                      <View key={ing} style={{ paddingHorizontal: 11, paddingVertical: 5, borderRadius: 14, backgroundColor: C.surface2 }}>
+                        <Text style={{ fontSize: 11.5, color: C.inkSoft }}>{ing}</Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  {/* Mini stats */}
+                  <View style={{ flexDirection: 'row', gap: 14, marginTop: 14, padding: 13, borderRadius: 14, backgroundColor: C.surface2 }}>
+                    <View>
+                      <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 16, color: C.ink }}>{dish.tempsPreparationMin} min</Text>
+                      <Text style={{ fontSize: 9.5, color: C.inkMute }}>{t('scanner.prepTime')}</Text>
+                    </View>
+                    <View>
+                      <View style={{ flexDirection: 'row', gap: 2 }}>
+                        {[1, 2, 3].map((lvl) => (
+                          <Icon key={lvl} name="Flame" size={13} color={lvl <= dish.niveauEpice ? C.error : C.border} />
+                        ))}
+                      </View>
+                      <Text style={{ fontSize: 9.5, color: C.inkMute, marginTop: 3 }}>{t('scanner.spiceLevel')}</Text>
+                    </View>
+                  </View>
+
+                  {/* Actions */}
+                  <View style={{ marginTop: 14, gap: 8 }}>
+                    <TouchableOpacity
+                      onPress={() => navigation.navigate('Recipe', { dishId: classId })}
+                      activeOpacity={0.85}
+                      style={{ height: 46, borderRadius: 23, backgroundColor: C.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                    >
+                      <Icon name="GraduationCap" size={17} color="#fff" />
+                      <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>{t('scanner.viewRecipe')}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => requireAuth(() => navigation.navigate('CreatePost', { imageUri, classId, confidence }))}
+                      activeOpacity={0.85}
+                      style={{ height: 46, borderRadius: 23, borderWidth: 1.6, borderColor: C.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                    >
+                      <Icon name="Send" size={16} color={C.primary} />
+                      <Text style={{ color: C.primary, fontSize: 14, fontWeight: '700' }}>Publier en post</Text>
+                    </TouchableOpacity>
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                      <TouchableOpacity
+                        onPress={() => navigation.navigate('MapScreen' as never)}
+                        activeOpacity={0.85}
+                        style={{ flex: 1, height: 42, borderRadius: 21, backgroundColor: C.surface2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+                      >
+                        <Icon name="Store" size={15} color={C.inkSoft} />
+                        <Text style={{ color: C.ink, fontSize: 13, fontWeight: '600' }}>{t('scanner.findRestaurants')}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={handleAddToJournal}
+                        disabled={savedToJournal || savingToJournal}
+                        activeOpacity={0.85}
+                        style={{ flex: 1, height: 42, borderRadius: 21, backgroundColor: C.surface2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+                      >
+                        <Icon name="Bookmark" size={15} color={savedToJournal ? C.success : C.inkSoft} fill={savedToJournal ? C.success : 'none'} />
+                        <Text style={{ color: savedToJournal ? C.success : C.ink, fontSize: 13, fontWeight: '600' }}>
+                          {savedToJournal ? 'Au journal' : t('scanner.addToJournal')}
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={handleToggleBookmark}
+                        activeOpacity={0.85}
+                        style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: bookmarked ? C.primarySoft : C.surface2, alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        <Icon name="Heart" size={16} color={bookmarked ? C.primary : C.inkSoft} fill={bookmarked ? C.primary : 'none'} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  {/* Suggestions de suite */}
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginTop: 16 }}>
+                    {dish.accompagnements.slice(0, 3).map((acc) => (
+                      <TouchableOpacity
+                        key={acc}
+                        onPress={() => void followUp(`Et ${acc}, comment l'accompagner ?`, acc)}
+                        style={{ paddingHorizontal: 12, paddingVertical: 7, borderRadius: 18, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface }}
+                      >
+                        <Text style={{ fontSize: 12, fontWeight: '600', color: C.inkSoft }}>{acc} ?</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </>
+              )}
+            </View>
+          </View>
+          <View style={{ height: 12 }} />
+        </ScrollView>
       </SafeAreaView>
 
-      {/* Dish name on hero */}
-      <View style={{ position: 'absolute', zIndex: 5, top: 300, left: 20, right: 20 }}>
-        {!isUnknown && dish && (
-          <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', fontFamily: 'JetBrainsMono-Regular', marginBottom: 6 }}>
-            {dish.region}
-          </Text>
-        )}
-        <Text style={{ fontFamily: 'PlayfairDisplay-Bold', color: '#fff', fontSize: 38, lineHeight: 44 }}>
-          {isUnknown || !dish ? t('scanner.notRecognized') : dish.nomFR}
-        </Text>
-      </View>
-
-      {/* Bottom sheet */}
-      <ScrollView
-        style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
-        contentContainerStyle={{ paddingBottom: 32 }}
-        showsVerticalScrollIndicator={false}
-        scrollEnabled
-      >
-        <View style={{ marginTop: 390 }}>
-          <View style={{ backgroundColor: C.cream, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 12, paddingHorizontal: 20 }}>
-            {/* Handle */}
-            <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: C.border, alignSelf: 'center', marginBottom: 20 }} />
-
-            {/* Confidence */}
-            <ConfidenceBadge value={confidence} t={t} />
-
-            {isUnknown || !dish ? (
-              <View style={{ marginTop: 20, alignItems: 'center', paddingVertical: 24 }}>
-                <Icon name="Search" size={40} color={C.inkMute} />
-                <Text style={{ fontSize: 16, fontWeight: '700', color: C.ink, marginTop: 14, textAlign: 'center' }}>
-                  {t('scanner.notRecognized')}
-                </Text>
-                <Text style={{ fontSize: 13, color: C.inkSoft, marginTop: 8, textAlign: 'center', lineHeight: 20 }}>
-                  {t('scanner.notRecognizedDesc')}
-                </Text>
-                <TouchableOpacity
-                  style={{ marginTop: 20, height: 48, paddingHorizontal: 24, backgroundColor: C.primary, borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-                  onPress={() => navigation.goBack()}
-                  activeOpacity={0.85}
-                >
-                  <Icon name="RefreshCw" size={16} color="#fff" />
-                  <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>{t('scanner.tryAgain')}</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <>
-                {/* Story section */}
-                <View style={{ marginTop: 18 }}>
-                  <Text style={{ fontSize: 15, fontWeight: '700', color: C.ink, fontFamily: 'Inter-Bold', marginBottom: 10 }}>
-                    {t('scanner.storyTitle')}
-                  </Text>
-                  <Text style={{ fontSize: 13, color: C.inkSoft, lineHeight: 21 }}>
-                    {dish.description}
-                  </Text>
-                </View>
-
-                {/* Ingredients */}
-                <View style={{ marginTop: 18 }}>
-                  <Text style={{ fontSize: 13, fontWeight: '700', color: C.ink, marginBottom: 8 }}>{t('scanner.ingredients')}</Text>
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                    {dish.ingredients.map((ing) => (
-                      <View key={ing} style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border }}>
-                        <Text style={{ fontSize: 12, color: C.inkSoft }}>{ing}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-
-                {/* Prep time + spice level */}
-                <View style={{ flexDirection: 'row', gap: 10, marginTop: 18 }}>
-                  <View style={{ flex: 1, padding: 12, borderRadius: 14, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center' }}>
-                    <Icon name="Clock" size={16} color={C.inkMute} />
-                    <Text style={{ fontSize: 13, fontWeight: '700', color: C.ink, marginTop: 4 }}>
-                      {dish.tempsPreparationMin} {t('scanner.minutes')}
-                    </Text>
-                    <Text style={{ fontSize: 10, color: C.inkMute, marginTop: 1 }}>{t('scanner.prepTime')}</Text>
-                  </View>
-                  <View style={{ flex: 1, padding: 12, borderRadius: 14, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center' }}>
-                    <View style={{ flexDirection: 'row', gap: 2 }}>
-                      {[1, 2, 3].map((lvl) => (
-                        <Icon key={lvl} name="Flame" size={14} color={lvl <= dish.niveauEpice ? '#C62828' : C.border} />
-                      ))}
-                    </View>
-                    <Text style={{ fontSize: 10, color: C.inkMute, marginTop: 5 }}>{t('scanner.spiceLevel')}</Text>
-                  </View>
-                </View>
-
-                {/* Primary actions */}
-                <View style={{ flexDirection: 'row', gap: 10, marginTop: 20 }}>
-                  <TouchableOpacity
-                    style={{ flex: 1, height: 50, backgroundColor: '#E8591A', borderRadius: 25, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-                    onPress={() => navigation.navigate('Recipe', { dishId: classId })}
-                    activeOpacity={0.85}
-                  >
-                    <Icon name="ChefHat" size={18} color="#fff" />
-                    <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700', fontFamily: 'Inter-Bold' }}>
-                      {t('scanner.viewRecipe')}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={{ flex: 1, height: 50, borderWidth: 2, borderColor: '#2E7D32', borderRadius: 25, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-                    activeOpacity={0.85}
-                    onPress={() => navigation.navigate('MapScreen' as never)}
-                  >
-                    <Icon name="MapPin" size={18} color="#2E7D32" />
-                    <Text style={{ color: '#2E7D32', fontSize: 14, fontWeight: '700', fontFamily: 'Inter-Bold' }}>
-                      {t('scanner.findRestaurants')}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-                {/* Secondary action */}
-                <TouchableOpacity
-                  style={{ marginTop: 10, height: 46, borderWidth: 1, borderColor: C.border, borderRadius: 23, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.surface }}
-                  onPress={handleAddToJournal}
-                  disabled={savedToJournal || savingToJournal}
-                  activeOpacity={0.8}
-                >
-                  <Icon name="Bookmark" size={16} color={savedToJournal ? '#2E7D32' : '#6D4C41'} fill={savedToJournal ? '#2E7D32' : 'none'} />
-                  <Text style={{ color: savedToJournal ? '#2E7D32' : '#6D4C41', fontSize: 13, fontWeight: '600' }}>
-                    {savedToJournal ? t('scanner.addedToJournal', 'Ajouté au journal') : t('scanner.addToJournal')}
-                  </Text>
-                </TouchableOpacity>
-
-                {/* Accompagnements */}
-                <View style={{ marginTop: 20 }}>
-                  <Text style={{ fontSize: 13, fontWeight: '700', color: C.ink, marginBottom: 10 }}>
-                    {t('scanner.accompaniments')}
-                  </Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-                    {dish.accompagnements.map((acc) => (
-                      <View
-                        key={acc}
-                        style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, flexDirection: 'row', alignItems: 'center', gap: 6 }}
-                      >
-                        <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: C.surface2 }} />
-                        <Text style={{ fontSize: 13, color: C.inkSoft, fontWeight: '500' }}>{acc}</Text>
-                      </View>
-                    ))}
-                  </ScrollView>
-                </View>
-              </>
-            )}
-
-            {/* Scan again */}
-            <TouchableOpacity
-              style={{ marginTop: 16, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 }}
-              onPress={() => navigation.goBack()}
-            >
-              <Icon name="RefreshCw" size={14} color="#E8591A" />
-              <Text style={{ color: '#E8591A', fontSize: 13, fontWeight: '600' }}>
-                {t('scanner.scanAgain')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ScrollView>
+      <ScanHistoryDrawer visible={historyOpen} onClose={() => setHistoryOpen(false)} />
     </View>
   );
 }

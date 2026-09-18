@@ -1,22 +1,40 @@
+// Nouvelle publication — carrousel de plusieurs photos/vidéos comme sur
+// Instagram, tags, et détection IA du plat quand on arrive depuis le Scanner.
 import React, { useState } from 'react';
 import {
   View, TextInput, ScrollView, TouchableOpacity, StatusBar, KeyboardAvoidingView, Platform, Image, Alert, ActivityIndicator,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import * as ImagePicker from 'expo-image-picker';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { useFeedStore } from '@/store/feed.store';
 import { useAuthStore } from '@/store/auth.store';
-import type { CreatePostPayload } from '@/services/community.service';
+import type { CreatePostPayload, CreatePostMediaPayload } from '@/services/community.service';
+import type { HomeStackParamList } from '@/navigation/types';
+import { getDishDescription } from '@/ai/dishDescriptions';
+import { UNKNOWN_CLASS } from '@/ai/interpretResult';
+import { readUriAsBase64 } from '@/utils/readUriAsBase64';
 
 const SUGGESTED_TAGS = ['#Mbongo', '#Ndolé', '#PouletDG', '#Kpwem', '#Achu', '#Cameroun', '#Recette'];
+const MAX_MEDIA = 10;
+
+interface MediaItem {
+  id: string;
+  uri: string;
+  base64?: string;
+  mimeType: string;
+  kind: 'image' | 'video';
+}
+
+type CreatePostRoute = RouteProp<HomeStackParamList, 'CreatePost'>;
 
 export default function CreatePost() {
   const navigation = useNavigation<any>();
+  const route = useRoute<CreatePostRoute>();
   const C = useColors();
   const { t } = useTranslation();
 
@@ -31,11 +49,20 @@ export default function CreatePost() {
     ...(isPro ? [{ key: 'event' as const, label: t('community.postTypeEvent') }] : []),
   ];
 
+  // Arrivée depuis le Scanner ("Publier" sur un plat identifié) — préremplit
+  // la photo et propose de taguer le plat détecté par l'IA.
+  const scanClassId = route.params?.classId;
+  const scanConfidence = route.params?.confidence ?? 0;
+  const detectedDish = scanClassId && scanClassId !== UNKNOWN_CLASS ? getDishDescription(scanClassId) : null;
+
   const [postType, setPostType] = useState<CreatePostPayload['type']>('post');
   const [text, setText] = useState('');
   const [tags, setTags] = useState<string[]>([]);
-  const [imageUri, setImageUri] = useState<string | null>(null);
-  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [media, setMedia] = useState<MediaItem[]>(
+    route.params?.imageUri ? [{ id: 'scan-0', uri: route.params.imageUri, base64: route.params.imageBase64, mimeType: route.params.mimeType ?? 'image/jpeg', kind: 'image' }] : [],
+  );
+  const [dishTagged, setDishTagged] = useState(false);
+  const [dishSuggestionDismissed, setDishSuggestionDismissed] = useState(false);
   const [publishing, setPublishing] = useState(false);
 
   const createPost = useFeedStore(s => s.createPost);
@@ -48,12 +75,60 @@ export default function CreatePost() {
 
   const canPublish = text.trim().length > 0 && !publishing;
 
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.8, mediaTypes: ['images'], base64: true });
-    if (!result.canceled && result.assets?.[0]) {
-      setImageUri(result.assets[0].uri);
-      setImageBase64(result.assets[0].base64 ?? null);
-    }
+  const tagDetectedDish = () => {
+    if (!detectedDish) return;
+    setDishTagged(true);
+    addTag(`#${detectedDish.nomFR.replace(/\s+/g, '')}`);
+    setText((prev) => prev.trim().length > 0 ? prev : `${detectedDish.nomFR} — identifié avec KFL Lens 📸`);
+  };
+
+  const addAssets = (assets: ImagePicker.ImagePickerAsset[]) => {
+    setMedia((prev) => {
+      const room = MAX_MEDIA - prev.length;
+      const next = assets.slice(0, room).map((a, i) => ({
+        id: `${Date.now()}-${i}`,
+        uri: a.uri,
+        base64: a.base64 ?? undefined,
+        mimeType: a.mimeType ?? (a.type === 'video' ? 'video/mp4' : 'image/jpeg'),
+        kind: (a.type === 'video' ? 'video' : 'image') as 'image' | 'video',
+      }));
+      return [...prev, ...next];
+    });
+  };
+
+  const pickFromLibrary = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      quality: 0.8,
+      mediaTypes: ['images', 'videos'],
+      allowsMultipleSelection: true,
+      selectionLimit: Math.max(1, MAX_MEDIA - media.length),
+      base64: true,
+    });
+    if (!result.canceled && result.assets?.length) addAssets(result.assets);
+  };
+
+  const takePhoto = async () => {
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    if (!perm.granted) return;
+    const result = await ImagePicker.launchCameraAsync({ quality: 0.8, base64: true });
+    if (!result.canceled && result.assets?.length) addAssets(result.assets);
+  };
+
+  const removeMedia = (id: string) => setMedia((prev) => prev.filter((m) => m.id !== id));
+
+  // Le carrousel peut mélanger des éléments choisis avec base64 (galerie/caméra)
+  // et un élément arrivé du Scanner (uri locale seule) — on lit ceux-là nous-mêmes.
+  const resolveMediaPayload = async (): Promise<CreatePostMediaPayload[]> => {
+    const resolved = await Promise.all(media.map(async (m) => {
+      if (m.base64) return { base64: m.base64, mimeType: m.mimeType };
+      try {
+        const base64 = await readUriAsBase64(m.uri);
+        return { base64, mimeType: m.mimeType };
+      } catch {
+        return null;
+      }
+    }));
+    return resolved.filter((r): r is CreatePostMediaPayload => r !== null);
   };
 
   const handlePublish = async () => {
@@ -61,11 +136,11 @@ export default function CreatePost() {
     setPublishing(true);
     try {
       const content = tags.length > 0 ? `${text.trim()}\n\n${tags.join(' ')}` : text.trim();
+      const mediaPayload = await resolveMediaPayload();
       await createPost({
         content,
         type: postType,
-        imageBase64: imageBase64 ?? undefined,
-        mimeType: imageBase64 ? 'image/jpeg' : undefined,
+        media: mediaPayload.length > 0 ? mediaPayload : undefined,
       });
       navigation.goBack();
     } catch {
@@ -130,25 +205,81 @@ export default function CreatePost() {
             <Text style={{ fontSize: 11, color: text.length > 500 ? '#C62828' : '#8C8278', textAlign: 'right', marginTop: 6 }}>{text.length}/500</Text>
           </View>
 
-          {/* Media */}
+          {/* Media — carrousel façon Instagram, plusieurs photos ET vidéos */}
           <View style={{ backgroundColor: C.surface, padding: 16, borderBottomWidth: 1, borderColor: C.border }}>
-            <Text style={{ fontSize: 13, fontWeight: '600', color: C.inkSoft, marginBottom: 10 }}>{t('community.photosVideo')}</Text>
-            {imageUri ? (
-              <View style={{ width: 100, height: 100, borderRadius: 12, overflow: 'hidden' }}>
-                <Image source={{ uri: imageUri }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-                <TouchableOpacity
-                  onPress={() => { setImageUri(null); setImageBase64(null); }}
-                  style={{ position: 'absolute', top: 4, right: 4, width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' }}
-                >
-                  <Icon name="X" size={12} color="#fff" />
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: C.inkSoft }}>
+                {t('community.photosVideo')}{media.length > 0 ? ` (${media.length}/${MAX_MEDIA})` : ''}
+              </Text>
+              {media.length > 0 && media.length < MAX_MEDIA && (
+                <TouchableOpacity onPress={() => void pickFromLibrary()}>
+                  <Text style={{ fontSize: 12.5, fontWeight: '700', color: C.primary }}>{t('community.addMore', 'Ajouter')}</Text>
                 </TouchableOpacity>
-              </View>
-            ) : (
-              <TouchableOpacity onPress={() => void pickImage()} style={{ width: 80, height: 80, borderRadius: 12, backgroundColor: C.surface2, borderWidth: 1.5, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name="Camera" size={22} color="#8C8278" />
-              </TouchableOpacity>
+              )}
+            </View>
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+              {media.map((m) => (
+                <View key={m.id} style={{ width: 100, height: 100, borderRadius: 12, overflow: 'hidden', backgroundColor: C.surface2 }}>
+                  <Image source={{ uri: m.uri }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                  {m.kind === 'video' && (
+                    <View style={{ position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.25)' }}>
+                      <Icon name="Play" size={26} color="#fff" />
+                    </View>
+                  )}
+                  <TouchableOpacity
+                    onPress={() => removeMedia(m.id)}
+                    style={{ position: 'absolute', top: 4, right: 4, width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <Icon name="X" size={12} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+
+              {media.length < MAX_MEDIA && (
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <TouchableOpacity onPress={() => void pickFromLibrary()} style={{ width: 80, height: 100, borderRadius: 12, backgroundColor: C.surface2, borderWidth: 1.5, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                    <Icon name="Image" size={20} color="#8C8278" />
+                    <Text style={{ fontSize: 10, color: C.inkMute, fontWeight: '600' }}>{t('community.gallery', 'Galerie')}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => void takePhoto()} style={{ width: 80, height: 100, borderRadius: 12, backgroundColor: C.surface2, borderWidth: 1.5, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                    <Icon name="Camera" size={20} color="#8C8278" />
+                    <Text style={{ fontSize: 10, color: C.inkMute, fontWeight: '600' }}>{t('community.camera', 'Caméra')}</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </ScrollView>
+            {media.length > 1 && (
+              <Text style={{ fontSize: 11, color: C.inkMute, marginTop: 8 }}>
+                {t('community.carouselHint', "Les gens pourront glisser pour voir toutes les photos/vidéos, comme un carrousel.")}
+              </Text>
             )}
           </View>
+
+          {/* Suggestion IA — plat détecté par le Scanner */}
+          {detectedDish && !dishSuggestionDismissed && (
+            <View style={{ margin: 16, marginBottom: 0, padding: 13, borderRadius: 14, backgroundColor: C.primarySoft, borderWidth: 1, borderColor: C.primary }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+                <Icon name="Sparkles" size={17} color={C.primary} />
+                <Text style={{ fontSize: 11, fontWeight: '800', color: C.primary, letterSpacing: 0.6 }}>DÉTECTÉ PAR L'IA KFL</Text>
+              </View>
+              <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 18, color: C.ink, marginTop: 6 }}>{detectedDish.nomFR}</Text>
+              <Text style={{ fontSize: 11.5, color: C.inkSoft }}>{detectedDish.region} · Confiance {Math.round(scanConfidence * 100)}%</Text>
+              <View style={{ flexDirection: 'row', gap: 7, marginTop: 10 }}>
+                <TouchableOpacity
+                  onPress={tagDetectedDish}
+                  disabled={dishTagged}
+                  style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, backgroundColor: dishTagged ? C.success : C.primary, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 }}
+                >
+                  {dishTagged && <Icon name="Check" size={13} color="#fff" />}
+                  <Text style={{ color: '#fff', fontSize: 12.5, fontWeight: '700' }}>{dishTagged ? 'Plat tagué' : 'Taguer ce plat'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setDishSuggestionDismissed(true)} style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, borderWidth: 1, borderColor: C.primary, alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ color: C.primary, fontSize: 12.5, fontWeight: '700' }}>Corriger</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
 
           {/* Tags */}
           <View style={{ backgroundColor: C.surface, padding: 16, borderBottomWidth: 1, borderColor: C.border }}>

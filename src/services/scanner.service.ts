@@ -6,6 +6,11 @@ import type { DishDescription } from '@/ai/dishDescriptions';
 export interface ScanImagePayload {
   imageBase64: string;
   mimeType?: string;
+  // Résultat déjà calculé par le modèle TFLite embarqué sur l'appareil — utilisé
+  // par le backend UNIQUEMENT si son service IA distant est injoignable, pour que
+  // le scan soit quand même historisé/synchronisé au lieu d'échouer silencieusement.
+  localClassId?: string;
+  localConfidence?: number;
 }
 
 export interface ScanAudioPayload {

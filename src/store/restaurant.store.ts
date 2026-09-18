@@ -34,6 +34,7 @@ export interface Restaurant {
   price:        '€' | '€€' | '€€€';
   menu:         MenuItem[];
   followers:    number;
+  isFollowing:  boolean;
   lat:          number;
   lng:          number;
   specialties:  string[];
@@ -43,6 +44,8 @@ export interface Restaurant {
   phone:        string;
   imageUrl?:    string;
   ownerId:      string;
+  acceptsDelivery:     boolean;
+  acceptsReservations: boolean;
 }
 
 function priceRangeToSymbol(priceRange: 1 | 2 | 3): '€' | '€€' | '€€€' {
@@ -77,7 +80,8 @@ function toStoreRestaurant(dto: RestaurantDto, menuItems: MenuItemDto[]): Restau
     freeDelivery: 5000,
     isOpen: dto.isOpen,
     price: priceRangeToSymbol(dto.priceRange),
-    followers: 0,
+    followers: dto.followersCount,
+    isFollowing: dto.isFollowing,
     lat: dto.lat,
     lng: dto.lng,
     specialties: dto.specialties,
@@ -87,6 +91,8 @@ function toStoreRestaurant(dto: RestaurantDto, menuItems: MenuItemDto[]): Restau
     phone: dto.phone ?? '',
     imageUrl: dto.imageUrl,
     ownerId: dto.ownerId,
+    acceptsDelivery: dto.acceptsDelivery,
+    acceptsReservations: dto.acceptsReservations,
     menu: menuItems.map(toStoreMenuItem),
   };
 }
@@ -102,12 +108,16 @@ interface RestaurantState {
   fetchById:     (id: string) => Promise<Restaurant | undefined>;
   getById:       (id: string) => Restaurant | undefined;
   ensureLoaded:  () => void;
+  toggleFollow:  (id: string) => Promise<void>;
+  followed:      Restaurant[];
+  fetchFollowed: () => Promise<void>;
 }
 
 export const useRestaurantStore = create<RestaurantState>()(
   persist(
     (set, get) => ({
       restaurants: [],
+      followed:    [],
       isLoading:   false,
 
       fetchNearby: async (lat, lng, radiusMeters = 5000) => {
@@ -143,6 +153,47 @@ export const useRestaurantStore = create<RestaurantState>()(
       },
 
       getById: (id) => get().restaurants.find(r => r.id === id),
+
+      toggleFollow: async (id) => {
+        const restaurant = get().getById(id);
+        if (!restaurant) return;
+        const wasFollowing = restaurant.isFollowing;
+
+        set((s) => ({
+          restaurants: s.restaurants.map((r) => r.id === id
+            ? { ...r, isFollowing: !wasFollowing, followers: wasFollowing ? r.followers - 1 : r.followers + 1 }
+            : r),
+        }));
+
+        try {
+          const result = wasFollowing
+            ? await restaurantsService.unfollow(id)
+            : await restaurantsService.follow(id);
+          set((s) => ({
+            restaurants: s.restaurants.map((r) => r.id === id
+              ? { ...r, isFollowing: result.isFollowing, followers: result.followersCount }
+              : r),
+          }));
+        } catch (err) {
+          set((s) => ({
+            restaurants: s.restaurants.map((r) => r.id === id
+              ? { ...r, isFollowing: wasFollowing, followers: restaurant.followers }
+              : r),
+          }));
+          throw err;
+        }
+      },
+
+      fetchFollowed: async () => {
+        const items = await restaurantsService.getFollowed();
+        const withMenus = await Promise.all(
+          items.map(async (r) => {
+            const menuItems = await restaurantsService.getMenu(r.id).catch(() => []);
+            return toStoreRestaurant(r, menuItems);
+          }),
+        );
+        set({ followed: withMenus });
+      },
 
       ensureLoaded: () => {
         const { restaurants, isLoading, fetchNearby } = get();

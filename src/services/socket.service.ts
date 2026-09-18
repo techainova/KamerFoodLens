@@ -8,9 +8,11 @@ import { useStoriesStore } from '@/store/stories.store';
 import { useEventsStore } from '@/store/events.store';
 import { useFeedStore } from '@/store/feed.store';
 import { useMessagesStore } from '@/store/messages.store';
+import { useNotificationsStore } from '@/store/notifications.store';
 import type { Story, FeedPost } from './community.service';
 import type { KflEvent as KflEventDto } from './events.service';
 import type { KflMessage } from './messages.service';
+import type { Notification as KflNotification } from './users.service';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface OrderStatusUpdate {
@@ -47,6 +49,7 @@ class SocketService {
   private communityFeed: Socket | null = null;
   private eventsFeed: Socket | null = null;
   private messages: Socket | null = null;
+  private notifications: Socket | null = null;
 
   // ── Namespace /orders ──────────────────────────────────────────────────────
   connectOrders(onUpdate: (payload: OrderStatusUpdate) => void): void {
@@ -163,12 +166,36 @@ class SocketService {
     this.messages = null;
   }
 
+  // ── Namespace /notifications ────────────────────────────────────────────────
+  // Room par utilisateur, même principe que /messages : reçoit les nouvelles
+  // notifications (commande, paiement, événement…) en direct, écran fermé compris.
+  connectNotifications(userId: string): void {
+    if (this.notifications?.connected) return;
+
+    this.notifications = io(`${API_CONFIG.SOCKET_URL}/notifications`, socketOptions());
+    this.notifications.on('connect', () => {
+      this.notifications?.emit('notification:join', userId);
+    });
+    this.notifications.on('notification:new', (notification: KflNotification) => {
+      useNotificationsStore.getState().receiveNotification(notification);
+    });
+    this.notifications.on('connect_error', (err: Error) => {
+      console.warn('[Socket/notifications] connect_error:', err.message);
+    });
+  }
+
+  disconnectNotifications(): void {
+    this.notifications?.disconnect();
+    this.notifications = null;
+  }
+
   // ── Utilitaires ────────────────────────────────────────────────────────────
   disconnectAll(): void {
     this.disconnectOrders();
     this.leaveEventLive();
     this.disconnectContentFeed();
     this.disconnectMessaging();
+    this.disconnectNotifications();
   }
 }
 

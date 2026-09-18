@@ -43,9 +43,10 @@ export function useFoodScanner() {
   const scanImage = useCallback(async (imageUri: string): Promise<FoodScanResult> => {
     setState({ status: 'loading', result: null, error: null });
     try {
+      const imageBase64 = await imageUriToBase64(imageUri);
+
       // Essai via l'API backend (payload AES-256-GCM chiffré par l'intercepteur)
       try {
-        const imageBase64 = await imageUriToBase64(imageUri);
         const apiResult = await scannerService.analyzeImage({ imageBase64, mimeType: 'image/jpeg' });
         const result: FoodScanResult = {
           classId: apiResult.classId,
@@ -62,18 +63,35 @@ export function useFoodScanner() {
         }
       }
 
-      // Fallback : IA locale TFLite
+      // Fallback : IA locale TFLite (indisponible sur web — voir loadModel.web.ts)
       const scores = await runInference(imageUri);
       const { classe, confiance } = interpretResult(scores);
       if (__DEV__) {
         console.log('[KFL][useFoodScanner] local IA -> classe:', classe, 'confiance:', confiance);
       }
       const isUnknown = classe === UNKNOWN_CLASS;
+
+      // Le service IA distant du backend est injoignable (sinon on ne serait pas
+      // ici), mais on renvoie quand même le résultat local calculé pour qu'il soit
+      // historisé + XP synchronisés, au lieu de rester uniquement sur l'appareil.
+      let scanId: string | undefined;
+      try {
+        const synced = await scannerService.analyzeImage({
+          imageBase64, mimeType: 'image/jpeg', localClassId: classe, localConfidence: confiance,
+        });
+        scanId = synced.scanId;
+      } catch (syncErr) {
+        if (__DEV__) {
+          console.warn('[KFL][useFoodScanner] synchronisation du résultat local a échoué (hors-ligne ?) :', syncErr);
+        }
+      }
+
       const result: FoodScanResult = {
         classId: classe,
         confidence: confiance,
         description: isUnknown ? null : getDishDescription(classe),
         isUnknown,
+        scanId,
       };
       setState({ status: 'success', result, error: null });
       return result;

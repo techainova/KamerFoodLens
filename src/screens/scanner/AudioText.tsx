@@ -12,6 +12,7 @@ import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { useVoiceToText } from '@/hooks/useVoiceToText';
 import { matchDishByDescription } from '@/ai/text/matchDishByDescription';
+import { scannerService } from '@/services/scanner.service';
 import { useAuthStore } from '@/store/auth.store';
 import { useGuestStore, FREE_SCAN_LIMIT } from '@/store/guest.store';
 
@@ -104,12 +105,28 @@ export default function AudioText() {
 
     const description = activeTab === 'audio' ? transcript : textInput;
     setAnalyzing(true);
-    await new Promise(r => setTimeout(r, 800)); // léger délai pour matérialiser l'analyse à l'écran
-    const { classId, confidence } = matchDishByDescription(description);
+    let scanId = `text-scan-${Date.now()}`;
+    let classId: string;
+    let confidence: number;
+    try {
+      // Que la description vienne du micro (transcrite hors-ligne) ou du clavier,
+      // l'identification finale passe par le backend pour être historisée + XP.
+      const apiResult = await scannerService.analyzeText({ text: description });
+      scanId = apiResult.scanId;
+      classId = apiResult.classId;
+      confidence = apiResult.confidence;
+    } catch (err) {
+      if (__DEV__) {
+        console.warn('[KFL][AudioText] API indisponible, correspondance locale de secours :', err);
+      }
+      const local = matchDishByDescription(description);
+      classId = local.classId;
+      confidence = local.confidence;
+    }
     setAnalyzing(false);
     if (!isAuthenticated) registerAnonymousScan();
     nav.navigate('Result', {
-      scanId: `text-scan-${Date.now()}`,
+      scanId,
       classId,
       confidence,
     });

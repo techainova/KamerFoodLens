@@ -1,17 +1,20 @@
 // src/navigation/AppNavigator.tsx — Navigation complète KFL (phases 3–9 + sous-écrans)
 
-import React, { useState } from 'react';
+import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StackActions, getFocusedRouteNameFromRoute, useNavigation } from '@react-navigation/native';
+import { StackActions, getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import type { AppTabParams } from './types';
 import { useAuthStore } from '@/store/auth.store';
-import QuickActionsSheet, { type QuickAction } from '@/components/ui/QuickActionsSheet';
 
 // ── Core ────────────────────────────────────────────────────────────────────
 import HomeV1        from '@/screens/home/HomeV1';
 import HomeV2        from '@/screens/home/HomeV2';
 import HomeV3        from '@/screens/home/HomeV3';
+import Restos         from '@/screens/restaurants/Restos';
+import VideoFeed       from '@/screens/videos/VideoFeed';
+import VideoComments   from '@/screens/videos/VideoComments';
+import CreateVideo     from '@/screens/videos/CreateVideo';
 import StoriesViewer  from '@/screens/home/StoriesViewer';
 import StoryCreatorCamera from '@/screens/home/StoryCreatorCamera';
 import AddStory       from '@/screens/home/AddStory';
@@ -22,6 +25,7 @@ import Search        from '@/screens/home/Search';
 import Notifications from '@/screens/home/Notifications';
 
 // ── Scanner ─────────────────────────────────────────────────────────────────
+import ScannerHome from '@/screens/scanner/ScannerHome';
 import Camera    from '@/screens/scanner/Camera';
 import AudioText from '@/screens/scanner/AudioText';
 import ResultV1  from '@/screens/scanner/ResultV1';
@@ -111,6 +115,8 @@ import ProOrders           from '@/screens/order/ProOrders';
 import ProOrderDetail      from '@/screens/order/ProOrderDetail';
 import ProConfirmation     from '@/screens/pro/ProConfirmation';
 import ProRegistration     from '@/screens/pro/ProRegistration';
+import ProCreateHub        from '@/screens/pro/ProCreateHub';
+import ProOffers           from '@/screens/pro/ProOffers';
 import CreateEvent         from '@/screens/pro/CreateEvent';
 import ManageEvent         from '@/screens/pro/ManageEvent';
 import CreateCourse        from '@/screens/pro/CreateCourse';
@@ -144,15 +150,21 @@ import SettingsProActive     from '@/screens/user_v3/SettingsProActive';
 import ProfilePro            from '@/screens/user_v3/ProfilePro';
 import HomeProAware          from '@/screens/user_v3/HomeProAware';
 
-import { WFBottomNav } from '@/components/ui';
-import type { TabName } from '@/components/ui';
+import { WFBottomNav, WFProBottomNav } from '@/components/ui';
+import type { TabName, ProTabName } from '@/components/ui';
 import { resetTabBarVisibility } from './tabBarScroll';
 
 const Tab = createBottomTabNavigator<AppTabParams>();
 const HomeStack    = createNativeStackNavigator();
+const RestoStack   = createNativeStackNavigator();
 const ScannerStack = createNativeStackNavigator();
+const VideoStack   = createNativeStackNavigator();
 const ProfileStack = createNativeStackNavigator();
-const ProStack     = createNativeStackNavigator();
+const DashStack    = createNativeStackNavigator();
+const OrdersStack  = createNativeStackNavigator();
+const CreateStack  = createNativeStackNavigator();
+const OffersStack  = createNativeStackNavigator();
+const PageStack    = createNativeStackNavigator();
 
 function HomeStackNav() {
   return (
@@ -295,13 +307,44 @@ function HomeStackNav() {
 function ScannerStackNav() {
   return (
     <ScannerStack.Navigator screenOptions={{ headerShown: false }}>
+      <ScannerStack.Screen name="ScannerHome" component={ScannerHome} />
       <ScannerStack.Screen name="Camera"     component={Camera} />
       <ScannerStack.Screen name="AudioText"  component={AudioText} />
       <ScannerStack.Screen name="Result"     component={ResultV1} />
       <ScannerStack.Screen name="Recipe"     component={RecipeV1} />
       <ScannerStack.Screen name="MapScreen"  component={MapScreen} />
       <ScannerStack.Screen name="Restaurant" component={Restaurant} />
+      <ScannerStack.Screen name="CreatePost" component={CreatePost} />
+      <ScannerStack.Screen name="ChatThread" component={ChatThread} />
     </ScannerStack.Navigator>
+  );
+}
+
+function RestoStackNav() {
+  return (
+    <RestoStack.Navigator screenOptions={{ headerShown: false }}>
+      <RestoStack.Screen name="Restos"       component={Restos} />
+      <RestoStack.Screen name="Restaurant"   component={Restaurant} />
+      <RestoStack.Screen name="OrderMenu"    component={OrderMenu} />
+      <RestoStack.Screen name="OrderSummary" component={OrderSummary} />
+      <RestoStack.Screen name="OrderPayment" component={OrderPayment} />
+      <RestoStack.Screen name="OrderInvoice" component={OrderInvoice} />
+      <RestoStack.Screen name="OrderHistory" component={OrderHistory} />
+      <RestoStack.Screen name="MapScreen"    component={MapScreen} />
+      <RestoStack.Screen name="ChatThread"   component={ChatThread} />
+    </RestoStack.Navigator>
+  );
+}
+
+function VideoStackNav() {
+  return (
+    <VideoStack.Navigator screenOptions={{ headerShown: false }}>
+      <VideoStack.Screen name="VideoFeed"     component={VideoFeed} />
+      <VideoStack.Screen name="VideoComments" component={VideoComments} options={{ presentation: 'modal' }} />
+      <VideoStack.Screen name="CreateVideo"   component={CreateVideo} options={{ presentation: 'modal' }} />
+      <VideoStack.Screen name="CourseDetail"  component={CourseDetail} />
+      <VideoStack.Screen name="EventDetail"   component={EventDetail} />
+    </VideoStack.Navigator>
   );
 }
 
@@ -385,38 +428,110 @@ function ProfileStackNav() {
       <ProfileStack.Screen name="OrderInvoice"       component={OrderInvoice} />
       <ProfileStack.Screen name="OrderHistory"       component={OrderHistory} />
       <ProfileStack.Screen name="Restaurant"         component={Restaurant} />
+      <ProfileStack.Screen name="Courses"            component={Courses} />
+      <ProfileStack.Screen name="CourseDetail"       component={CourseDetail} />
+      <ProfileStack.Screen name="CoursePlayer"       component={CoursePlayer} />
+      <ProfileStack.Screen name="Events"             component={Events} />
+      <ProfileStack.Screen name="EventDetail"        component={EventDetail} />
+      <ProfileStack.Screen name="Recipe"             component={RecipeV1} />
+      <ProfileStack.Screen name="ChatThread"         component={ChatThread} />
+      <ProfileStack.Screen name="ConversationsList"  component={ConversationsList} />
     </ProfileStack.Navigator>
   );
 }
 
-function ProStackNav() {
+// ── Compte Pro — 5 stacks indépendantes, une par onglet ──────────────────────
+function DashStackNav() {
   return (
-    <ProStack.Navigator screenOptions={{ headerShown: false }}>
-      <ProStack.Screen name="ProDashboard"       component={ProDashboard} />
-      <ProStack.Screen name="RestaurantMenu"     component={RestaurantMenu} />
-      <ProStack.Screen name="RestaurantMenuEdit" component={RestaurantMenuEdit} />
-      <ProStack.Screen name="ProRevenues"        component={ProRevenues} />
-      <ProStack.Screen name="ProFormationsList"  component={ProFormationsList} />
-      <ProStack.Screen name="ProFormationManage" component={ProFormationManage} />
-      <ProStack.Screen name="ProMessages"        component={ProMessages} />
-      <ProStack.Screen name="ProMessageDetail"   component={ProMessageDetail} />
-      <ProStack.Screen name="ProPromos"          component={ProPromos} />
-      <ProStack.Screen name="ProAnalytics"       component={ProAnalytics} />
-      <ProStack.Screen name="ProSubscription"    component={ProSubscription} />
-      <ProStack.Screen name="ProPaymentSetup"    component={ProPaymentSetup} />
-      <ProStack.Screen name="ProOrders"          component={ProOrders} />
-      <ProStack.Screen name="ProOrderDetail"     component={ProOrderDetail} />
-      <ProStack.Screen name="ManageCommunity"    component={ManageCommunity} />
-      <ProStack.Screen name="CreateEvent"        component={CreateEvent} />
-      <ProStack.Screen name="ManageEvent"        component={ManageEvent} />
-      <ProStack.Screen name="CreateCourse"       component={CreateCourse} />
-      <ProStack.Screen name="SettingsProActive"  component={SettingsProActive} />
-    </ProStack.Navigator>
+    <DashStack.Navigator screenOptions={{ headerShown: false }}>
+      <DashStack.Screen name="ProDashboard"       component={ProDashboard} />
+      <DashStack.Screen name="RestaurantMenu"     component={RestaurantMenu} />
+      <DashStack.Screen name="RestaurantMenuEdit" component={RestaurantMenuEdit} />
+      <DashStack.Screen name="ProRevenues"        component={ProRevenues} />
+      <DashStack.Screen name="ProAnalytics"       component={ProAnalytics} />
+      <DashStack.Screen name="ProMessages"        component={ProMessages} />
+      <DashStack.Screen name="ProMessageDetail"   component={ProMessageDetail} />
+      <DashStack.Screen name="ProSubscription"    component={ProSubscription} />
+      <DashStack.Screen name="ProPaymentSetup"    component={ProPaymentSetup} />
+      <DashStack.Screen name="ProOrderDetail"     component={ProOrderDetail} />
+      <DashStack.Screen name="ManageCommunity"    component={ManageCommunity} />
+      <DashStack.Screen name="ManageEvent"        component={ManageEvent} />
+      <DashStack.Screen name="SettingsProActive"  component={SettingsProActive} />
+      <DashStack.Screen name="ProCreateHub"       component={ProCreateHub} />
+      <DashStack.Screen name="CreatePost"         component={CreatePost} />
+      <DashStack.Screen name="CreateEvent"        component={CreateEvent} />
+      <DashStack.Screen name="CreateCourse"       component={CreateCourse} />
+      <DashStack.Screen name="CreateVideo"        component={CreateVideo} />
+    </DashStack.Navigator>
   );
 }
 
-const TAB_NAMES_STANDARD: TabName[] = ['home', 'search', 'scanner', 'favorites', 'profile'];
-const ROUTE_NAMES_STANDARD = ['HomeTab', 'SearchTab', 'ScannerTab', 'FavoritesTab', 'ProfileTab'];
+function OrdersStackNav() {
+  return (
+    <OrdersStack.Navigator screenOptions={{ headerShown: false }}>
+      <OrdersStack.Screen name="ProOrders"      component={ProOrders} />
+      <OrdersStack.Screen name="ProOrderDetail" component={ProOrderDetail} />
+    </OrdersStack.Navigator>
+  );
+}
+
+function CreateStackNav() {
+  return (
+    <CreateStack.Navigator screenOptions={{ headerShown: false }}>
+      <CreateStack.Screen name="ProCreateHub"       component={ProCreateHub} />
+      <CreateStack.Screen name="CreatePost"         component={CreatePost} />
+      <CreateStack.Screen name="CreateEvent"        component={CreateEvent} />
+      <CreateStack.Screen name="CreateCourse"       component={CreateCourse} />
+      <CreateStack.Screen name="CreateVideo"        component={CreateVideo} />
+      <CreateStack.Screen name="ProPromos"          component={ProPromos} />
+      <CreateStack.Screen name="RestaurantMenuEdit" component={RestaurantMenuEdit} />
+      <CreateStack.Screen name="RestaurantMenu"     component={RestaurantMenu} />
+    </CreateStack.Navigator>
+  );
+}
+
+function OffersStackNav() {
+  return (
+    <OffersStack.Navigator screenOptions={{ headerShown: false }}>
+      <OffersStack.Screen name="ProOffers"          component={ProOffers} />
+      <OffersStack.Screen name="ProFormationsList"  component={ProFormationsList} />
+      <OffersStack.Screen name="ProFormationManage" component={ProFormationManage} />
+      <OffersStack.Screen name="ManageEvent"        component={ManageEvent} />
+      <OffersStack.Screen name="CreateEvent"        component={CreateEvent} />
+      <OffersStack.Screen name="CreateCourse"       component={CreateCourse} />
+      <OffersStack.Screen name="ProCreateHub"       component={ProCreateHub} />
+    </OffersStack.Navigator>
+  );
+}
+
+function PageStackNav() {
+  return (
+    <PageStack.Navigator screenOptions={{ headerShown: false }}>
+      <PageStack.Screen name="ProfilePro"         component={ProfilePro} />
+      <PageStack.Screen name="EditProfile"        component={EditProfile} />
+      <PageStack.Screen name="Settings"           component={SettingsScreen} />
+      <PageStack.Screen name="SettingsProActive"  component={SettingsProActive} />
+      <PageStack.Screen name="ProPromos"          component={ProPromos} />
+      <PageStack.Screen name="ProRevenues"        component={ProRevenues} />
+      <PageStack.Screen name="RestaurantMenu"     component={RestaurantMenu} />
+      <PageStack.Screen name="RestaurantMenuEdit" component={RestaurantMenuEdit} />
+      <PageStack.Screen name="Badges"             component={Badges} />
+      <PageStack.Screen name="WalletScreen"       component={WalletScreen} />
+      <PageStack.Screen name="ConversationsList"  component={ConversationsList} />
+      <PageStack.Screen name="ChatThread"         component={ChatThread} />
+      <PageStack.Screen name="ProMessages"        component={ProMessages} />
+      <PageStack.Screen name="ProMessageDetail"   component={ProMessageDetail} />
+    </PageStack.Navigator>
+  );
+}
+
+// Compte standard : 5 icônes nues (fil Instagram-like) — voir WFBottomNav.
+const TAB_NAMES_STANDARD: TabName[] = ['home', 'resto', 'scan', 'video', 'profile'];
+const ROUTE_NAMES_STANDARD = ['HomeTab', 'RestoTab', 'ScanTab', 'VideoTab', 'ProfileTab'];
+
+// Compte Pro : barre distincte avec labels — voir WFProBottomNav.
+const TAB_NAMES_PRO: ProTabName[] = ['dash', 'orders', 'create', 'offers', 'page'];
+const ROUTE_NAMES_PRO = ['DashTab', 'OrdersTab', 'CreateTab', 'OffersTab', 'PageTab'];
 
 // Écran racine de chaque onglet — la barre ne s'affiche que là. Dès qu'on
 // pousse un écran par-dessus (Settings, EditProfile, ProDashboard...), cet
@@ -424,107 +539,108 @@ const ROUTE_NAMES_STANDARD = ['HomeTab', 'SearchTab', 'ScannerTab', 'FavoritesTa
 // flottante n'a plus sa place par-dessus.
 const TAB_ROOT_SCREEN: Record<string, string> = {
   HomeTab: 'HomeScreen',
-  ScannerTab: 'Camera',
-  ProTab: 'ProDashboard',
+  RestoTab: 'Restos',
+  ScanTab: 'ScannerHome',
+  VideoTab: 'VideoFeed',
   ProfileTab: 'ProfileScreen',
-  // SearchTab et FavoritesTab rendent un écran plat (pas de stack imbriqué) :
-  // getFocusedRouteNameFromRoute y renvoie toujours undefined, donc absent
-  // de cette table = toujours considéré "à la racine".
+  DashTab: 'ProDashboard',
+  OrdersTab: 'ProOrders',
+  CreateTab: 'ProCreateHub',
+  OffersTab: 'ProOffers',
+  PageTab: 'ProfilePro',
 };
-
-// Compte Pro actif : 6 onglets — Favoris reste, « Pro » s'ajoute entre Favoris et Profil
-// (cf. design Module C5 — la barre standard n'est jamais réduite pour les comptes Pro).
-const TAB_NAMES_PRO: TabName[] = ['home', 'search', 'scanner', 'favorites', 'pro', 'profile'];
-const ROUTE_NAMES_PRO = ['HomeTab', 'SearchTab', 'ScannerTab', 'FavoritesTab', 'ProTab', 'ProfileTab'];
 
 export function AppNavigator() {
   const isPro = useAuthStore((s) => s.user?.role === 'pro');
-  const TAB_NAMES = isPro ? TAB_NAMES_PRO : TAB_NAMES_STANDARD;
-  const ROUTE_NAMES = isPro ? ROUTE_NAMES_PRO : ROUTE_NAMES_STANDARD;
-  const [quickActionsVisible, setQuickActionsVisible] = useState(false);
-  // Navigation du stack racine (parent du Tab.Navigator) — utilisée pour les
-  // raccourcis de la feuille, atteint n'importe quel écran imbriqué depuis ici.
-  const rootNavigation = useNavigation<any>();
+  const avatarUri = useAuthStore((s) => s.user?.avatar);
 
-  const handleQuickAction = (action: QuickAction) => {
-    setQuickActionsVisible(false);
-    switch (action) {
-      case 'scanPhoto':
-        rootNavigation.navigate('App', { screen: 'ScannerTab', params: { screen: 'Camera' } });
-        return;
-      case 'scanVoice':
-        rootNavigation.navigate('App', { screen: 'ScannerTab', params: { screen: 'AudioText' } });
-        return;
-      case 'history':
-        rootNavigation.navigate('App', { screen: 'HomeTab', params: { screen: 'History' } });
-        return;
-      case 'addStory':
-        // Créer une histoire exige un compte — vérifié ici plutôt que dans le
-        // composant de la feuille, qui ne connaît pas la navigation racine.
-        if (!useAuthStore.getState().isAuthenticated) {
-          rootNavigation.navigate('Login');
-          return;
-        }
-        rootNavigation.navigate('App', { screen: 'HomeTab', params: { screen: 'StoryCreatorCamera' } });
-        return;
-    }
-  };
+  if (isPro) {
+    return (
+      <Tab.Navigator
+        screenOptions={{ headerShown: false }}
+        tabBar={({ navigation, state }) => {
+          const activeRoute = state.routes[state.index];
+          const focusedRouteName = getFocusedRouteNameFromRoute(activeRoute);
+          const expectedRoot = TAB_ROOT_SCREEN[activeRoute.name];
+          const isAtTabRoot = focusedRouteName === undefined || focusedRouteName === expectedRoot;
+          if (!isAtTabRoot) return null;
+          const ordersBadge = 0;
+          return (
+            <WFProBottomNav
+              activeTab={(TAB_NAMES_PRO[state.index] ?? 'dash')}
+              ordersBadge={ordersBadge}
+              onTabPress={(tab) => {
+                resetTabBarVisibility();
+                const idx = TAB_NAMES_PRO.indexOf(tab);
+                if (idx < 0) return;
+                const routeName = ROUTE_NAMES_PRO[idx]!;
+                const currentRoute = state.routes[state.index];
+                const isAlreadyOnThisTab = currentRoute?.name === routeName;
+                if (isAlreadyOnThisTab) {
+                  const innerKey = currentRoute.state?.key;
+                  if (innerKey) {
+                    navigation.dispatch({ ...StackActions.popToTop(), target: innerKey });
+                  }
+                  return;
+                }
+                navigation.navigate(routeName as never);
+              }}
+            />
+          );
+        }}
+      >
+        <Tab.Screen name="DashTab"   component={DashStackNav} />
+        <Tab.Screen name="OrdersTab" component={OrdersStackNav} />
+        <Tab.Screen name="CreateTab" component={CreateStackNav} />
+        <Tab.Screen name="OffersTab" component={OffersStackNav} />
+        <Tab.Screen name="PageTab"   component={PageStackNav} />
+      </Tab.Navigator>
+    );
+  }
 
   return (
-    <>
     <Tab.Navigator
       screenOptions={{ headerShown: false }}
       tabBar={({ navigation, state }) => {
-        if (state.index === 2) return null;
         const activeRoute = state.routes[state.index];
+        // Le Scanner occupe tout l'écran, façon Claude — jamais de barre de
+        // menu par-dessus, y compris sur son écran racine.
+        if (activeRoute.name === 'ScanTab') return null;
         const focusedRouteName = getFocusedRouteNameFromRoute(activeRoute);
         const expectedRoot = TAB_ROOT_SCREEN[activeRoute.name];
         const isAtTabRoot = focusedRouteName === undefined || focusedRouteName === expectedRoot;
         if (!isAtTabRoot) return null;
         return (
-        <WFBottomNav
-          activeTab={TAB_NAMES[state.index] ?? 'home'}
-          isPro={isPro}
-          onTabPress={(tab) => {
-            // Le bouton scanner central ouvre un menu de raccourcis plutôt que
-            // de naviguer directement — voir QuickActionsSheet.
-            if (tab === 'scanner') {
-              setQuickActionsVisible(true);
-              return;
-            }
-            // Le nouvel onglet démarre en haut de son contenu : la barre ne
-            // doit pas rester cachée à cause du défilement de l'onglet précédent.
-            resetTabBarVisibility();
-            const idx = TAB_NAMES.indexOf(tab);
-            if (idx < 0) return;
-            const routeName = ROUTE_NAMES[idx]!;
-            const currentRoute = state.routes[state.index];
-            const isAlreadyOnThisTab = currentRoute?.name === routeName;
-            if (isAlreadyOnThisTab) {
-              const innerKey = currentRoute.state?.key;
-              if (innerKey) {
-                navigation.dispatch({ ...StackActions.popToTop(), target: innerKey });
+          <WFBottomNav
+            activeTab={TAB_NAMES_STANDARD[state.index] ?? 'home'}
+            avatarUri={avatarUri}
+            onTabPress={(tab) => {
+              // Le nouvel onglet démarre en haut de son contenu : la barre ne
+              // doit pas rester cachée à cause du défilement de l'onglet précédent.
+              resetTabBarVisibility();
+              const idx = TAB_NAMES_STANDARD.indexOf(tab);
+              if (idx < 0) return;
+              const routeName = ROUTE_NAMES_STANDARD[idx]!;
+              const currentRoute = state.routes[state.index];
+              const isAlreadyOnThisTab = currentRoute?.name === routeName;
+              if (isAlreadyOnThisTab) {
+                const innerKey = currentRoute.state?.key;
+                if (innerKey) {
+                  navigation.dispatch({ ...StackActions.popToTop(), target: innerKey });
+                }
+                return;
               }
-              return;
-            }
-            navigation.navigate(routeName as never);
-          }}
-        />
+              navigation.navigate(routeName as never);
+            }}
+          />
         );
       }}
     >
-      <Tab.Screen name="HomeTab"      component={HomeStackNav} />
-      <Tab.Screen name="SearchTab"    component={Search} />
-      <Tab.Screen name="ScannerTab"   component={ScannerStackNav} />
-      <Tab.Screen name="FavoritesTab" component={FavoritesScreen} />
-      {isPro && <Tab.Screen name="ProTab" component={ProStackNav} />}
-      <Tab.Screen name="ProfileTab"   component={ProfileStackNav} />
+      <Tab.Screen name="HomeTab"    component={HomeStackNav} />
+      <Tab.Screen name="RestoTab"   component={RestoStackNav} />
+      <Tab.Screen name="ScanTab"    component={ScannerStackNav} />
+      <Tab.Screen name="VideoTab"   component={VideoStackNav} />
+      <Tab.Screen name="ProfileTab" component={ProfileStackNav} />
     </Tab.Navigator>
-    <QuickActionsSheet
-      visible={quickActionsVisible}
-      onClose={() => setQuickActionsVisible(false)}
-      onSelect={handleQuickAction}
-    />
-    </>
   );
 }

@@ -23,6 +23,10 @@ export interface Restaurant {
   isVerified: boolean;
   openingHours?: Record<string, string>;
   ownerId: string;
+  followersCount: number;
+  isFollowing: boolean;
+  acceptsDelivery: boolean;
+  acceptsReservations: boolean;
 }
 
 export interface MenuItem {
@@ -95,5 +99,20 @@ export const restaurantsService = {
 
   async deleteMenuItem(restaurantId: string, itemId: string): Promise<void> {
     await apiClient.delete(`${ENDPOINTS.RESTAURANT_MENU}/${restaurantId}/menu/${itemId}`);
+  },
+
+  async follow(restaurantId: string): Promise<{ followersCount: number; isFollowing: true }> {
+    const { data } = await apiClient.post(`${ENDPOINTS.RESTAURANT_DETAIL}/${restaurantId}/follow`);
+    return data;
+  },
+
+  async unfollow(restaurantId: string): Promise<{ followersCount: number; isFollowing: false }> {
+    const { data } = await apiClient.delete(`${ENDPOINTS.RESTAURANT_DETAIL}/${restaurantId}/follow`);
+    return data;
+  },
+
+  async getFollowed(): Promise<Restaurant[]> {
+    const { data } = await apiClient.get<Restaurant[]>(`${ENDPOINTS.RESTAURANT_DETAIL}/followed`);
+    return data;
   },
 };

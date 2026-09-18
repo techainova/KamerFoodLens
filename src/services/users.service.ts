@@ -15,7 +15,7 @@ export interface UpdateProfilePayload {
 
 export interface FavoriteItem {
   id: string;
-  type: 'dish' | 'restaurant' | 'recipe';
+  type: 'dish' | 'restaurant' | 'recipe' | 'post';
   itemId: string;
   name: string;
   imageUrl: string | null;
@@ -47,14 +47,39 @@ export interface AddJournalEntryPayload {
   note?: string;
 }
 
+export interface UserStats {
+  scansCount: number;
+  recipesCount: number;
+  reviewsCount: number;
+  postsCount: number;
+}
+
+export interface MyReview {
+  id: string;
+  restaurantId: string;
+  restaurantName: string;
+  rating: number;
+  comment: string | null;
+  createdAt: string;
+}
+
+export type NotificationType = 'order' | 'payment' | 'event' | 'course' | 'community' | 'system' | 'badge';
+
 export interface Notification {
   id: string;
-  type: 'order' | 'payment' | 'community' | 'promo' | 'system';
+  type: NotificationType;
   title: string;
   body: string;
   isRead: boolean;
   createdAt: string;
-  data?: Record<string, string>;
+  data?: Record<string, unknown> | null;
+}
+
+export interface NotificationsPage {
+  items: Notification[];
+  total: number;
+  page: number;
+  unreadCount: number;
 }
 
 export const usersService = {
@@ -65,6 +90,16 @@ export const usersService = {
 
   async updateProfile(payload: UpdateProfilePayload): Promise<User> {
     const { data } = await apiClient.patch<User>(ENDPOINTS.PROFILE_UPDATE, payload);
+    return data;
+  },
+
+  async getMyStats(): Promise<UserStats> {
+    const { data } = await apiClient.get<UserStats>(`${ENDPOINTS.PROFILE_ME}/stats`);
+    return data;
+  },
+
+  async getMyReviews(): Promise<MyReview[]> {
+    const { data } = await apiClient.get<MyReview[]>(`${ENDPOINTS.PROFILE_ME}/reviews`);
     return data;
   },
 
@@ -111,8 +146,8 @@ export const usersService = {
     await apiClient.delete(`${ENDPOINTS.JOURNAL_ENTRY}/${entryId}`);
   },
 
-  async getNotifications(page = 1): Promise<{ items: Notification[]; unreadCount: number }> {
-    const { data } = await apiClient.get(ENDPOINTS.NOTIFICATIONS, { params: { page } });
+  async getNotifications(page = 1, type?: NotificationType): Promise<NotificationsPage> {
+    const { data } = await apiClient.get(ENDPOINTS.NOTIFICATIONS, { params: { page, type } });
     return data;
   },
 
@@ -122,5 +157,9 @@ export const usersService = {
 
   async markAllNotificationsRead(): Promise<void> {
     await apiClient.patch(ENDPOINTS.NOTIFICATIONS_READ);
+  },
+
+  async deleteNotification(notificationId: string): Promise<void> {
+    await apiClient.delete(`${ENDPOINTS.NOTIFICATIONS}/${notificationId}`);
   },
 };

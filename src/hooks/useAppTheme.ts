@@ -6,63 +6,75 @@ import { useUIStore } from '@/store/ui.store';
 import { useAccessibilityStore, type ContrastMode } from '@/store/accessibility.store';
 
 export type AppColors = {
-  cream:       string;
-  surface:     string;
-  surface2:    string;
-  border:      string;
-  ink:         string;
-  inkSoft:     string;
-  inkMute:     string;
-  primary:     string;
-  success:     string;
-  error:       string;
-  gold:        string;
-  navy:        string;
-  successSoft: string;
-  errorSoft:   string;
-  goldSoft:    string;
-  navySoft:    string;
-  statusBar:   'dark-content' | 'light-content';
+  cream:        string;
+  surface:      string;
+  surface2:     string;
+  border:       string;
+  borderStrong: string;
+  divider:      string;
+  ink:          string;
+  inkSoft:      string;
+  inkMute:      string;
+  inkFaint:     string;
+  primary:      string;
+  primarySoft:  string;
+  success:      string;
+  error:        string;
+  gold:         string;
+  navy:         string;
+  successSoft:  string;
+  errorSoft:    string;
+  goldSoft:     string;
+  navySoft:     string;
+  statusBar:    'dark-content' | 'light-content';
 };
 
 export const LIGHT: AppColors = {
-  cream:       '#FFFAF5',
-  surface:     '#FFFFFF',
-  surface2:    '#F5F0EB',
-  border:      '#E5E0D8',
-  ink:         '#2C1810',
-  inkSoft:     '#6D4C41',
-  inkMute:     '#8C8278',
-  primary:     '#E8591A',
-  success:     '#2E7D32',
-  error:       '#C62828',
-  gold:        '#F9A825',
-  navy:        '#1A237E',
-  successSoft: '#E3F0E4',
-  errorSoft:   '#FBDCDC',
-  goldSoft:    '#FBF3DC',
-  navySoft:    '#E8EAF6',
-  statusBar:   'dark-content',
+  cream:        '#FBFAF8',
+  surface:      '#FFFFFF',
+  surface2:     '#F4F1ED',
+  border:       '#DCD5CD',
+  borderStrong: '#B8AFA5',
+  divider:      '#ECE7E1',
+  ink:          '#1F1A15',
+  inkSoft:      '#4A413A',
+  inkMute:      '#8C8278',
+  inkFaint:     '#C9C2BB',
+  primary:      '#E8591A',
+  primarySoft:  '#FCE5D6',
+  success:      '#2E7D32',
+  error:        '#C62828',
+  gold:         '#F9A825',
+  navy:         '#1A237E',
+  successSoft:  '#DDEAD8',
+  errorSoft:    '#FBDCDC',
+  goldSoft:     '#FBF3DC',
+  navySoft:     '#E8EAF6',
+  statusBar:    'dark-content',
 };
 
 export const DARK: AppColors = {
-  cream:       '#111111',
-  surface:     '#1C1C1E',
-  surface2:    '#2C2C2E',
-  border:      '#38383A',
-  ink:         '#F2EDE8',
-  inkSoft:     '#B5A89C',
-  inkMute:     '#78726C',
-  primary:     '#E8591A',
-  success:     '#2E7D32',
-  error:       '#C62828',
-  gold:        '#F9A825',
-  navy:        '#1A237E',
-  successSoft: '#1A2E1A',
-  errorSoft:   '#2E1A1A',
-  goldSoft:    '#2E2510',
-  navySoft:    '#0E1230',
-  statusBar:   'light-content',
+  cream:        '#14110E',
+  surface:      '#1C1814',
+  surface2:     '#25201B',
+  border:       '#3A332D',
+  borderStrong: '#574E45',
+  divider:      '#2A2520',
+  ink:          '#F2EBE3',
+  inkSoft:      '#C9BFB4',
+  inkMute:      '#847A6F',
+  inkFaint:     '#4D453E',
+  primary:      '#E8591A',
+  primarySoft:  'rgba(232, 89, 26, 0.16)',
+  success:      '#2E7D32',
+  error:        '#C62828',
+  gold:         '#F9A825',
+  navy:         '#1A237E',
+  successSoft:  'rgba(76, 175, 80, 0.16)',
+  errorSoft:    '#2E1A1A',
+  goldSoft:     '#2E2510',
+  navySoft:     '#0E1230',
+  statusBar:    'light-content',
 };
 
 function applyContrast(base: AppColors, mode: ContrastMode, isDark: boolean): AppColors {

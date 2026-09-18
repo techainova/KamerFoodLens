@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View, ScrollView, TouchableOpacity, StatusBar,
+  View, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,18 +8,25 @@ import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
-import { SHADOW_SM, SHADOW_MD, SHADOW_LG } from '@/constants/theme';
-
-const COURSES = [
-  { title: 'Maîtrisez le Ndolé',      students: 124, rating: 4.9, revenue: 372000, status: 'active' },
-  { title: 'Cuisine du Littoral',      students: 58,  rating: 4.7, revenue: 116000, status: 'active' },
-  { title: 'Épices camerounaises',     students: 12,  rating: 0,   revenue: 0,      status: 'draft'  },
-];
+import { SHADOW_SM } from '@/constants/theme';
+import { coursesService, type Course } from '@/services/courses.service';
 
 export default function ProFormationsList() {
   const navigation = useNavigation<any>();
   const C = useColors();
   const { t } = useTranslation();
+
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    coursesService.getManaged()
+      .then((c) => { if (!cancelled) setCourses(c); })
+      .catch(() => { if (!cancelled) setCourses([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -40,44 +47,40 @@ export default function ProFormationsList() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 12 }} showsVerticalScrollIndicator={false}>
-        {COURSES.length === 0 ? (
-          <Text style={{ fontSize: 13, color: C.inkMute, textAlign: 'center', marginTop: 24 }}>{t('proFormationsList.noCourses')}</Text>
-        ) : (
-          COURSES.map((course, i) => (
-            <TouchableOpacity
-              key={i}
-              onPress={() => navigation.navigate('ProFormationManage', { courseId: String(i) })}
-              style={{ padding: 16, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}
-              activeOpacity={0.85}
-            >
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-                <Text style={{ flex: 1, fontSize: 14, fontWeight: '700', color: C.ink, marginRight: 8 }}>{course.title}</Text>
-                <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, backgroundColor: course.status === 'active' ? C.successSoft : C.surface2 }}>
-                  <Text style={{ fontSize: 11, fontWeight: '600', color: course.status === 'active' ? C.success : C.inkMute }}>
-                    {course.status === 'active' ? t('proFormationsList.active') : t('proFormationsList.draft')}
-                  </Text>
-                </View>
-              </View>
-              <View style={{ flexDirection: 'row', gap: 16 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Icon name="Users" size={12} color={C.inkMute} />
-                  <Text style={{ fontSize: 12, color: C.inkMute }}>{course.students} {t('proFormationsList.students')}</Text>
-                </View>
-                {course.rating > 0 && (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <Icon name="Star" size={12} color={C.gold} fill="#F9A825" />
-                    <Text style={{ fontSize: 12, color: C.inkMute }}>{course.rating}</Text>
+      {loading ? (
+        <ActivityIndicator color={C.primary} style={{ marginTop: 30 }} />
+      ) : (
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 12 }} showsVerticalScrollIndicator={false}>
+          {courses.length === 0 ? (
+            <Text style={{ fontSize: 13, color: C.inkMute, textAlign: 'center', marginTop: 24 }}>{t('proFormationsList.noCourses')}</Text>
+          ) : (
+            courses.map((course) => (
+              <TouchableOpacity
+                key={course.id}
+                onPress={() => navigation.navigate('ProFormationManage', { courseId: course.id })}
+                style={{ padding: 16, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}
+                activeOpacity={0.85}
+              >
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                  <Text style={{ flex: 1, fontSize: 14, fontWeight: '700', color: C.ink, marginRight: 8 }}>{course.title}</Text>
+                  <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, backgroundColor: C.successSoft }}>
+                    <Text style={{ fontSize: 11, fontWeight: '600', color: C.success }}>{t('proFormationsList.active')}</Text>
                   </View>
-                )}
-                {course.revenue > 0 && (
-                  <Text style={{ fontSize: 12, fontWeight: '600', color: C.gold }}>{course.revenue.toLocaleString()} XAF</Text>
-                )}
-              </View>
-            </TouchableOpacity>
-          ))
-        )}
-      </ScrollView>
+                </View>
+                <View style={{ flexDirection: 'row', gap: 16 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Icon name="Users" size={12} color={C.inkMute} />
+                    <Text style={{ fontSize: 12, color: C.inkMute }}>{course.studentsCount} {t('proFormationsList.students')}</Text>
+                  </View>
+                  {course.priceXAF > 0 && (
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: C.gold }}>{(course.studentsCount * course.priceXAF).toLocaleString()} XAF</Text>
+                  )}
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }

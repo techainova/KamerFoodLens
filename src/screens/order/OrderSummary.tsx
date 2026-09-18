@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
@@ -12,12 +12,17 @@ import { SHADOW_SM } from '@/constants/theme';
 import { useCartStore } from '@/store/cart.store';
 import { useRestaurantStore } from '@/store/restaurant.store';
 
+type DeliveryMode = 'delivery' | 'pickup' | 'reservation';
+
 export default function OrderSummary() {
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
   const C = useColors();
   const { t } = useTranslation();
-  const [deliveryMode, setDeliveryMode] = useState<'delivery' | 'pickup'>('delivery');
+  const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>(route.params?.intent === 'reservation' ? 'reservation' : 'delivery');
   const [note, setNote] = useState('');
+  const [reservationDate, setReservationDate] = useState('');
+  const [reservationTime, setReservationTime] = useState('');
 
   const { items, restaurantId, restaurantName, updateQty, removeItem, total: cartTotal } = useCartStore();
   const restaurant = restaurantId ? useRestaurantStore.getState().getById(restaurantId) : null;
@@ -25,6 +30,8 @@ export default function OrderSummary() {
   const subtotal = cartTotal();
   const delivery = deliveryMode === 'delivery' ? 1000 : 0;
   const total = subtotal + delivery;
+  const reservationAt = reservationDate && reservationTime ? new Date(`${reservationDate}T${reservationTime}:00`) : null;
+  const reservationValid = deliveryMode !== 'reservation' || (reservationAt !== null && !Number.isNaN(reservationAt.getTime()));
 
   if (items.length === 0) {
     return (
@@ -97,19 +104,45 @@ export default function OrderSummary() {
 
         {/* Delivery mode */}
         <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 8 }}>{t('order.deliveryMode')}</Text>
-        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
+        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
           {([
-            { mode: 'delivery' as const, icon: 'Truck', label: t('order.deliveryLabel'), price: '1 000 XAF' },
-            { mode: 'pickup' as const,   icon: 'Home',  label: t('order.pickupLabel'),   price: t('common.free') },
+            { mode: 'delivery' as const,    icon: 'Truck',    label: t('order.deliveryLabel'),    price: '1 000 XAF' },
+            { mode: 'pickup' as const,      icon: 'Home',     label: t('order.pickupLabel'),      price: t('common.free') },
+            ...(restaurant?.acceptsReservations !== false
+              ? [{ mode: 'reservation' as const, icon: 'Calendar' as const, label: t('order.reservationLabel'), price: t('common.free') }]
+              : []),
           ]).map(({ mode, icon, label, price }) => (
             <TouchableOpacity key={mode} onPress={() => setDeliveryMode(mode)}
-              style={{ flex: 1, padding: 14, borderRadius: 18, borderWidth: 2, backgroundColor: deliveryMode === mode ? '#FEF3EC' : '#fff', borderColor: deliveryMode === mode ? '#E8591A' : '#E5E0D8' }}>
-              <Icon name={icon} size={22} color={deliveryMode === mode ? '#E8591A' : '#8C8278'} />
-              <Text style={{ fontSize: 14, fontWeight: '600', color: deliveryMode === mode ? '#E8591A' : '#2C1810', marginTop: 6 }}>{label}</Text>
-              <Text style={{ fontSize: 12, color: C.inkMute, marginTop: 2 }}>{price}</Text>
+              style={{ flex: 1, padding: 12, borderRadius: 18, borderWidth: 2, backgroundColor: deliveryMode === mode ? '#FEF3EC' : '#fff', borderColor: deliveryMode === mode ? '#E8591A' : '#E5E0D8' }}>
+              <Icon name={icon} size={20} color={deliveryMode === mode ? '#E8591A' : '#8C8278'} />
+              <Text style={{ fontSize: 13, fontWeight: '600', color: deliveryMode === mode ? '#E8591A' : '#2C1810', marginTop: 6 }} numberOfLines={1}>{label}</Text>
+              <Text style={{ fontSize: 11, color: C.inkMute, marginTop: 2 }}>{price}</Text>
             </TouchableOpacity>
           ))}
         </View>
+
+        {deliveryMode === 'reservation' && (
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 8 }}>{t('order.reservation')}</Text>
+            <View style={{ flexDirection: 'row', gap: 9 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, marginBottom: 6 }}>{t('order.reservationDateLabel')}</Text>
+                <View style={{ height: 46, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, paddingHorizontal: 13, justifyContent: 'center' }}>
+                  <TextInput value={reservationDate} onChangeText={setReservationDate} placeholder="2026-09-28" placeholderTextColor={C.inkMute} style={{ fontSize: 14, color: C.ink }} />
+                </View>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, marginBottom: 6 }}>{t('order.reservationTimeLabel')}</Text>
+                <View style={{ height: 46, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, paddingHorizontal: 13, justifyContent: 'center' }}>
+                  <TextInput value={reservationTime} onChangeText={setReservationTime} placeholder="19:00" placeholderTextColor={C.inkMute} style={{ fontSize: 14, color: C.ink }} />
+                </View>
+              </View>
+            </View>
+            {!reservationValid && (reservationDate.length > 0 || reservationTime.length > 0) && (
+              <Text style={{ fontSize: 11.5, color: C.error, marginTop: 6 }}>{t('order.reservationInvalid')}</Text>
+            )}
+          </View>
+        )}
 
         {/* Note */}
         <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink, marginBottom: 8 }}>{t('order.noteLabel')}</Text>
@@ -137,13 +170,15 @@ export default function OrderSummary() {
       {/* CTA */}
       <View style={{ paddingHorizontal: 16, paddingVertical: 14, borderTopWidth: 1, borderColor: C.border, backgroundColor: C.surface }}>
         <TouchableOpacity
+          disabled={!reservationValid}
           onPress={() => navigation.navigate('OrderPayment', {
             total, note, deliveryMode,
+            reservationAt: deliveryMode === 'reservation' && reservationAt ? reservationAt.toISOString() : undefined,
             restaurantId, restaurantName,
             items: items.map(i => ({ id: i.id, name: i.name, qty: i.qty, price: i.price })),
             subtotal, delivery,
           })}
-          style={{ height: 48, backgroundColor: '#E8591A', borderRadius: 24, alignItems: 'center', justifyContent: 'center' }}
+          style={{ height: 48, backgroundColor: reservationValid ? '#E8591A' : '#D0C8C0', borderRadius: 24, alignItems: 'center', justifyContent: 'center' }}
           activeOpacity={0.85}
         >
           <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>{t('order.proceedWithAmount', { total: total.toLocaleString() })}</Text>

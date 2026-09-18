@@ -10,7 +10,9 @@ import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { useMessagesStore } from '@/store/messages.store';
 import { useAuthStore } from '@/store/auth.store';
-import type { ConversationParticipant } from '@/services/messages.service';
+import type { ConversationParticipant, KflMessage } from '@/services/messages.service';
+
+const EMPTY_MESSAGES: KflMessage[] = [];
 
 export default function ChatThread() {
   const navigation = useNavigation<any>();
@@ -23,7 +25,7 @@ export default function ChatThread() {
   const otherUser: ConversationParticipant = route.params?.otherUser;
 
   const myId = useAuthStore((s) => s.user?.id);
-  const messages = useMessagesStore((s) => s.activeMessages[conversationId] ?? []);
+  const messages = useMessagesStore((s) => s.activeMessages[conversationId] ?? EMPTY_MESSAGES);
   const fetchMessages = useMessagesStore((s) => s.fetchMessages);
   const markRead = useMessagesStore((s) => s.markRead);
   const sendMessage = useMessagesStore((s) => s.sendMessage);
@@ -50,6 +52,17 @@ export default function ChatThread() {
       requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
     }
   }, [messages.length]);
+
+  // Un message entrant peut arriver en temps réel (socket) pendant que le fil
+  // est déjà ouvert — sans ça, il resterait compté "non lu" tant que l'écran
+  // n'est pas rouvert.
+  const lastMessageId = messages[messages.length - 1]?.id;
+  useEffect(() => {
+    if (!loading && messages.length > 0 && messages[messages.length - 1].senderId !== myId) {
+      void markRead(conversationId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastMessageId]);
 
   const handleSend = async () => {
     const trimmed = text.trim();

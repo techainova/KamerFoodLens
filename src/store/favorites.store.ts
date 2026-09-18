@@ -16,7 +16,6 @@ interface FavoritesState {
   isLoading:  boolean;
   fetchAll:   () => Promise<void>;
   toggle:     (type: FavoriteItem['type'], itemId: string) => Promise<void>;
-  isSaved:    (itemId: string) => boolean;
   getByType:  (type: FavoriteItem['type']) => FavoriteItem[];
 }
 
@@ -62,8 +61,6 @@ export const useFavoritesStore = create<FavoritesState>()(
           throw err;
         }
       },
-
-      isSaved: (itemId) => get().favorites.some((f) => f.itemId === itemId),
 
       getByType: (type) => {
         const favorites = get().favorites;

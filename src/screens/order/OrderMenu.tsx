@@ -24,6 +24,7 @@ export default function OrderMenu() {
   const { requireAuth } = useAuthGate();
 
   const restaurantId: string | undefined = route.params?.restaurantId;
+  const intent: 'reservation' | undefined = route.params?.intent;
   const fetchById = useRestaurantStore((s) => s.fetchById);
   const [restaurant, setRestaurant] = useState(() => (restaurantId ? useRestaurantStore.getState().getById(restaurantId) : undefined));
   const [loading, setLoading] = useState(!restaurant);
@@ -188,7 +189,7 @@ export default function OrderMenu() {
 
       {cartCount > 0 && (
         <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 16, paddingVertical: 14, backgroundColor: C.surface, borderTopWidth: 1, borderColor: C.border }}>
-          <TouchableOpacity onPress={() => requireAuth(() => navigation.navigate('OrderSummary'))} style={{ height: 48, backgroundColor: '#E8591A', borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 }} activeOpacity={0.85}>
+          <TouchableOpacity onPress={() => requireAuth(() => navigation.navigate('OrderSummary', { intent }))} style={{ height: 48, backgroundColor: '#E8591A', borderRadius: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 }} activeOpacity={0.85}>
             <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}>
               <Text style={{ color: '#E8591A', fontSize: 11, fontWeight: '700' }}>{cartCount}</Text>
             </View>

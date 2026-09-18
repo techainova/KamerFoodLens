@@ -15,10 +15,17 @@ export interface PostComment extends AuthorInfo {
   createdAt: string;
 }
 
+export interface PostMedia {
+  url: string;
+  type: 'image' | 'video';
+}
+
 export interface FeedPost extends AuthorInfo {
   id: string;
   content: string;
+  /** @deprecated use `media` */
   imageUrl?: string;
+  media: PostMedia[];
   type: 'post' | 'recipe' | 'review' | 'event';
   likes: string[];
   comments: PostComment[];
@@ -123,11 +130,15 @@ export interface Story extends AuthorInfo {
   slider?: StorySliderView;
 }
 
+export interface CreatePostMediaPayload {
+  base64: string;
+  mimeType: string;
+}
+
 export interface CreatePostPayload {
   content: string;
   type: 'post' | 'recipe' | 'review' | 'event';
-  imageBase64?: string;
-  mimeType?: string;
+  media?: CreatePostMediaPayload[];
 }
 
 export interface CreateThreadPayload {
@@ -210,8 +221,8 @@ export interface StoryHighlightDetail {
 
 export const communityService = {
   // Feed
-  async getFeed(page = 1): Promise<{ items: FeedPost[]; total: number; page: number }> {
-    const { data } = await apiClient.get(ENDPOINTS.FEED, { params: { page } });
+  async getFeed(page = 1, authorId?: string): Promise<{ items: FeedPost[]; total: number; page: number }> {
+    const { data } = await apiClient.get(ENDPOINTS.FEED, { params: { page, authorId } });
     return data;
   },
 

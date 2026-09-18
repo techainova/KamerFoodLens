@@ -220,6 +220,7 @@
     "system": "System",
     "community": "Community",
     "events": "Events",
+    "empty": "No notifications",
     "scan": "Dish identified: Eru",
     "scanDesc": "92% confidence · View result",
     "badge": "New badge: 100 scans!",
@@ -374,6 +375,9 @@
     "onArrivalSub": "I show my invoice on arrival",
     "validToday": "Valid today during opening hours",
     "reservation": "Reservation · Date & Time",
+    "reservationDateLabel": "Date",
+    "reservationTimeLabel": "Time",
+    "reservationInvalid": "Choose a valid date and time.",
     "proceedPayment": "Proceed to payment",
     "confirmPayment": "Confirm payment",
     "myOrders": "My orders",
@@ -771,6 +775,7 @@
     "tabPublications": "Posts",
     "tabAvis": "Reviews",
     "recipesCount": "Recipes",
+    "followedRestaurants": "Followed restaurants",
     "levelN": "Lvl. {{n}}"
   },
   "settings": {

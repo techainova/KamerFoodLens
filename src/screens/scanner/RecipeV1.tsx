@@ -38,7 +38,6 @@ export default function RecipeV1() {
   const [portions, setPortions] = useState(4);
   const [checked, setChecked] = useState<Set<number>>(new Set());
 
-  const isSaved = useFavoritesStore((s) => s.isSaved);
   const toggleFavorite = useFavoritesStore((s) => s.toggle);
   const fetchFavorites = useFavoritesStore((s) => s.fetchAll);
   const { requireAuth } = useAuthGate();
@@ -89,7 +88,7 @@ export default function RecipeV1() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dishId]);
 
-  const bookmarked = recipe ? isSaved(recipe.id) : false;
+  const bookmarked = useFavoritesStore((s) => !!recipe && s.favorites.some((f) => f.itemId === recipe.id));
 
   const toggleCheck = (i: number) => {
     const next = new Set(checked);

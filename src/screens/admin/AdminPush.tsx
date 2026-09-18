@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, TextInput, ScrollView, TouchableOpacity, StatusBar,
+  View, TextInput, ScrollView, TouchableOpacity, StatusBar, Alert, ActivityIndicator,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,6 +8,15 @@ import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
+import apiClient from '@/services/api.client';
+import { ENDPOINTS } from '@/services/config';
+
+// Seules les 3 premières valeurs sont des cibles réellement supportées par le
+// backend (POST /admin/push : 'all' | 'standard' | 'pro' | 'admin' | userId).
+// "Segment personnalisé" n'a pas encore de critère de segmentation ni de
+// backend derrière — on désactive l'envoi plutôt que d'inventer un
+// comportement, voir handleSend ci-dessous.
+const TARGET_VALUES = ['all', 'standard', 'pro', null] as const;
 
 export default function AdminPush() {
   const navigation = useNavigation<any>();
@@ -16,6 +25,7 @@ export default function AdminPush() {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [target, setTarget] = useState(0);
+  const [isSending, setIsSending] = useState(false);
 
   const TARGETS = [
     t('admin.targetAll'),
@@ -23,6 +33,27 @@ export default function AdminPush() {
     t('admin.targetPro'),
     t('admin.targetCustom'),
   ];
+
+  const handleSend = async () => {
+    const targetValue = TARGET_VALUES[target];
+    if (!title.trim() || !body.trim()) {
+      Alert.alert(t('admin.pushTitle'), t('admin.notifBodyPlaceholder'));
+      return;
+    }
+    if (!targetValue) {
+      Alert.alert(t('admin.pushTitle'), t('admin.targetCustom') + ' — non disponible pour le moment.');
+      return;
+    }
+    setIsSending(true);
+    try {
+      await apiClient.post(ENDPOINTS.ADMIN_PUSH, { target: targetValue, title: title.trim(), body: body.trim() });
+      Alert.alert(t('admin.sendNotification'), '✓', [{ text: 'OK', onPress: () => navigation.goBack() }]);
+    } catch {
+      Alert.alert(t('admin.pushTitle'), 'Échec de l\'envoi. Réessayez.');
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -103,11 +134,19 @@ export default function AdminPush() {
       {/* CTA */}
       <View style={{ paddingHorizontal: 16, paddingVertical: 14, borderTopWidth: 1, borderColor: C.border, backgroundColor: C.surface }}>
         <TouchableOpacity
-          style={{ height: 48, backgroundColor: '#1A237E', borderRadius: 24, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
+          style={{ height: 48, backgroundColor: '#1A237E', borderRadius: 24, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, opacity: isSending ? 0.7 : 1 }}
           activeOpacity={0.85}
+          disabled={isSending}
+          onPress={() => void handleSend()}
         >
-          <Icon name="Megaphone" size={16} color="#fff" />
-          <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>{t('admin.sendNotification')}</Text>
+          {isSending ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <>
+              <Icon name="Megaphone" size={16} color="#fff" />
+              <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>{t('admin.sendNotification')}</Text>
+            </>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>

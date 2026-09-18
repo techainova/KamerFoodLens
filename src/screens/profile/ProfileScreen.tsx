@@ -6,7 +6,7 @@ import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import Icon from '@/components/ui/Icon';
+import Icon, { type IconName } from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { useAuthStore } from '@/store/auth.store';
 import { useFavoritesStore } from '@/store/favorites.store';
@@ -15,23 +15,14 @@ import ProfilePro from '@/screens/user_v3/ProfilePro';
 import StoryHighlightBar from '@/screens/home/story-stickers/StoryHighlightBar';
 import { SHADOW_SM, SHADOW_MD, SHADOW_LG } from '@/constants/theme';
 import { onTabBarScroll } from '@/navigation/tabBarScroll';
+import { useRestaurantStore } from '@/store/restaurant.store';
+import { useCoursesStore } from '@/store/courses.store';
+import { useEventsStore } from '@/store/events.store';
+import { usersService, type UserStats, type MyReview } from '@/services/users.service';
+import { communityService, type FeedPost } from '@/services/community.service';
+import { gamesService, type Badge } from '@/services/games.service';
+import { ordersService } from '@/services/orders.service';
 
-const POST_COLORS = ['#E8591A', '#2E7D32', '#F9A825', '#1A237E', '#E8591A', '#2E7D32', '#F9A825', '#1A237E', '#E8591A'];
-const REVIEWS = [
-  { dish: 'Ndolé traditionnel', restaurant: 'Chez Mama Pauline', rating: 5, text: 'Authentique et délicieux, exactement comme à la maison.' },
-  { dish: 'Poulet DG', restaurant: "Restaurant L'Authenticité", rating: 4, text: 'Très bon, un peu salé à mon goût.' },
-];
-const BADGE_ICONS: { icon: Parameters<typeof Icon>[0]['name']; color: string; unlocked: boolean }[] = [
-  { icon: 'Camera',   color: '#E8591A', unlocked: true  },
-  { icon: 'Flame',    color: '#F9A825', unlocked: true  },
-  { icon: 'ChefHat',  color: '#E8591A', unlocked: true  },
-  { icon: 'Globe',    color: '#1A237E', unlocked: true  },
-  { icon: 'Award',    color: '#F9A825', unlocked: true  },
-  { icon: 'Trophy',   color: '#F9A825', unlocked: true  },
-  { icon: 'Star',     color: '#F9A825', unlocked: false },
-  { icon: 'Users',    color: '#8C8278', unlocked: false },
-  { icon: 'Sparkles', color: '#8C8278', unlocked: false },
-];
 
 export default function ProfileScreen() {
   const navigation = useNavigation<any>();
@@ -43,10 +34,32 @@ export default function ProfileScreen() {
   const fetchFavorites = useFavoritesStore((s) => s.fetchAll);
   const highlights = useStoriesStore((s) => s.highlights);
   const fetchHighlights = useStoriesStore((s) => s.fetchHighlights);
+  const followedRestaurants = useRestaurantStore((s) => s.followed);
+  const fetchFollowed = useRestaurantStore((s) => s.fetchFollowed);
+  const myCourses = useCoursesStore((s) => s.myCourses);
+  const fetchMyCourses = useCoursesStore((s) => s.fetchMyCourses);
+  const upcomingEvents = useEventsStore((s) => s.getRegistered());
+  const fetchEvents = useEventsStore((s) => s.fetchAll);
+
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [myPosts, setMyPosts] = useState<FeedPost[]>([]);
+  const [badges, setBadges] = useState<Badge[]>([]);
+  const [myReviews, setMyReviews] = useState<MyReview[]>([]);
+  const [ordersCount, setOrdersCount] = useState(0);
 
   useEffect(() => {
     void fetchFavorites();
     if (user?.id) void fetchHighlights(user.id);
+    void fetchFollowed();
+    void fetchMyCourses();
+    void fetchEvents();
+    void usersService.getMyStats().then(setStats).catch(() => setStats(null));
+    void usersService.getMyReviews().then(setMyReviews).catch(() => setMyReviews([]));
+    void gamesService.getMyBadges().then(setBadges).catch(() => setBadges([]));
+    void ordersService.getList(1).then((r) => setOrdersCount(r.total)).catch(() => setOrdersCount(0));
+    if (user?.id) {
+      void communityService.getFeed(1, user.id).then((r) => setMyPosts(r.items)).catch(() => setMyPosts([]));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
@@ -114,13 +127,15 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        {/* Stats row */}
+        {/* Stats row — données réelles (aucun système de "followers" entre utilisateurs
+            n'existe côté backend ; on affiche donc les statistiques qui ont un sens et
+            qui sont réellement synchronisées avec la base). */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 14, borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.border }}>
           {[
-            { value: '24',  labelKey: 'profile.recipesCount' },
-            { value: '142', labelKey: 'profile.scans'        },
-            { value: '318', labelKey: 'profile.followers'    },
-            { value: '92',  labelKey: 'profile.following'    },
+            { value: String(stats?.recipesCount ?? 0),      labelKey: 'profile.recipesCount' },
+            { value: String(stats?.scansCount ?? 0),        labelKey: 'profile.scans'        },
+            { value: String(stats?.postsCount ?? 0),        labelKey: 'profile.tabPublications' },
+            { value: String(followedRestaurants.length),    labelKey: 'profile.followedRestaurants' },
           ].map((stat, i) => (
             <View key={i} style={{ alignItems: 'center' }}>
               <Text style={{ fontSize: 16, fontWeight: '700', color: C.ink, fontFamily: 'Inter-Bold' }}>{stat.value}</Text>
@@ -138,6 +153,59 @@ export default function ProfileScreen() {
           >
             <Text style={{ fontSize: 14, fontWeight: '600', color: C.success }}>{t('profile.edit')}</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Restaurants suivis */}
+        {followedRestaurants.length > 0 && (
+          <View style={{ paddingTop: 4 }}>
+            <View style={{ paddingHorizontal: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: C.ink }}>{t('profile.followedRestaurants', 'Restaurants suivis')}</Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 14 }}>
+              {followedRestaurants.map((r) => (
+                <TouchableOpacity key={r.id} onPress={() => navigation.navigate('Restaurant', { restaurantId: r.id })} style={{ width: 76, alignItems: 'center' }}>
+                  <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                    {r.imageUrl ? (
+                      <Image source={{ uri: r.imageUrl }} style={{ width: 60, height: 60 }} resizeMode="cover" />
+                    ) : (
+                      <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700' }}>{r.name.slice(0, 2).toUpperCase()}</Text>
+                    )}
+                  </View>
+                  <Text numberOfLines={1} style={{ fontSize: 10.5, fontWeight: '700', color: C.ink, marginTop: 4 }}>{r.name}</Text>
+                  <Text style={{ fontSize: 9.5, color: C.gold, fontWeight: '700', marginTop: 1 }}>★ {r.rating.toFixed(1)}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Mes formations / événements / commandes */}
+        <View style={{ paddingHorizontal: 16, paddingTop: 18, gap: 9 }}>
+          {[
+            { key: 'formations', icon: 'GraduationCap' as const, title: t('profile.myCourses', 'Mes formations'), subtitle: myCourses.length > 0 ? `${myCourses.filter(c => c.progressPct < 100).length} en cours · ${myCourses.filter(c => c.progressPct === 100).length} terminée(s)` : 'Aucune formation pour le moment', color: C.success, bg: C.successSoft, count: myCourses.length, onPress: () => navigation.navigate('Courses') },
+            { key: 'events', icon: 'Calendar' as const, title: t('profile.myUpcomingEvents', 'Mes événements à venir'), subtitle: upcomingEvents[0]?.title ?? 'Aucun événement à venir', color: C.primary, bg: 'rgba(232,89,26,0.1)', count: upcomingEvents.length, onPress: () => navigation.navigate('Events') },
+            { key: 'orders', icon: 'ShoppingBag' as const, title: t('profile.myOrders', 'Mes commandes'), subtitle: t('profile.myOrdersSubtitle', 'Historique de vos commandes'), color: C.inkSoft, bg: C.surface2, count: ordersCount, onPress: () => navigation.navigate('OrderHistory') },
+          ].map((row) => (
+            <TouchableOpacity
+              key={row.key}
+              onPress={row.onPress}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 13, borderRadius: 14, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border }}
+            >
+              <View style={{ width: 40, height: 40, borderRadius: 11, backgroundColor: row.bg, alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name={row.icon} size={21} color={row.color} />
+              </View>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={{ fontSize: 13.5, fontWeight: '700', color: C.ink }}>{row.title}</Text>
+                <Text numberOfLines={1} style={{ fontSize: 11.5, color: C.inkMute, marginTop: 1 }}>{row.subtitle}</Text>
+              </View>
+              {row.count > 0 && (
+                <View style={{ paddingHorizontal: 8, height: 18, borderRadius: 9, backgroundColor: row.color, alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: '#fff' }}>{row.count}</Text>
+                </View>
+              )}
+              <Icon name="ChevronRight" size={17} color={C.inkMute} />
+            </TouchableOpacity>
+          ))}
         </View>
 
         {/* Histoires à la une */}
@@ -161,17 +229,36 @@ export default function ProfileScreen() {
           ))}
         </View>
 
-        {/* Publications grid */}
+        {/* Publications grid — les vraies publications de l'utilisateur (Mongo, filtrées par authorId) */}
         {activeTab === 0 && (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', padding: 2 }}>
-            {POST_COLORS.map((color, i) => (
-              <TouchableOpacity key={i} style={{ width: '33.33%', aspectRatio: 1, padding: 2 }}>
-                <View style={{ flex: 1, backgroundColor: color + '15', borderRadius: 2, alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon name="Camera" size={22} color={color + '60'} />
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
+          myPosts.length === 0 ? (
+            <View style={{ alignItems: 'center', paddingTop: 40 }}>
+              <Icon name="Camera" size={40} color={C.inkMute} />
+              <Text style={{ fontSize: 14, color: C.inkMute, marginTop: 10 }}>{t('profile.noPosts', 'Aucune publication pour le moment.')}</Text>
+            </View>
+          ) : (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', padding: 2 }}>
+              {myPosts.map((post) => {
+                const thumb = post.media[0]?.url ?? post.imageUrl;
+                return (
+                  <TouchableOpacity key={post.id} style={{ width: '33.33%', aspectRatio: 1, padding: 2 }}>
+                    <View style={{ flex: 1, backgroundColor: C.surface2, borderRadius: 2, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                      {thumb ? (
+                        <Image source={{ uri: thumb }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                      ) : (
+                        <Icon name="MessageSquare" size={20} color={C.inkMute} />
+                      )}
+                      {post.media.length > 1 && (
+                        <View style={{ position: 'absolute', top: 4, right: 4 }}>
+                          <Icon name="Grid" size={13} color="#fff" />
+                        </View>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )
         )}
 
         {/* Favorites list */}
@@ -214,17 +301,17 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        {/* Badges grid */}
+        {/* Badges grid — vraies données (GET /users/badges) */}
         {activeTab === 2 && (
           <View style={{ padding: 16 }}>
             <Text style={{ fontSize: 12, color: C.inkMute, marginBottom: 14, textAlign: 'center' }}>
-              {t('profile.badgesCount', { unlocked: 6, total: 18 })}
+              {t('profile.badgesCount', { unlocked: badges.filter((b) => b.isEarned).length, total: badges.length })}
             </Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14, justifyContent: 'center' }}>
-              {BADGE_ICONS.map((b, i) => (
-                <View key={i} style={{ alignItems: 'center', gap: 4 }}>
-                  <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: b.unlocked ? b.color + '15' : C.surface2, borderWidth: 2, borderColor: b.unlocked ? b.color + '40' : C.border, alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon name={b.icon} size={24} color={b.unlocked ? b.color : C.inkMute} />
+              {badges.slice(0, 9).map((b) => (
+                <View key={b.id} style={{ alignItems: 'center', gap: 4 }}>
+                  <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: b.isEarned ? b.color + '15' : C.surface2, borderWidth: 2, borderColor: b.isEarned ? b.color + '40' : C.border, alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name={b.icon as IconName} size={24} color={b.isEarned ? b.color : C.inkMute} />
                   </View>
                 </View>
               ))}
@@ -235,15 +322,24 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        {/* Reviews */}
+        {/* Reviews — vraies données (GET /users/me/reviews, toutes restaurants confondus) */}
         {activeTab === 3 && (
           <View style={{ paddingHorizontal: 16, paddingTop: 14, gap: 12 }}>
-            {REVIEWS.map((r, i) => (
-              <View key={i} style={{ backgroundColor: C.surface, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
+            {myReviews.length === 0 ? (
+              <View style={{ alignItems: 'center', paddingTop: 26 }}>
+                <Icon name="Star" size={40} color={C.inkMute} />
+                <Text style={{ fontSize: 14, color: C.inkMute, marginTop: 10 }}>{t('profile.noReviews', 'Aucun avis pour le moment.')}</Text>
+              </View>
+            ) : myReviews.map((r) => (
+              <TouchableOpacity
+                key={r.id}
+                onPress={() => navigation.navigate('Restaurant', { restaurantId: r.restaurantId })}
+                style={{ backgroundColor: C.surface, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}
+              >
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink }}>{r.dish}</Text>
-                    <Text style={{ fontSize: 11, color: C.inkMute, marginTop: 1 }}>{r.restaurant}</Text>
+                    <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink }}>{r.restaurantName}</Text>
+                    <Text style={{ fontSize: 11, color: C.inkMute, marginTop: 1 }}>{new Date(r.createdAt).toLocaleDateString()}</Text>
                   </View>
                   <View style={{ flexDirection: 'row', gap: 1 }}>
                     {[1, 2, 3, 4, 5].map((s) => (
@@ -251,8 +347,8 @@ export default function ProfileScreen() {
                     ))}
                   </View>
                 </View>
-                <Text style={{ fontSize: 13, color: C.inkSoft, lineHeight: 19 }}>{r.text}</Text>
-              </View>
+                {!!r.comment && <Text style={{ fontSize: 13, color: C.inkSoft, lineHeight: 19 }}>{r.comment}</Text>}
+              </TouchableOpacity>
             ))}
           </View>
         )}

@@ -28,6 +28,8 @@ import {
 
 import { useUIStore } from '@/store/ui.store';
 import { useAuthStore } from '@/store/auth.store';
+import { useMessagesStore } from '@/store/messages.store';
+import { useNotificationsStore } from '@/store/notifications.store';
 import i18n from '@/i18n';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { socketService } from '@/services/socket.service';
@@ -56,7 +58,21 @@ export default function App() {
   useEffect(() => {
     if (!userId) { socketService.disconnectMessaging(); return; }
     socketService.connectMessaging(userId);
+    // Sans cet appel initial, le badge "non lus" (icônes Accueil/ProfilePro)
+    // reste à 0 tant que l'utilisateur n'a pas ouvert une fois la liste des
+    // conversations — les mises à jour temps réel arrivent bien via le socket
+    // ci-dessus, mais seulement pour les conversations déjà connues.
+    void useMessagesStore.getState().fetchConversations();
     return () => socketService.disconnectMessaging();
+  }, [userId]);
+
+  // Notifications : même principe que la messagerie ci-dessus — connectée dès
+  // qu'un compte est présent, pour recevoir commandes/paiements/… en direct.
+  useEffect(() => {
+    if (!userId) { socketService.disconnectNotifications(); return; }
+    socketService.connectNotifications(userId);
+    void useNotificationsStore.getState().fetchFirstPage();
+    return () => socketService.disconnectNotifications();
   }, [userId]);
 
   const [fontsLoaded] = useFonts({

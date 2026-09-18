@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View, ScrollView, TouchableOpacity, StatusBar, Image,
 } from 'react-native';
@@ -11,25 +11,57 @@ import { useColors } from '@/hooks/useAppTheme';
 import { useAuthStore } from '@/store/auth.store';
 import { SHADOW_SM, SHADOW_MD, SHADOW_LG } from '@/constants/theme';
 import { onTabBarScroll } from '@/navigation/tabBarScroll';
+import { eventsService, type KflEvent } from '@/services/events.service';
+import { coursesService, type Course } from '@/services/courses.service';
+import { proService } from '@/services/pro.service';
+import { restaurantsService, type Restaurant, type RestaurantReview } from '@/services/restaurants.service';
+import { communityService, type FeedPost } from '@/services/community.service';
+import { useMessagesStore } from '@/store/messages.store';
 
 const TAB_KEYS = ['tabPublications', 'tabEvents', 'tabFormations', 'tabReviews'] as const;
-const POST_COLORS = ['#E8591A', '#2E7D32', '#F9A825', '#1A237E', '#E8591A', '#2E7D32', '#F9A825', '#1A237E', '#E8591A'];
 
 export default function ProfilePro() {
   const navigation = useNavigation<any>();
   const C = useColors();
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
+  const unreadMessages = useMessagesStore((s) => s.totalUnread());
   const [activeTab, setActiveTab] = useState(0);
+
+  const [myEvents, setMyEvents] = useState<KflEvent[]>([]);
+  const [myCourses, setMyCourses] = useState<Course[]>([]);
+  const [myPosts, setMyPosts] = useState<FeedPost[]>([]);
+  const [primaryRestaurant, setPrimaryRestaurant] = useState<Restaurant | null>(null);
+  const [myReviews, setMyReviews] = useState<RestaurantReview[]>([]);
+
+  useEffect(() => {
+    void eventsService.getManaged().then(setMyEvents).catch(() => setMyEvents([]));
+    void coursesService.getManaged().then(setMyCourses).catch(() => setMyCourses([]));
+    if (user?.id) {
+      void communityService.getFeed(1, user.id).then((r) => setMyPosts(r.items)).catch(() => setMyPosts([]));
+    }
+    void proService.getMyRestaurants().then(async (restaurants) => {
+      const first = restaurants[0];
+      if (!first) return;
+      const detail = await restaurantsService.getDetail(first.id).catch(() => null);
+      if (detail) setPrimaryRestaurant(detail);
+      const reviews = await restaurantsService.getReviews(first.id).catch(() => []);
+      setMyReviews(reviews);
+    }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const fullName = user ? `${user.firstName} ${user.lastName}`.trim() : 'Invité';
   const avatarInitial = (user?.firstName?.charAt(0) || '?').toUpperCase() + (user?.lastName?.charAt(0) || '').toUpperCase();
 
+  // Pas de système de "followers" entre comptes dans ce backend — le nombre
+  // d'abonnés réel et synchronisé est celui du (des) restaurant(s) suivis
+  // (RestaurantFollow), déjà exposé par GET /restaurants/:id.
   const STATS = [
-    { v: '12',  labelKey: 'statEvents' },
-    { v: '4',   labelKey: 'statFormations' },
-    { v: '247', labelKey: 'statFollowers' },
-    { v: '4.7', labelKey: '', icon: 'Star' as const },
+    { v: String(myEvents.length),   labelKey: 'statEvents' },
+    { v: String(myCourses.length),  labelKey: 'statFormations' },
+    { v: String(primaryRestaurant?.followersCount ?? 0), labelKey: 'statFollowers' },
+    { v: primaryRestaurant ? primaryRestaurant.rating.toFixed(1) : '—', labelKey: '', icon: 'Star' as const },
   ];
 
   return (
@@ -39,7 +71,18 @@ export default function ProfilePro() {
       {/* AppBar */}
       <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
         <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>{t('profile.title')}</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('EditProfile')} style={{ width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
+        <TouchableOpacity onPress={() => navigation.navigate('ProMessages')} style={{ width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="Bell" size={16} color={C.inkSoft} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('ConversationsList')} style={{ width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: C.border, marginLeft: 8, alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+          <Icon name="MessageCircle" size={16} color={C.inkSoft} />
+          {unreadMessages > 0 && (
+            <View style={{ position: 'absolute', top: -3, right: -3, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 }}>
+              <Text style={{ fontSize: 9, fontWeight: '800', color: '#fff' }}>{unreadMessages > 9 ? '9+' : unreadMessages}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('EditProfile')} style={{ width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: C.border, marginLeft: 8, alignItems: 'center', justifyContent: 'center' }}>
           <Icon name="Edit" size={16} color={C.inkSoft} />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('SettingsProActive')} style={{ width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: C.border, marginLeft: 8, alignItems: 'center', justifyContent: 'center' }}>
@@ -148,62 +191,106 @@ export default function ProfilePro() {
           ))}
         </View>
 
-        {/* Publications grid */}
+        {/* Publications grid — vraies publications (authorId filtré) */}
         {activeTab === 0 && (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', padding: 2 }}>
-            {POST_COLORS.map((color, i) => (
-              <TouchableOpacity key={i} style={{ width: '33.33%', aspectRatio: 1, padding: 2 }}>
-                <View style={{ flex: 1, backgroundColor: color + '15', borderRadius: 2, alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon name="Camera" size={22} color={color + '60'} />
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
+          myPosts.length === 0 ? (
+            <View style={{ alignItems: 'center', paddingTop: 40 }}>
+              <Icon name="Camera" size={40} color={C.inkMute} />
+              <Text style={{ fontSize: 14, color: C.inkMute, marginTop: 10 }}>{t('profile.noPosts', 'Aucune publication pour le moment.')}</Text>
+            </View>
+          ) : (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', padding: 2 }}>
+              {myPosts.map((post) => {
+                const thumb = post.media[0]?.url ?? post.imageUrl;
+                return (
+                  <TouchableOpacity key={post.id} style={{ width: '33.33%', aspectRatio: 1, padding: 2 }}>
+                    <View style={{ flex: 1, backgroundColor: C.surface2, borderRadius: 2, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                      {thumb ? (
+                        <Image source={{ uri: thumb }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                      ) : (
+                        <Icon name="MessageSquare" size={20} color={C.inkMute} />
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )
         )}
 
-        {/* Événements */}
+        {/* Événements — vraie liste des événements créés par ce Pro */}
         {activeTab === 1 && (
           <View style={{ paddingHorizontal: 16, paddingTop: 14, gap: 10 }}>
-            <TouchableOpacity onPress={() => navigation.navigate('ManageEvent')} style={{ backgroundColor: C.surface, borderRadius: 14, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }} activeOpacity={0.85}>
-              <View style={{ width: 50, height: 50, borderRadius: 12, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name="Calendar" size={20} color={C.inkMute} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink }}>Festival du Ndolé</Text>
-                <Text style={{ fontSize: 12, color: C.inkMute }}>28 Nov · Bonanjo, Douala</Text>
-              </View>
-              <Icon name="ChevronRight" size={16} color={C.inkMute} />
-            </TouchableOpacity>
+            {myEvents.map((ev) => (
+              <TouchableOpacity key={ev.id} onPress={() => navigation.navigate('ManageEvent', { eventId: ev.id })} style={{ backgroundColor: C.surface, borderRadius: 14, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }} activeOpacity={0.85}>
+                <View style={{ width: 50, height: 50, borderRadius: 12, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name="Calendar" size={20} color={C.inkMute} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink }}>{ev.title}</Text>
+                  <Text style={{ fontSize: 12, color: C.inkMute }}>{ev.date} · {ev.location}</Text>
+                </View>
+                <Icon name="ChevronRight" size={16} color={C.inkMute} />
+              </TouchableOpacity>
+            ))}
+            {myEvents.length === 0 && (
+              <Text style={{ fontSize: 13, color: C.inkMute, textAlign: 'center', paddingVertical: 10 }}>{t('profile.noEvents', 'Aucun événement pour le moment.')}</Text>
+            )}
             <TouchableOpacity onPress={() => navigation.navigate('CreateEvent')} style={{ height: 44, borderRadius: 14, borderWidth: 1.5, borderColor: C.primary, alignItems: 'center', justifyContent: 'center' }}>
               <Text style={{ fontSize: 14, fontWeight: '600', color: C.primary }}>+ {t('createEvent.title', 'Créer un événement')}</Text>
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Formations */}
+        {/* Formations — vraie liste des formations créées par ce Pro */}
         {activeTab === 2 && (
           <View style={{ paddingHorizontal: 16, paddingTop: 14, gap: 10 }}>
-            <TouchableOpacity onPress={() => navigation.navigate('ProFormationsList')} style={{ backgroundColor: C.surface, borderRadius: 14, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }} activeOpacity={0.85}>
-              <View style={{ width: 50, height: 50, borderRadius: 12, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name="GraduationCap" size={20} color={C.inkMute} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink }}>Maîtriser les sauces camerounaises</Text>
-                <Text style={{ fontSize: 12, color: C.inkMute }}>24 inscrits</Text>
-              </View>
-              <Icon name="ChevronRight" size={16} color={C.inkMute} />
+            {myCourses.map((c) => (
+              <TouchableOpacity key={c.id} onPress={() => navigation.navigate('ProFormationsList')} style={{ backgroundColor: C.surface, borderRadius: 14, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }} activeOpacity={0.85}>
+                <View style={{ width: 50, height: 50, borderRadius: 12, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name="GraduationCap" size={20} color={C.inkMute} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink }}>{c.title}</Text>
+                  <Text style={{ fontSize: 12, color: C.inkMute }}>{c.studentsCount} inscrits</Text>
+                </View>
+                <Icon name="ChevronRight" size={16} color={C.inkMute} />
+              </TouchableOpacity>
+            ))}
+            {myCourses.length === 0 && (
+              <Text style={{ fontSize: 13, color: C.inkMute, textAlign: 'center', paddingVertical: 10 }}>{t('profile.noCourses', 'Aucune formation pour le moment.')}</Text>
+            )}
+            <TouchableOpacity onPress={() => navigation.navigate('CreateCourse')} style={{ height: 44, borderRadius: 14, borderWidth: 1.5, borderColor: C.primary, alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: C.primary }}>+ {t('createCourse.title', 'Créer une formation')}</Text>
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Avis */}
+        {/* Avis — vraie note moyenne + vrais avis du restaurant */}
         {activeTab === 3 && (
-          <View style={{ paddingHorizontal: 16, paddingTop: 14 }}>
-            <Text style={{ fontSize: 14, color: C.inkMute }}>312 {t('profilePro.reviewsAvg')}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
-              {[1, 2, 3, 4, 5].map(s => <Icon key={s} name="Star" size={16} color={C.gold} fill={C.gold} />)}
-              <Text style={{ fontSize: 16, fontWeight: '700', color: C.ink, marginLeft: 4 }}>4.7</Text>
-            </View>
+          <View style={{ paddingHorizontal: 16, paddingTop: 14, gap: 12 }}>
+            {primaryRestaurant && (
+              <View>
+                <Text style={{ fontSize: 14, color: C.inkMute }}>{primaryRestaurant.reviewCount} {t('profilePro.reviewsAvg')}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                  {[1, 2, 3, 4, 5].map(s => <Icon key={s} name="Star" size={16} color={C.gold} fill={s <= Math.round(primaryRestaurant.rating) ? C.gold : 'none'} />)}
+                  <Text style={{ fontSize: 16, fontWeight: '700', color: C.ink, marginLeft: 4 }}>{primaryRestaurant.rating.toFixed(1)}</Text>
+                </View>
+              </View>
+            )}
+            {myReviews.length === 0 ? (
+              <Text style={{ fontSize: 13, color: C.inkMute, textAlign: 'center', paddingVertical: 10 }}>{t('profile.noReviews', 'Aucun avis pour le moment.')}</Text>
+            ) : myReviews.map((r) => (
+              <View key={r.id} style={{ backgroundColor: C.surface, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: C.ink }}>{r.authorName}</Text>
+                  <View style={{ flexDirection: 'row', gap: 1 }}>
+                    {[1, 2, 3, 4, 5].map(s => <Icon key={s} name="Star" size={12} color={C.gold} fill={s <= r.rating ? C.gold : 'none'} />)}
+                  </View>
+                </View>
+                <Text style={{ fontSize: 13, color: C.inkSoft, lineHeight: 19 }}>{r.text}</Text>
+              </View>
+            ))}
           </View>
         )}
       </ScrollView>

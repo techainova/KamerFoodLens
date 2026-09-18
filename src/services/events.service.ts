@@ -24,7 +24,28 @@ export interface KflEvent {
   imageUrl?: string;
 }
 
+export interface CreateEventPayload {
+  title: string;
+  description?: string;
+  category?: string;
+  imageUrl?: string;
+  location?: string;
+  city?: string;
+  tags?: string[];
+  isOnline?: boolean;
+  streamUrl?: string;
+  startAt: string;
+  endAt: string;
+  priceXAF?: number;
+  maxSeats?: number;
+}
+
 export const eventsService = {
+  async create(payload: CreateEventPayload): Promise<KflEvent> {
+    const { data } = await apiClient.post<KflEvent>(ENDPOINTS.EVENTS, payload);
+    return data;
+  },
+
   async getList(params?: { category?: string; page?: number }): Promise<KflEvent[]> {
     const { data } = await apiClient.get<KflEvent[]>(ENDPOINTS.EVENTS, { params });
     return data;
@@ -47,6 +68,16 @@ export const eventsService = {
 
   async getMyRegistrations(): Promise<KflEvent[]> {
     const { data } = await apiClient.get<KflEvent[]>(`${ENDPOINTS.EVENTS}/my`);
+    return data;
+  },
+
+  async getManaged(): Promise<KflEvent[]> {
+    const { data } = await apiClient.get<KflEvent[]>(`${ENDPOINTS.EVENTS}/managed`);
+    return data;
+  },
+
+  async remove(eventId: string): Promise<{ message: string }> {
+    const { data } = await apiClient.delete(`${ENDPOINTS.EVENTS}/${eventId}`);
     return data;
   },
 };

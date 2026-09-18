@@ -59,11 +59,15 @@ export default function Login({ navigation }: Props) {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Forgot password
+  // Forgot password — 3 étapes : email → code + nouveau mot de passe → confirmation
   const [forgotVisible, setForgotVisible] = useState(false);
+  const [forgotStep, setForgotStep] = useState<'email' | 'code' | 'done'>('email');
   const [forgotEmail, setForgotEmail] = useState('');
-  const [forgotSent, setForgotSent] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
+  const [resetCode, setResetCode] = useState('');
+  const [resetPassword, setResetPassword] = useState('');
+  const [resetPasswordConfirm, setResetPasswordConfirm] = useState('');
+  const [resetError, setResetError] = useState('');
 
   const setUser = useAuthStore((s) => s.setUser);
   const setTokens = useAuthStore((s) => s.setTokens);
@@ -110,8 +114,54 @@ export default function Login({ navigation }: Props) {
       // Silencieux — on affiche toujours le succès pour ne pas révéler les comptes existants
     } finally {
       setForgotLoading(false);
-      setForgotSent(true);
+      setForgotStep('code');
     }
+  }
+
+  async function handleResetSubmit() {
+    setResetError('');
+    if (resetCode.trim().length !== 6) {
+      setResetError(t('auth.resetCodeInvalid', 'Le code doit contenir 6 chiffres.'));
+      return;
+    }
+    if (resetPassword.length < 8) {
+      setResetError(t('auth.passwordTooShortReset', 'Le mot de passe doit contenir au moins 8 caractères.'));
+      return;
+    }
+    if (resetPassword !== resetPasswordConfirm) {
+      setResetError(t('auth.passwordMismatch', 'Les mots de passe ne correspondent pas.'));
+      return;
+    }
+    setForgotLoading(true);
+    try {
+      await authService.resetPassword({
+        email: forgotEmail.toLowerCase().trim(),
+        otp: resetCode.trim(),
+        newPassword: resetPassword,
+      });
+      setForgotStep('done');
+      setPassword('');
+    } catch (err) {
+      if (__DEV__) {
+        console.warn('[KFL][Login] échec de la réinitialisation :', err);
+      }
+      setResetError(
+        isNetworkError(err)
+          ? t('auth.networkError', 'Impossible de joindre le serveur. Vérifiez votre connexion.')
+          : t('auth.resetCodeWrong', 'Code invalide ou expiré. Redemandez un nouveau code.'),
+      );
+    } finally {
+      setForgotLoading(false);
+    }
+  }
+
+  function closeForgotModal() {
+    setForgotVisible(false);
+    setForgotStep('email');
+    setResetCode('');
+    setResetPassword('');
+    setResetPasswordConfirm('');
+    setResetError('');
   }
 
   const { promptGoogleSignIn } = useGoogleSignIn(async (idToken) => {
@@ -232,7 +282,7 @@ export default function Login({ navigation }: Props) {
           </View>
 
           {/* Forgot password */}
-          <TouchableOpacity style={{ alignSelf: 'flex-end' }} onPress={() => { setForgotVisible(true); setForgotSent(false); setForgotEmail(email); }}>
+          <TouchableOpacity style={{ alignSelf: 'flex-end' }} onPress={() => { setForgotVisible(true); setForgotStep('email'); setForgotEmail(email); }}>
             <Text style={{ color: '#E8591A', fontSize: 12, fontWeight: '600' }}>
               {t('auth.forgotPassword')}
             </Text>
@@ -301,19 +351,23 @@ export default function Login({ navigation }: Props) {
       </ScrollView>
 
       {/* ── Forgot Password Modal ── */}
-      <Modal visible={forgotVisible} transparent animationType="slide" onRequestClose={() => setForgotVisible(false)}>
+      <Modal visible={forgotVisible} transparent animationType="slide" onRequestClose={closeForgotModal}>
         <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' }}>
-          <View style={{ backgroundColor: C.cream, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 28, paddingBottom: 48 }}>
+          <ScrollView
+            style={{ backgroundColor: C.cream, borderTopLeftRadius: 24, borderTopRightRadius: 24 }}
+            contentContainerStyle={{ padding: 28, paddingBottom: 48 }}
+            keyboardShouldPersistTaps="handled"
+          >
 
             <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: '#E5E0D8', alignSelf: 'center', marginBottom: 24 }} />
 
-            {!forgotSent ? (
+            {forgotStep === 'email' && (
               <>
                 <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontWeight: '700', fontSize: 22, color: C.ink, marginBottom: 8 }}>
                   {t('auth.forgotPassword')}
                 </Text>
                 <Text style={{ fontSize: 13, color: C.inkSoft, lineHeight: 20, marginBottom: 20 }}>
-                  {t('auth.forgotPasswordDesc', 'Entrez votre email, nous vous enverrons un lien de réinitialisation.')}
+                  {t('auth.forgotPasswordDesc', 'Entrez votre email, nous vous enverrons un code de réinitialisation.')}
                 </Text>
 
                 <View style={{ gap: 6, marginBottom: 20 }}>
@@ -338,42 +392,134 @@ export default function Login({ navigation }: Props) {
                 <TouchableOpacity
                   style={{ height: 52, backgroundColor: '#E8591A', borderRadius: 26, alignItems: 'center', justifyContent: 'center' }}
                   onPress={handleForgotSend}
+                  disabled={forgotLoading || !forgotEmail.includes('@')}
+                >
+                  {forgotLoading
+                    ? <ActivityIndicator color="#fff" />
+                    : <Text style={{ color: '#fff', fontSize: 15, fontWeight: '600' }}>
+                        {t('auth.sendResetCode', 'Envoyer le code')}
+                      </Text>
+                  }
+                </TouchableOpacity>
+
+                <TouchableOpacity style={{ marginTop: 14, alignItems: 'center' }} onPress={closeForgotModal}>
+                  <Text style={{ color: C.inkMute, fontSize: 12 }}>{t('common.cancel')}</Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {forgotStep === 'code' && (
+              <>
+                <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontWeight: '700', fontSize: 22, color: C.ink, marginBottom: 8 }}>
+                  {t('auth.enterResetCode', 'Code de réinitialisation')}
+                </Text>
+                <Text style={{ fontSize: 13, color: C.inkSoft, lineHeight: 20, marginBottom: 20 }}>
+                  {t('auth.resetCodeSentTo', 'Code envoyé à')} <Text style={{ fontWeight: '700' }}>{forgotEmail}</Text>
+                  {' — '}{t('auth.resetCodeExpiry', 'valable un temps limité.')}
+                </Text>
+
+                <View style={{ gap: 6, marginBottom: 14 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkSoft, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    {t('auth.resetCodeLabel', 'Code à 6 chiffres')}
+                  </Text>
+                  <View style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
+                    <Icon name="Shield" size={16} color="#8C8278" />
+                    <TextInput
+                      style={{ flex: 1, fontSize: 18, letterSpacing: 6, color: C.ink }}
+                      value={resetCode}
+                      onChangeText={(v) => setResetCode(v.replace(/[^0-9]/g, '').slice(0, 6))}
+                      keyboardType="number-pad"
+                      placeholder="000000"
+                      placeholderTextColor="#8C8278"
+                      maxLength={6}
+                      autoFocus
+                    />
+                  </View>
+                </View>
+
+                <View style={{ gap: 6, marginBottom: 14 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkSoft, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    {t('auth.newPassword', 'Nouveau mot de passe')}
+                  </Text>
+                  <View style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
+                    <Icon name="Lock" size={16} color="#8C8278" />
+                    <TextInput
+                      style={{ flex: 1, fontSize: 14, color: C.ink }}
+                      value={resetPassword}
+                      onChangeText={setResetPassword}
+                      secureTextEntry
+                      placeholder="••••••••"
+                      placeholderTextColor="#8C8278"
+                    />
+                  </View>
+                </View>
+
+                <View style={{ gap: 6, marginBottom: 16 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkSoft, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    {t('auth.confirmPassword', 'Confirmer le mot de passe')}
+                  </Text>
+                  <View style={{ height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 10 }}>
+                    <Icon name="Lock" size={16} color="#8C8278" />
+                    <TextInput
+                      style={{ flex: 1, fontSize: 14, color: C.ink }}
+                      value={resetPasswordConfirm}
+                      onChangeText={setResetPasswordConfirm}
+                      secureTextEntry
+                      placeholder="••••••••"
+                      placeholderTextColor="#8C8278"
+                    />
+                  </View>
+                </View>
+
+                {resetError.length > 0 && (
+                  <View style={{ backgroundColor: '#FBDCDC', borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                    <Icon name="AlertCircle" size={15} color="#C62828" />
+                    <Text style={{ fontSize: 13, color: '#C62828', flex: 1 }}>{resetError}</Text>
+                  </View>
+                )}
+
+                <TouchableOpacity
+                  style={{ height: 52, backgroundColor: '#E8591A', borderRadius: 26, alignItems: 'center', justifyContent: 'center' }}
+                  onPress={handleResetSubmit}
                   disabled={forgotLoading}
                 >
                   {forgotLoading
                     ? <ActivityIndicator color="#fff" />
                     : <Text style={{ color: '#fff', fontSize: 15, fontWeight: '600' }}>
-                        {t('auth.sendResetLink', 'Envoyer le lien')}
+                        {t('auth.resetPasswordCta', 'Réinitialiser le mot de passe')}
                       </Text>
                   }
                 </TouchableOpacity>
 
-                <TouchableOpacity style={{ marginTop: 14, alignItems: 'center' }} onPress={() => setForgotVisible(false)}>
+                <TouchableOpacity style={{ marginTop: 12, alignItems: 'center' }} onPress={handleForgotSend} disabled={forgotLoading}>
+                  <Text style={{ color: '#E8591A', fontSize: 12, fontWeight: '600' }}>{t('auth.resendCode', 'Renvoyer le code')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={{ marginTop: 10, alignItems: 'center' }} onPress={closeForgotModal}>
                   <Text style={{ color: C.inkMute, fontSize: 12 }}>{t('common.cancel')}</Text>
                 </TouchableOpacity>
               </>
-            ) : (
-              <>
-                <View style={{ alignItems: 'center', paddingVertical: 16 }}>
-                  <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: C.successSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                    <Icon name="Mail" size={36} color="#2E7D32" />
-                  </View>
-                  <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontWeight: '700', fontSize: 20, color: C.ink, textAlign: 'center', marginBottom: 10 }}>
-                    {t('auth.checkYourEmail', 'Vérifiez votre email')}
-                  </Text>
-                  <Text style={{ fontSize: 13, color: C.inkSoft, textAlign: 'center', lineHeight: 20, marginBottom: 24 }}>
-                    {t('auth.resetLinkSentTo', 'Lien envoyé à')} <Text style={{ fontWeight: '700' }}>{forgotEmail}</Text>
-                  </Text>
-                  <TouchableOpacity
-                    style={{ height: 52, backgroundColor: '#2E7D32', borderRadius: 26, alignItems: 'center', justifyContent: 'center', width: '100%' }}
-                    onPress={() => setForgotVisible(false)}
-                  >
-                    <Text style={{ color: '#fff', fontSize: 15, fontWeight: '600' }}>{t('common.done')}</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
             )}
-          </View>
+
+            {forgotStep === 'done' && (
+              <View style={{ alignItems: 'center', paddingVertical: 16 }}>
+                <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: C.successSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                  <Icon name="CheckCircle" size={36} color="#2E7D32" />
+                </View>
+                <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontWeight: '700', fontSize: 20, color: C.ink, textAlign: 'center', marginBottom: 10 }}>
+                  {t('auth.passwordResetDone', 'Mot de passe réinitialisé')}
+                </Text>
+                <Text style={{ fontSize: 13, color: C.inkSoft, textAlign: 'center', lineHeight: 20, marginBottom: 24 }}>
+                  {t('auth.passwordResetDoneDesc', 'Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.')}
+                </Text>
+                <TouchableOpacity
+                  style={{ height: 52, backgroundColor: '#2E7D32', borderRadius: 26, alignItems: 'center', justifyContent: 'center', width: '100%' }}
+                  onPress={() => { setEmail(forgotEmail); closeForgotModal(); }}
+                >
+                  <Text style={{ color: '#fff', fontSize: 15, fontWeight: '600' }}>{t('common.done')}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </ScrollView>
         </View>
       </Modal>
     </SafeAreaView>

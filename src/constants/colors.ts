@@ -19,24 +19,25 @@ export const colors = {
   navy:        '#1A237E',      // Admin, autorité
   navySoft:    '#E8EAF6',
 
-  // ── Textes ──────────────────────────────────────
-  ink:         '#2C1810',      // Texte principal — brun chaud
-  inkSoft:     '#6D4C41',      // Texte secondaire
+  // ── Textes (alignés design system v5) ────────────
+  ink:         '#1F1A15',      // Texte principal
+  inkSoft:     '#4A413A',      // Texte secondaire
   inkMute:     '#8C8278',      // Texte désactivé / placeholder
+  inkFaint:    '#C9C2BB',      // Texte très discret (compteurs, hints)
   fgOnDark:    '#FFFFFF',
 
-  // ── Fonds & surfaces ────────────────────────────
-  cream:       '#FFFAF5',      // Fond principal (chaud)
+  // ── Fonds & surfaces (alignés design system v5) ──
+  cream:       '#FBFAF8',      // Fond principal
   surface:     '#FFFFFF',      // Cartes, modals
-  surface2:    '#F5F0EB',      // Fond secondaire
+  surface2:    '#F4F1ED',      // Fond secondaire
 
   // ── Bordures ────────────────────────────────────
-  border:      '#E5E0D8',
+  border:      '#DCD5CD',
 
   // ── Tokens étendus (alias internes) ─────────────
-  bg:            '#FFFAF5',    // = cream
+  bg:            '#FBFAF8',    // = cream
   surfaceRaised: '#FFFFFF',    // = surface
-  surfaceSunken: '#F5F0EB',    // = surface2
+  surfaceSunken: '#F4F1ED',    // = surface2
 
   fg:          '#2C1810',      // = ink
   fgMuted:     '#6D4C41',      // = inkSoft
@@ -44,10 +45,10 @@ export const colors = {
   fgDisabled:  '#B5A9A4',
   fgSoft:      '#8C8278',      // = inkMute (alias modules Pro/Order)
 
-  borderStrong: '#C8C0BA',
+  borderStrong: '#B8AFA5',
   borderFocus:  '#E8591A',     // = primary
-  divider:      '#E5E0D8',     // = border
-  borderDark:   '#C8C0BA',
+  divider:      '#ECE7E1',
+  borderDark:   '#B8AFA5',
 
   // ── Sémantiques étendus ──────────────────────────
   warning:     '#F9A825',      // = gold

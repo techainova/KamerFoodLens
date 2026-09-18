@@ -723,6 +723,25 @@ const ICONS: Record<string, IconDef> = {
       </>
     ),
   },
+  Store: {
+    paths: (
+      <>
+        <Path d="M3 9.5 5 4h14l2 5.5" />
+        <Path d="M4 9.5h16V19a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9.5z" />
+        <Path d="M9 21v-6h6v6" />
+      </>
+    ),
+  },
+  Bike: {
+    paths: (
+      <>
+        <Circle cx="5.5" cy="17.5" r="3.5" />
+        <Circle cx="18.5" cy="17.5" r="3.5" />
+        <Path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" />
+        <Path d="M12 17.5V14l-3-3 4-3 2 3h2" />
+      </>
+    ),
+  },
   Image: {
     paths: (
       <>

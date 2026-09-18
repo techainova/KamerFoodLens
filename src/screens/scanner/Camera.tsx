@@ -135,7 +135,7 @@ export default function Camera() {
       const result = await scanImage(imageUri);
       if (!isAuthenticated) registerAnonymousScan();
       navigation.navigate('Result', {
-        scanId: `scan-${Date.now()}`,
+        scanId: result.scanId ?? `scan-${Date.now()}`,
         classId: result.classId,
         confidence: result.confidence,
         imageUri,

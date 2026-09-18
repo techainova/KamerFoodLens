@@ -45,7 +45,30 @@ export interface CourseDetail extends Course {
   sections: CourseSection[];
 }
 
+export interface CreateLessonPayload {
+  title: string;
+  videoUrl?: string;
+  duration?: number;
+  order: number;
+  sectionTitle?: string;
+}
+
+export interface CreateCoursePayload {
+  title: string;
+  description?: string;
+  priceXAF?: number;
+  imageUrl?: string;
+  level?: CourseLevel;
+  isCertified?: boolean;
+  lessons?: CreateLessonPayload[];
+}
+
 export const coursesService = {
+  async create(payload: CreateCoursePayload): Promise<Course> {
+    const { data } = await apiClient.post<Course>(ENDPOINTS.COURSES, payload);
+    return data;
+  },
+
   async getList(page = 1): Promise<{ items: Course[]; total: number; page: number }> {
     const { data } = await apiClient.get(ENDPOINTS.COURSES, { params: { page } });
     return data;
@@ -62,7 +85,12 @@ export const coursesService = {
   },
 
   async enroll(courseId: string): Promise<{ id: string }> {
-    const { data } = await apiClient.post(`${ENDPOINTS.COURSE_ENROLL}/${courseId}`);
+    const { data } = await apiClient.post(`${ENDPOINTS.COURSE_ENROLL}/${courseId}/enroll`);
+    return data;
+  },
+
+  async getManaged(): Promise<Course[]> {
+    const { data } = await apiClient.get<Course[]>(`${ENDPOINTS.COURSES}/managed`);
     return data;
   },
 
@@ -73,5 +101,9 @@ export const coursesService = {
 
   async completeLesson(courseId: string, lessonId: string): Promise<void> {
     await apiClient.patch(`${ENDPOINTS.COURSES}/${courseId}/lessons/${lessonId}/complete`);
+  },
+
+  async update(courseId: string, payload: Partial<CreateCoursePayload>): Promise<void> {
+    await apiClient.patch(`${ENDPOINTS.COURSES}/${courseId}`, payload);
   },
 };
