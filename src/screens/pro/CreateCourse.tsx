@@ -1,16 +1,19 @@
 // Compte Pro — création d'une formation (gratuite ou payante), en 3 étapes :
 // contenu, tarif, publication — publie réellement via POST /courses.
 import React, { useState } from 'react';
-import { View, TextInput, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator } from 'react-native';
+import { View, TextInput, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator, Image } from 'react-native';
 import { Alert } from '@/utils/alert';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { SHADOW_SM } from '@/constants/theme';
-import { coursesService, type CreateLessonPayload } from '@/services/courses.service';
+import { coursesService, type CreateLessonPayload, type LessonType } from '@/services/courses.service';
 import type { CourseLevel } from '@/services/courses.service';
+import { readUriAsBase64 } from '@/utils/readUriAsBase64';
 
 const STEPS = ['Contenu', 'Tarif', 'Publication'];
 const LEVELS: { key: CourseLevel; label: string }[] = [
@@ -18,6 +21,30 @@ const LEVELS: { key: CourseLevel; label: string }[] = [
   { key: 'intermediate', label: 'Intermédiaire' },
   { key: 'advanced', label: 'Expert' },
 ];
+const LESSON_TYPES: { key: LessonType; label: string; icon: Parameters<typeof Icon>[0]['name'] }[] = [
+  { key: 'video', label: 'Vidéo', icon: 'Video' },
+  { key: 'document', label: 'Document', icon: 'FileText' },
+  { key: 'text', label: 'Texte', icon: 'Type' },
+];
+
+interface LessonDraft {
+  title: string;
+  type: LessonType;
+  videoUrl: string;
+  documentUrl: string;
+  documentName: string;
+  textContent: string;
+  textImageUrl: string;
+  durationMin: string;
+  uploading: boolean;
+}
+
+function emptyLesson(): LessonDraft {
+  return {
+    title: '', type: 'video', videoUrl: '', documentUrl: '', documentName: '',
+    textContent: '', textImageUrl: '', durationMin: '', uploading: false,
+  };
+}
 
 export default function CreateCourse() {
   const navigation = useNavigation<any>();
@@ -27,7 +54,7 @@ export default function CreateCourse() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [level, setLevel] = useState<CourseLevel>('beginner');
-  const [lessons, setLessons] = useState<{ title: string; videoUrl: string }[]>([{ title: '', videoUrl: '' }]);
+  const [lessons, setLessons] = useState<LessonDraft[]>([emptyLesson()]);
   const [isPaid, setIsPaid] = useState(false);
   const [priceXAF, setPriceXAF] = useState('');
   const [isCertified, setIsCertified] = useState(false);
@@ -42,11 +69,64 @@ export default function CreateCourse() {
     return true;
   };
 
-  const updateLesson = (i: number, field: 'title' | 'videoUrl', value: string) => {
-    setLessons((prev) => prev.map((l, idx) => (idx === i ? { ...l, [field]: value } : l)));
+  const patchLesson = (i: number, patch: Partial<LessonDraft>) => {
+    setLessons((prev) => prev.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
   };
 
   const removeLesson = (i: number) => setLessons((prev) => prev.filter((_, idx) => idx !== i));
+
+  const pickLessonVideo = async (i: number) => {
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['videos'], quality: 0.7, base64: true });
+    if (result.canceled || !result.assets?.[0]) return;
+    const asset = result.assets[0];
+    patchLesson(i, { uploading: true });
+    try {
+      const base64 = asset.base64 ?? (await readUriAsBase64(asset.uri));
+      const { url } = await coursesService.uploadMedia(base64, asset.mimeType ?? 'video/mp4');
+      patchLesson(i, { videoUrl: url, uploading: false });
+    } catch {
+      patchLesson(i, { uploading: false });
+      Alert.alert('Erreur', "L'envoi de la vidéo a échoué. Réessayez plus tard.");
+    }
+  };
+
+  const pickLessonDocument = async (i: number) => {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+      copyToCacheDirectory: true,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
+    const asset = result.assets[0];
+    patchLesson(i, { uploading: true });
+    try {
+      const base64 = await readUriAsBase64(asset.uri);
+      const { url } = await coursesService.uploadMedia(base64, asset.mimeType ?? 'application/pdf');
+      patchLesson(i, { documentUrl: url, documentName: asset.name, uploading: false });
+    } catch {
+      patchLesson(i, { uploading: false });
+      Alert.alert('Erreur', "L'envoi du document a échoué. Réessayez plus tard.");
+    }
+  };
+
+  const pickLessonTextImage = async (i: number) => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permission requise', "Autorisez l'accès pour ajouter une image.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, base64: true, allowsEditing: true });
+    if (result.canceled || !result.assets?.[0]) return;
+    const asset = result.assets[0];
+    patchLesson(i, { uploading: true });
+    try {
+      const base64 = asset.base64 ?? (await readUriAsBase64(asset.uri));
+      const { url } = await coursesService.uploadMedia(base64, asset.mimeType ?? 'image/jpeg');
+      patchLesson(i, { textImageUrl: url, uploading: false });
+    } catch {
+      patchLesson(i, { uploading: false });
+      Alert.alert('Erreur', "L'envoi de l'image a échoué. Réessayez plus tard.");
+    }
+  };
 
   const handlePublish = async () => {
     setPublishing(true);
@@ -54,7 +134,12 @@ export default function CreateCourse() {
     try {
       const payloadLessons: CreateLessonPayload[] = validLessons.map((l, i) => ({
         title: l.title.trim(),
-        videoUrl: l.videoUrl.trim() || undefined,
+        type: l.type,
+        videoUrl: l.type === 'video' ? (l.videoUrl.trim() || undefined) : undefined,
+        documentUrl: l.type === 'document' ? (l.documentUrl.trim() || undefined) : undefined,
+        textContent: l.type === 'text' ? (l.textContent.trim() || undefined) : undefined,
+        textImageUrl: l.type === 'text' ? (l.textImageUrl.trim() || undefined) : undefined,
+        duration: l.durationMin ? Math.round(Number(l.durationMin) * 60) : undefined,
         order: i,
       }));
       await coursesService.create({
@@ -65,7 +150,7 @@ export default function CreateCourse() {
         isCertified,
         lessons: payloadLessons,
       });
-      Alert.alert('Formation publiée', 'Elle sera vérifiée sous 48h par l\'équipe KFL avant mise en ligne.', [
+      Alert.alert('Formation publiée', 'Elle est en ligne et visible immédiatement par tous les utilisateurs.', [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
     } catch {
@@ -98,19 +183,6 @@ export default function CreateCourse() {
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
         {step === 0 && (
           <>
-            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
-              <View style={{ flex: 1, padding: 13, borderRadius: 14, borderWidth: 1.6, borderColor: C.primary, backgroundColor: C.primarySoft }}>
-                <Icon name="Video" size={21} color={C.primary} />
-                <Text style={{ fontSize: 14, fontWeight: '700', color: C.primary, marginTop: 6 }}>Vidéos</Text>
-                <Text style={{ fontSize: 10.5, color: C.inkMute, marginTop: 2 }}>Série publiée sur votre page</Text>
-              </View>
-              <View style={{ flex: 1, padding: 13, borderRadius: 14, borderWidth: 1, borderColor: C.border, opacity: 0.5 }}>
-                <Icon name="Radio" size={21} color={C.inkSoft} />
-                <Text style={{ fontSize: 14, fontWeight: '700', color: C.ink, marginTop: 6 }}>En direct</Text>
-                <Text style={{ fontSize: 10.5, color: C.inkMute, marginTop: 2 }}>Bientôt disponible</Text>
-              </View>
-            </View>
-
             <Text style={{ fontSize: 11.5, fontWeight: '700', color: C.inkSoft, marginBottom: 6 }}>TITRE</Text>
             <View style={{ height: 46, borderWidth: 1, borderColor: C.border, borderRadius: 12, backgroundColor: C.surface, paddingHorizontal: 13, justifyContent: 'center', marginBottom: 14 }}>
               <TextInput value={title} onChangeText={setTitle} placeholder="Maîtriser les sauces camerounaises" placeholderTextColor={C.inkMute} style={{ fontSize: 14, color: C.ink }} />
@@ -132,29 +204,139 @@ export default function CreateCourse() {
 
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <Text style={{ fontSize: 11.5, fontWeight: '700', color: C.inkSoft }}>LEÇONS ({validLessons.length})</Text>
-              <TouchableOpacity onPress={() => setLessons([...lessons, { title: '', videoUrl: '' }])} style={{ height: 28, paddingHorizontal: 12, backgroundColor: C.primary, borderRadius: 14, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <TouchableOpacity onPress={() => setLessons([...lessons, emptyLesson()])} style={{ height: 28, paddingHorizontal: 12, backgroundColor: C.primary, borderRadius: 14, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                 <Icon name="Plus" size={12} color="#fff" />
                 <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>Ajouter</Text>
               </TouchableOpacity>
             </View>
-            <View style={{ borderRadius: 14, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, overflow: 'hidden', ...SHADOW_SM }}>
+
+            <View style={{ gap: 10 }}>
               {lessons.map((lesson, i) => (
-                <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 13, paddingVertical: 11, borderBottomWidth: i < lessons.length - 1 ? 1 : 0, borderColor: C.surface2 }}>
-                  <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ color: C.inkSoft, fontSize: 11, fontWeight: '700' }}>{i + 1}</Text>
+                <View key={i} style={{ borderRadius: 14, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, padding: 12, ...SHADOW_SM }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                    <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center' }}>
+                      <Text style={{ color: C.inkSoft, fontSize: 11, fontWeight: '700' }}>{i + 1}</Text>
+                    </View>
+                    <TextInput
+                      value={lesson.title}
+                      onChangeText={(v) => patchLesson(i, { title: v })}
+                      placeholder={`Titre de la leçon ${i + 1}`}
+                      placeholderTextColor={C.inkMute}
+                      style={{ flex: 1, fontSize: 13.5, color: C.ink }}
+                    />
+                    {lessons.length > 1 && (
+                      <TouchableOpacity onPress={() => removeLesson(i)}>
+                        <Icon name="X" size={15} color={C.inkMute} />
+                      </TouchableOpacity>
+                    )}
                   </View>
-                  <TextInput
-                    value={lesson.title}
-                    onChangeText={(v) => updateLesson(i, 'title', v)}
-                    placeholder={`Titre de la leçon ${i + 1}`}
-                    placeholderTextColor={C.inkMute}
-                    style={{ flex: 1, fontSize: 13.5, color: C.ink }}
-                  />
-                  {lessons.length > 1 && (
-                    <TouchableOpacity onPress={() => removeLesson(i)}>
-                      <Icon name="X" size={15} color={C.inkMute} />
-                    </TouchableOpacity>
+
+                  {/* Type de contenu */}
+                  <View style={{ flexDirection: 'row', gap: 6, marginBottom: 10 }}>
+                    {LESSON_TYPES.map((lt) => (
+                      <TouchableOpacity
+                        key={lt.key}
+                        onPress={() => patchLesson(i, { type: lt.key })}
+                        style={{ flex: 1, height: 34, borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: lesson.type === lt.key ? C.primarySoft : C.surface2, borderWidth: 1, borderColor: lesson.type === lt.key ? C.primary : C.border }}
+                      >
+                        <Icon name={lt.icon} size={13} color={lesson.type === lt.key ? C.primary : C.inkMute} />
+                        <Text style={{ fontSize: 12, fontWeight: '600', color: lesson.type === lt.key ? C.primary : C.inkSoft }}>{lt.label}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+
+                  {/* Contenu selon le type */}
+                  {lesson.type === 'video' && (
+                    <View style={{ marginBottom: 10 }}>
+                      <TouchableOpacity
+                        onPress={() => void pickLessonVideo(i)}
+                        disabled={lesson.uploading}
+                        style={{ height: 40, borderRadius: 10, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 8 }}
+                      >
+                        {lesson.uploading ? <ActivityIndicator size="small" color={C.primary} /> : <Icon name="Video" size={14} color={C.inkSoft} />}
+                        <Text style={{ fontSize: 12.5, fontWeight: '600', color: C.inkSoft }}>{lesson.videoUrl ? 'Remplacer la vidéo' : 'Choisir une vidéo'}</Text>
+                      </TouchableOpacity>
+                      {!!lesson.videoUrl && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Icon name="CheckCircle" size={13} color={C.success} />
+                          <Text style={{ fontSize: 11.5, color: C.success }} numberOfLines={1}>Vidéo ajoutée</Text>
+                        </View>
+                      )}
+                      <Text style={{ fontSize: 10.5, color: C.inkMute, marginTop: 6, marginBottom: 4 }}>Ou collez un lien (YouTube, Vimeo…)</Text>
+                      <View style={{ height: 38, borderWidth: 1, borderColor: C.border, borderRadius: 10, backgroundColor: C.surface2, paddingHorizontal: 11, justifyContent: 'center' }}>
+                        <TextInput
+                          value={lesson.videoUrl}
+                          onChangeText={(v) => patchLesson(i, { videoUrl: v })}
+                          placeholder="https://…"
+                          placeholderTextColor={C.inkMute}
+                          style={{ fontSize: 12.5, color: C.ink }}
+                        />
+                      </View>
+                    </View>
                   )}
+
+                  {lesson.type === 'document' && (
+                    <View style={{ marginBottom: 10 }}>
+                      <TouchableOpacity
+                        onPress={() => void pickLessonDocument(i)}
+                        disabled={lesson.uploading}
+                        style={{ height: 40, borderRadius: 10, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                      >
+                        {lesson.uploading ? <ActivityIndicator size="small" color={C.primary} /> : <Icon name="FileText" size={14} color={C.inkSoft} />}
+                        <Text style={{ fontSize: 12.5, fontWeight: '600', color: C.inkSoft }} numberOfLines={1}>
+                          {lesson.documentName || 'Choisir un document (PDF, Word)'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  {lesson.type === 'text' && (
+                    <View style={{ marginBottom: 10 }}>
+                      <View style={{ minHeight: 70, borderWidth: 1, borderColor: C.border, borderRadius: 10, backgroundColor: C.surface2, padding: 10, marginBottom: 8 }}>
+                        <TextInput
+                          value={lesson.textContent}
+                          onChangeText={(v) => patchLesson(i, { textContent: v })}
+                          multiline
+                          placeholder="Contenu écrit de la leçon…"
+                          placeholderTextColor={C.inkMute}
+                          style={{ fontSize: 12.5, color: C.ink, lineHeight: 18 }}
+                        />
+                      </View>
+                      {lesson.textImageUrl ? (
+                        <View style={{ marginBottom: 8 }}>
+                          <Image source={{ uri: lesson.textImageUrl }} style={{ width: '100%', height: 100, borderRadius: 10 }} resizeMode="cover" />
+                          <TouchableOpacity onPress={() => patchLesson(i, { textImageUrl: '' })} style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: 11, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' }}>
+                            <Icon name="X" size={12} color="#fff" />
+                          </TouchableOpacity>
+                        </View>
+                      ) : (
+                        <TouchableOpacity
+                          onPress={() => void pickLessonTextImage(i)}
+                          disabled={lesson.uploading}
+                          style={{ height: 36, borderRadius: 10, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                        >
+                          {lesson.uploading ? <ActivityIndicator size="small" color={C.primary} /> : <Icon name="Image" size={13} color={C.inkSoft} />}
+                          <Text style={{ fontSize: 12, fontWeight: '600', color: C.inkSoft }}>Ajouter une image (optionnel)</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  )}
+
+                  {/* Durée — pour tous les types */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Icon name="Clock" size={13} color={C.inkMute} />
+                    <View style={{ height: 34, width: 80, borderWidth: 1, borderColor: C.border, borderRadius: 9, backgroundColor: C.surface2, paddingHorizontal: 10, justifyContent: 'center' }}>
+                      <TextInput
+                        value={lesson.durationMin}
+                        onChangeText={(v) => patchLesson(i, { durationMin: v })}
+                        keyboardType="numeric"
+                        placeholder="10"
+                        placeholderTextColor={C.inkMute}
+                        style={{ fontSize: 12.5, color: C.ink }}
+                      />
+                    </View>
+                    <Text style={{ fontSize: 11.5, color: C.inkMute }}>minutes</Text>
+                  </View>
                 </View>
               ))}
             </View>
@@ -187,7 +369,7 @@ export default function CreateCourse() {
               </View>
             </TouchableOpacity>
             <Text style={{ fontSize: 11, color: C.inkMute, marginTop: 14, lineHeight: 16, fontStyle: 'italic' }}>
-              ⓘ Votre formation sera vérifiée par l'équipe KFL sous 48h avant publication. Commission plateforme : 10%.
+              ⓘ Votre formation sera publiée immédiatement et visible par tous les utilisateurs. Commission plateforme : 10%.
             </Text>
           </>
         )}

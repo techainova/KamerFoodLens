@@ -93,6 +93,11 @@ export const usersService = {
     return data;
   },
 
+  async deleteAccount(): Promise<{ message: string }> {
+    const { data } = await apiClient.delete(ENDPOINTS.PROFILE_ME);
+    return data;
+  },
+
   async getMyStats(): Promise<UserStats> {
     const { data } = await apiClient.get<UserStats>(`${ENDPOINTS.PROFILE_ME}/stats`);
     return data;

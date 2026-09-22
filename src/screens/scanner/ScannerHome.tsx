@@ -97,7 +97,7 @@ export default function ScannerHome() {
       {/* Barre du haut — minimaliste : retour, logo KFLens, historique */}
       <View style={{ height: 50, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <TouchableOpacity
-          onPress={() => nav.getParent()?.navigate('HomeTab' as never)}
+          onPress={() => (nav.canGoBack() ? nav.goBack() : nav.getParent()?.navigate('HomeTab' as never))}
           style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}
         >
           <Icon name="ArrowLeft" size={20} color={C.ink} />

@@ -446,6 +446,8 @@ function ProfileStackNav() {
       <ProfileStack.Screen name="Recipe"             component={RecipeV1} />
       <ProfileStack.Screen name="ChatThread"         component={ChatThread} />
       <ProfileStack.Screen name="ConversationsList"  component={ConversationsList} />
+      <ProfileStack.Screen name="Forum"              component={Forum} />
+      <ProfileStack.Screen name="AllRecipes"         component={AllRecipes} />
     </ProfileStack.Navigator>
   );
 }
@@ -530,11 +532,14 @@ function PageStackNav() {
       <PageStack.Screen name="Settings"           component={SettingsScreen} />
       <PageStack.Screen name="SettingsProActive"  component={SettingsProActive} />
       <PageStack.Screen name="ProPromos"          component={ProPromos} />
+      <PageStack.Screen name="ProSubscription"    component={ProSubscription} />
       <PageStack.Screen name="ProRevenues"        component={ProRevenues} />
       <PageStack.Screen name="RestaurantMenu"     component={RestaurantMenu} />
       <PageStack.Screen name="RestaurantMenuEdit" component={RestaurantMenuEdit} />
       <PageStack.Screen name="Badges"             component={Badges} />
       <PageStack.Screen name="WalletScreen"       component={WalletScreen} />
+      <PageStack.Screen name="Payment"             component={Payment} />
+      <PageStack.Screen name="TransactionHistory"  component={TransactionHistory} />
       <PageStack.Screen name="ConversationsList"  component={ConversationsList} />
       <PageStack.Screen name="ChatThread"         component={ChatThread} />
       <PageStack.Screen name="ProMessages"        component={ProMessages} />
@@ -547,6 +552,16 @@ function PageStackNav() {
       <PageStack.Screen name="ProFormationsList"  component={ProFormationsList} />
       <PageStack.Screen name="ProFormationManage" component={ProFormationManage} />
       <PageStack.Screen name="CreateCourse"       component={CreateCourse} />
+      <PageStack.Screen name="ScannerHome"        component={ScannerHome} />
+      <PageStack.Screen name="Camera"              component={Camera} />
+      <PageStack.Screen name="AudioText"           component={AudioText} />
+      <PageStack.Screen name="Result"              component={ResultV1} />
+      <PageStack.Screen name="Recipe"              component={RecipeV1} />
+      <PageStack.Screen name="MapScreen"            component={MapScreen} />
+      <PageStack.Screen name="Restaurant"           component={Restaurant} />
+      <PageStack.Screen name="CreatePost"           component={CreatePost} />
+      <PageStack.Screen name="StoryCreatorCamera"   component={StoryCreatorCamera} />
+      <PageStack.Screen name="AddStory"             component={AddStory} />
     </PageStack.Navigator>
   );
 }

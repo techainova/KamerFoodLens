@@ -178,6 +178,26 @@ export default function ProfilePro() {
           </TouchableOpacity>
         </View>
 
+        {/* Actions rapides — scanner un plat / publier une story */}
+        <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 16 }}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ScannerHome')}
+            style={{ flex: 1, height: 44, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, borderRadius: 22, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 }}
+            activeOpacity={0.85}
+          >
+            <Icon name="ScanLine" size={16} color={C.ink} />
+            <Text style={{ fontSize: 13, fontWeight: '600', color: C.ink }}>{t('profilePro.scanDish')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('StoryCreatorCamera')}
+            style={{ flex: 1, height: 44, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, borderRadius: 22, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 }}
+            activeOpacity={0.85}
+          >
+            <Icon name="Camera" size={16} color={C.ink} />
+            <Text style={{ fontSize: 13, fontWeight: '600', color: C.ink }}>{t('profilePro.addStory')}</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Tabs */}
         <View style={{ flexDirection: 'row', backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
           {TAB_KEYS.map((key, i) => (

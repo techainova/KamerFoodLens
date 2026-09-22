@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, ScrollView, TouchableOpacity, StatusBar } from 'react-native';
 import { Alert } from '@/utils/alert';
 import { Text } from '@/components/ui/ScaledText';
@@ -9,6 +9,11 @@ import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import type { IconName } from '@/components/ui/Icon';
 import { SHADOW_SM, SHADOW_MD, SHADOW_LG } from '@/constants/theme';
+import { useAuthStore } from '@/store/auth.store';
+import { authService } from '@/services/auth.service';
+import { proService } from '@/services/pro.service';
+
+type ProSubscriptionData = Awaited<ReturnType<typeof proService.getSubscription>>;
 
 const PRO_ITEMS: { labelKey: string; icon: IconName; screen: string }[] = [
   { labelKey: 'settingsProActive.myRestaurant',    icon: 'ChefHat',     screen: 'RestaurantMenu' },
@@ -21,6 +26,16 @@ export default function SettingsProActive() {
   const navigation = useNavigation<any>();
   const C = useColors();
   const { t } = useTranslation();
+  const clearAuth = useAuthStore((s) => s.clearAuth);
+  const refreshToken = useAuthStore((s) => s.refreshToken);
+
+  const [subscription, setSubscription] = useState<ProSubscriptionData | null>(null);
+  const [dashboard, setDashboard] = useState<{ revenueXAF: number; ordersCount: number } | null>(null);
+
+  useEffect(() => {
+    void proService.getSubscription().then(setSubscription).catch(() => {});
+    void proService.getDashboard().then(setDashboard).catch(() => {});
+  }, []);
 
   const handleCancelSubscription = () => {
     Alert.alert(
@@ -39,7 +54,19 @@ export default function SettingsProActive() {
       undefined,
       [
         { text: t('settingsProActive.logoutConfirmCancel'), style: 'cancel' },
-        { text: t('settingsProActive.logoutConfirmAction'), style: 'destructive', onPress: () => navigation.navigate('Login') },
+        {
+          text: t('settingsProActive.logoutConfirmAction'),
+          style: 'destructive',
+          onPress: () => {
+            // Révoque le refresh token côté serveur avant de vider l'état local —
+            // sans ça le token restait valide indéfiniment côté backend, et la
+            // modale Login pouvait être balayée pour revenir dans l'app Pro
+            // toujours authentifiée (voir Settings.tsx pour le même correctif).
+            if (refreshToken) void authService.logout(refreshToken).catch(() => {});
+            clearAuth();
+            navigation.navigate('HomeTab', { screen: 'HomeScreen' });
+          },
+        },
       ],
     );
   };
@@ -66,14 +93,16 @@ export default function SettingsProActive() {
               <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>{t('settingsProActive.proActiveBadge')}</Text>
             </View>
           </View>
-          <Text style={{ color: '#fff', fontSize: 20, fontFamily: 'PlayfairDisplay-Bold', marginBottom: 4 }}>Chez Mama Pauline</Text>
+          <Text style={{ color: '#fff', fontSize: 20, fontFamily: 'PlayfairDisplay-Bold', marginBottom: 4 }}>
+            {subscription?.proProfile?.businessName ?? t('settingsProActive.proAccountFallback')}
+          </Text>
           <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, marginBottom: 16 }}>
-            {t('settingsProActive.renewalNote', { date: '15 Jul 2026' })}
+            {subscription?.status === 'active' ? t('settingsProActive.statusActive') : t('settingsProActive.statusInactive')}
           </Text>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             {[
-              { v: '47',   l: t('settingsProActive.ordersThisMonth'), vColor: '#fff'  },
-              { v: '195k', l: t('settingsProActive.revenueXaf'),       vColor: C.gold },
+              { v: String(dashboard?.ordersCount ?? 0), l: t('settingsProActive.ordersThisMonth'), vColor: '#fff'  },
+              { v: `${((dashboard?.revenueXAF ?? 0) / 1000).toFixed(0)}k`, l: t('settingsProActive.revenueXaf'), vColor: C.gold },
             ].map((s, i) => (
               <View key={i} style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 12, padding: 12, alignItems: 'center' }}>
                 <Text style={{ fontSize: 18, fontWeight: '700', color: s.vColor }}>{s.v}</Text>

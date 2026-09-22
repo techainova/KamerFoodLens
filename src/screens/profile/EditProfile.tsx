@@ -55,14 +55,13 @@ export default function EditProfile() {
     try {
       const updated = await usersService.updateProfile({ firstName, lastName, username, bio, phone, location });
       setUser({ ...updated });
-    } catch {
-      // Fallback local
-      if (user) setUser({ ...user, firstName, lastName, username, bio, phone, email, location });
-    } finally {
-      setSaving(false);
       Alert.alert(t('editProfile.savedTitle'), t('editProfile.savedMsg'), [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
+    } catch {
+      Alert.alert(t('editProfile.saveFailedTitle'), t('editProfile.saveFailedMsg'));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -105,9 +104,14 @@ export default function EditProfile() {
         {
           text: t('editProfile.deleteConfirmAction'),
           style: 'destructive',
-          onPress: () => {
-            clearAuth();
-            navigation.navigate('HomeTab', { screen: 'HomeScreen' });
+          onPress: async () => {
+            try {
+              await usersService.deleteAccount();
+              clearAuth();
+              navigation.navigate('HomeTab', { screen: 'HomeScreen' });
+            } catch {
+              Alert.alert(t('editProfile.deleteFailedTitle'), t('editProfile.deleteFailedMsg'));
+            }
           },
         },
       ],

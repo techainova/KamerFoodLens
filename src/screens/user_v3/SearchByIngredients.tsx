@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  View, TextInput, ScrollView, TouchableOpacity, StatusBar,
+  View, TextInput, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
+import { recipesService, type Recipe } from '@/services/recipes.service';
 
 const SUGGESTED = [
   'Feuilles de ndolé', "Pâte d'arachide", 'Poisson fumé', 'Plantains', 'Huile de palme',
@@ -16,12 +17,25 @@ const SUGGESTED = [
 
 const FILTER_KEYS = ['all', 'under30', 'vegetarian', 'spicy', 'simple', 'cameroonian', 'glutenFree'] as const;
 
-const RESULTS = [
-  { name: 'Ndolé traditionnel', match: 97, missing: [],                  region: 'Littoral' },
-  { name: 'Mbongo tchobi',      match: 72, missing: ['Écorces fraîches'], region: 'Littoral' },
-  { name: 'Sauce arachide',     match: 68, missing: ['Tomates'],          region: 'Centre'   },
-  { name: 'Eru aux crevettes',  match: 64, missing: ['Waterleaf'],        region: 'Sud-Ouest'},
-];
+interface RecipeMatch {
+  recipe: Recipe;
+  matchPct: number;
+  missing: string[];
+}
+
+function normalize(s: string): string {
+  return s.trim().toLowerCase();
+}
+
+function computeMatch(recipe: Recipe, selected: string[]): RecipeMatch {
+  const normalizedSelected = selected.map(normalize);
+  const matched = recipe.ingredients.filter((ing) =>
+    normalizedSelected.some((sel) => normalize(ing.name).includes(sel) || sel.includes(normalize(ing.name))),
+  );
+  const missing = recipe.ingredients.filter((ing) => !matched.includes(ing)).map((ing) => ing.name);
+  const matchPct = recipe.ingredients.length > 0 ? Math.round((matched.length / recipe.ingredients.length) * 100) : 0;
+  return { recipe, matchPct, missing };
+}
 
 export default function SearchByIngredients() {
   const navigation = useNavigation<any>();
@@ -30,10 +44,28 @@ export default function SearchByIngredients() {
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState(0);
   const [selected, setSelected] = useState<string[]>(['Feuilles de ndolé', "Pâte d'arachide", 'Poisson fumé']);
+  const [results, setResults] = useState<Recipe[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const toggle = (ing: string) => {
     setSelected(prev => prev.includes(ing) ? prev.filter(i => i !== ing) : [...prev, ing]);
   };
+
+  useEffect(() => {
+    if (selected.length < 2) {
+      setResults([]);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    recipesService.searchByIngredients(selected)
+      .then((r) => { if (!cancelled) setResults(r); })
+      .catch(() => { if (!cancelled) setResults([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [selected]);
+
+  const matches = useMemo(() => results.map((r) => computeMatch(r, selected)).sort((a, b) => b.matchPct - a.matchPct), [results, selected]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -107,29 +139,35 @@ export default function SearchByIngredients() {
           <View>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <Text style={{ fontSize: 15, fontFamily: 'PlayfairDisplay-Bold', color: C.ink }}>{t('searchByIngredients.compatibleRecipes')}</Text>
-              <Text style={{ fontSize: 12, color: C.inkMute }}>{RESULTS.length} {t('searchByIngredients.results')}</Text>
+              {!loading && <Text style={{ fontSize: 12, color: C.inkMute }}>{matches.length} {t('searchByIngredients.results')}</Text>}
             </View>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
-              {RESULTS.map((r, i) => (
-                <TouchableOpacity key={i} onPress={() => navigation.navigate('RecipeV1')} style={{ width: '47%' }}>
-                  <View style={{ height: 100, borderRadius: 12, backgroundColor: C.surface2, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon name="ChefHat" size={26} color={C.inkMute} />
-                  </View>
-                  <View style={{ paddingTop: 6 }}>
-                    <Text style={{ fontWeight: '600', fontSize: 12, lineHeight: 16, color: C.ink }} numberOfLines={2}>{r.name}</Text>
-                    <Text style={{ fontSize: 10, color: C.inkMute }}>{r.region}</Text>
-                    <View style={{ marginTop: 4 }}>
-                      <View style={{ alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 8, backgroundColor: r.match >= 90 ? C.successSoft : C.surface2 }}>
-                        <Text style={{ fontSize: 9, fontWeight: '700', color: r.match >= 90 ? C.success : C.inkSoft }}>{r.match}% {t('searchByIngredients.matchAbbrev')}</Text>
-                      </View>
+            {loading ? (
+              <ActivityIndicator color={C.primary} style={{ marginTop: 20 }} />
+            ) : matches.length === 0 ? (
+              <Text style={{ fontSize: 13, color: C.inkMute, textAlign: 'center', paddingVertical: 20 }}>{t('searchByIngredients.noResults', 'Aucune recette trouvée avec ces ingrédients.')}</Text>
+            ) : (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+                {matches.map((m) => (
+                  <TouchableOpacity key={m.recipe.id} onPress={() => navigation.navigate('RecipeV1', { dishId: m.recipe.id })} style={{ width: '47%' }}>
+                    <View style={{ height: 100, borderRadius: 12, backgroundColor: C.surface2, borderWidth: 1, borderStyle: 'dashed', borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
+                      <Icon name="ChefHat" size={26} color={C.inkMute} />
                     </View>
-                    {r.missing.length > 0 && (
-                      <Text style={{ fontSize: 9, color: C.primary, marginTop: 4, fontStyle: 'italic' }}>{t('searchByIngredients.missing')}: {r.missing.join(', ')}</Text>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
+                    <View style={{ paddingTop: 6 }}>
+                      <Text style={{ fontWeight: '600', fontSize: 12, lineHeight: 16, color: C.ink }} numberOfLines={2}>{m.recipe.name}</Text>
+                      <Text style={{ fontSize: 10, color: C.inkMute }}>{m.recipe.region}</Text>
+                      <View style={{ marginTop: 4 }}>
+                        <View style={{ alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 8, backgroundColor: m.matchPct >= 90 ? C.successSoft : C.surface2 }}>
+                          <Text style={{ fontSize: 9, fontWeight: '700', color: m.matchPct >= 90 ? C.success : C.inkSoft }}>{m.matchPct}% {t('searchByIngredients.matchAbbrev')}</Text>
+                        </View>
+                      </View>
+                      {m.missing.length > 0 && (
+                        <Text style={{ fontSize: 9, color: C.primary, marginTop: 4, fontStyle: 'italic' }} numberOfLines={1}>{t('searchByIngredients.missing')}: {m.missing.join(', ')}</Text>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </View>
         )}
       </ScrollView>

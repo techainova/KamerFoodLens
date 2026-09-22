@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  View, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator,
+  View, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator, Image, Linking,
 } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { SHADOW_SM } from '@/constants/theme';
@@ -18,6 +19,72 @@ function formatLessonDuration(seconds: number | null): string {
   return `${min}min`;
 }
 
+// Remonté (key={lesson.id} côté appelant) à chaque changement de leçon, pour que
+// useVideoPlayer reparte toujours d'un lecteur propre sur la bonne source.
+function LessonMedia({ lesson }: { lesson: CourseLesson }) {
+  const C = useColors();
+
+  if (lesson.type === 'document') {
+    return (
+      <View style={{ backgroundColor: '#1A1A1A', aspectRatio: 16 / 9, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 20 }}>
+        <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(232,89,26,0.15)', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="FileText" size={28} color="#E8591A" />
+        </View>
+        {lesson.documentUrl ? (
+          <TouchableOpacity
+            onPress={() => void Linking.openURL(lesson.documentUrl!)}
+            style={{ height: 40, paddingHorizontal: 18, borderRadius: 20, backgroundColor: '#E8591A', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
+          >
+            <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700' }}>Ouvrir le document</Text>
+          </TouchableOpacity>
+        ) : (
+          <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12 }}>Aucun document disponible.</Text>
+        )}
+      </View>
+    );
+  }
+
+  if (lesson.type === 'text') {
+    return (
+      <View style={{ backgroundColor: C.surface, padding: 16, borderBottomWidth: 1, borderColor: C.border }}>
+        {!!lesson.textImageUrl && (
+          <Image source={{ uri: lesson.textImageUrl }} style={{ width: '100%', height: 180, borderRadius: 12, marginBottom: 12 }} resizeMode="cover" />
+        )}
+        <Text style={{ fontSize: 14, color: C.inkSoft, lineHeight: 22 }}>
+          {lesson.textContent || 'Aucun contenu pour cette leçon.'}
+        </Text>
+      </View>
+    );
+  }
+
+  if (lesson.videoUrl) {
+    return <VideoLesson videoUrl={lesson.videoUrl} />;
+  }
+
+  return (
+    <View style={{ backgroundColor: '#1A1A1A', aspectRatio: 16 / 9, alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>Aucune vidéo disponible.</Text>
+    </View>
+  );
+}
+
+function VideoLesson({ videoUrl }: { videoUrl: string }) {
+  const player = useVideoPlayer(videoUrl, (p) => {
+    p.loop = false;
+  });
+
+  useEffect(() => {
+    player.play();
+    return () => player.pause();
+  }, [player]);
+
+  return (
+    <View style={{ backgroundColor: '#000', aspectRatio: 16 / 9 }}>
+      <VideoView player={player} style={{ width: '100%', height: '100%' }} contentFit="contain" nativeControls />
+    </View>
+  );
+}
+
 export default function CoursePlayer() {
   const navigation = useNavigation<any>();
   const C = useColors();
@@ -27,8 +94,6 @@ export default function CoursePlayer() {
 
   const [loading, setLoading] = useState(true);
   const [currentLessonId, setCurrentLessonId] = useState<string | undefined>(route.params?.lessonId);
-  const [playing, setPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [showList, setShowList] = useState(false);
 
   const details = useCoursesStore((s) => s.details);
@@ -74,16 +139,12 @@ export default function CoursePlayer() {
     await completeLesson(courseId, currentLesson.id);
     if (currentIndex < lessons.length - 1) {
       setCurrentLessonId(lessons[currentIndex + 1]!.id);
-      setProgress(0);
-      setPlaying(false);
     }
   };
 
   const goPrev = () => {
     if (currentIndex > 0) {
       setCurrentLessonId(lessons[currentIndex - 1]!.id);
-      setProgress(0);
-      setPlaying(false);
     }
   };
 
@@ -100,47 +161,13 @@ export default function CoursePlayer() {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
       <StatusBar barStyle="light-content" />
 
-      {/* Video area (visuel uniquement — pas de lecture vidéo réelle) */}
-      <View style={{ backgroundColor: '#1A1A1A', aspectRatio: 16 / 9, justifyContent: 'center', alignItems: 'center' }}>
+      <View>
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', padding: 12, zIndex: 10 }}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 6 }}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 6, backgroundColor: 'rgba(0,0,0,0.35)', borderRadius: 16 }}>
             <Icon name="ArrowLeft" size={22} color="#fff" />
           </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          onPress={() => setPlaying(p => !p)}
-          style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(232,89,26,0.9)', alignItems: 'center', justifyContent: 'center' }}
-          activeOpacity={0.85}
-        >
-          <Icon name={playing ? 'Pause' : 'Play'} size={28} color="#fff" fill="#fff" />
-        </TouchableOpacity>
-
-        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 12 }}>
-          <TouchableOpacity
-            style={{ height: 3, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 2, marginBottom: 10, overflow: 'hidden' }}
-            activeOpacity={1}
-            onPress={() => setProgress(prev => Math.min(1, prev + 0.1))}
-          >
-            <View style={{ height: '100%', width: `${progress * 100}%`, backgroundColor: '#E8591A', borderRadius: 2 }} />
-          </TouchableOpacity>
-
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-            <TouchableOpacity onPress={goPrev} style={{ padding: 4 }}>
-              <Icon name="SkipBack" size={22} color={currentIndex === 0 ? 'rgba(255,255,255,0.3)' : '#fff'} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setPlaying(p => !p)} style={{ padding: 4 }}>
-              <Icon name={playing ? 'Pause' : 'Play'} size={22} color="#fff" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => void goNext()} style={{ padding: 4 }}>
-              <Icon name="SkipForward" size={22} color={currentIndex === lessons.length - 1 ? 'rgba(255,255,255,0.3)' : '#fff'} />
-            </TouchableOpacity>
-            <View style={{ flex: 1 }} />
-            <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>
-              {formatLessonDuration(currentLesson.duration)}
-            </Text>
-          </View>
-        </View>
+        <LessonMedia key={currentLesson.id} lesson={currentLesson} />
       </View>
 
       <View style={{ flex: 1, backgroundColor: C.cream }}>
@@ -153,6 +180,7 @@ export default function CoursePlayer() {
             </Text>
             <Text style={{ fontSize: 13, color: C.inkMute }}>
               {course.title} · {t('courses.lesson')} {currentIndex + 1}/{lessons.length}
+              {currentLesson.duration ? ` · ${formatLessonDuration(currentLesson.duration)}` : ''}
             </Text>
 
             <View style={{ marginTop: 12 }}>
@@ -182,15 +210,16 @@ export default function CoursePlayer() {
               {lessons.map((lesson, i) => {
                 const isCompleted = completed.has(lesson.id);
                 const isCurrent = lesson.id === currentLessonId;
+                const typeIcon = lesson.type === 'document' ? 'FileText' : lesson.type === 'text' ? 'Type' : 'Play';
                 return (
                   <TouchableOpacity
                     key={lesson.id}
-                    onPress={() => { setCurrentLessonId(lesson.id); setProgress(0); setPlaying(false); }}
+                    onPress={() => setCurrentLessonId(lesson.id)}
                     style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 12, borderTopWidth: i > 0 ? 1 : 0, borderColor: C.border, backgroundColor: isCurrent ? '#FFF8F5' : '#fff', gap: 10 }}
                     activeOpacity={0.7}
                   >
                     <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: isCompleted ? '#E3F0E4' : (isCurrent ? '#E8591A15' : '#F5F0EB'), alignItems: 'center', justifyContent: 'center' }}>
-                      <Icon name={isCompleted ? 'Check' : (isCurrent ? 'Play' : 'Circle')} size={12} color={isCompleted ? '#2E7D32' : (isCurrent ? '#E8591A' : '#8C8278')} fill={isCurrent ? '#E8591A' : 'none'} />
+                      <Icon name={isCompleted ? 'Check' : typeIcon} size={12} color={isCompleted ? '#2E7D32' : (isCurrent ? '#E8591A' : '#8C8278')} fill={isCurrent && lesson.type !== 'document' && lesson.type !== 'text' ? '#E8591A' : 'none'} />
                     </View>
                     <Text style={{ flex: 1, fontSize: 13, color: isCurrent ? '#E8591A' : '#2C1810', fontWeight: isCurrent ? '700' : '400' }} numberOfLines={2}>
                       {lesson.title}

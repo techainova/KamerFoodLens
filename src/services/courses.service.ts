@@ -3,6 +3,7 @@ import apiClient from './api.client';
 import { ENDPOINTS } from './config';
 
 export type CourseLevel = 'beginner' | 'intermediate' | 'advanced';
+export type LessonType = 'video' | 'document' | 'text';
 
 export interface Course {
   id: string;
@@ -31,7 +32,11 @@ export interface MyCourse extends Course {
 export interface CourseLesson {
   id: string;
   title: string;
+  type: LessonType;
   videoUrl: string | null;
+  documentUrl: string | null;
+  textContent: string | null;
+  textImageUrl: string | null;
   duration: number | null;
   order: number;
 }
@@ -47,7 +52,11 @@ export interface CourseDetail extends Course {
 
 export interface CreateLessonPayload {
   title: string;
+  type?: LessonType;
   videoUrl?: string;
+  documentUrl?: string;
+  textContent?: string;
+  textImageUrl?: string;
   duration?: number;
   order: number;
   sectionTitle?: string;
@@ -105,5 +114,10 @@ export const coursesService = {
 
   async update(courseId: string, payload: Partial<CreateCoursePayload>): Promise<void> {
     await apiClient.patch(`${ENDPOINTS.COURSES}/${courseId}`, payload);
+  },
+
+  async uploadMedia(dataBase64: string, mimeType?: string): Promise<{ url: string }> {
+    const { data } = await apiClient.post<{ url: string }>(`${ENDPOINTS.COURSES}/upload-media`, { dataBase64, mimeType });
+    return data;
   },
 };

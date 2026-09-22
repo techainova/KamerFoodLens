@@ -19,20 +19,22 @@ export interface InitiatePaymentResult {
   paymentIntentId?: string;
 }
 
-export interface PaymentTransaction {
-  transactionId: string;
-  reference: string;
+export type WalletTransactionType = 'credit' | 'debit';
+
+export interface WalletTransaction {
+  id: string;
+  type: WalletTransactionType;
   amountXAF: number;
-  method: PaymentMethod;
-  status: PaymentStatus;
-  description: string;
+  description: string | null;
   createdAt: string;
 }
 
 export interface WalletBalance {
+  id: string;
+  userId: string;
   balanceXAF: number;
-  pendingXAF: number;
-  currency: 'XAF';
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface PayoutRequestPayload {
@@ -52,18 +54,13 @@ export const paymentsService = {
     return data;
   },
 
-  async getTransactions(page = 1, limit = 20): Promise<{ items: PaymentTransaction[]; total: number }> {
-    const { data } = await apiClient.get(ENDPOINTS.TRANSACTIONS, { params: { page, limit } });
+  async getTransactions(page = 1): Promise<{ items: WalletTransaction[]; total: number }> {
+    const { data } = await apiClient.get(ENDPOINTS.TRANSACTIONS, { params: { page } });
     return data;
   },
 
   async requestPayout(payload: PayoutRequestPayload): Promise<{ message: string; requestId: string }> {
     const { data } = await apiClient.post(ENDPOINTS.PAYOUT_REQUEST, payload);
-    return data;
-  },
-
-  async getTransaction(transactionId: string): Promise<PaymentTransaction> {
-    const { data } = await apiClient.get<PaymentTransaction>(`${ENDPOINTS.TRANSACTIONS}/${transactionId}`);
     return data;
   },
 };
