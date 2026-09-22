@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Alert, ScrollView, StatusBar, TextInput, TouchableOpacity, View, ActivityIndicator,
-} from 'react-native';
+import { ScrollView, StatusBar, TextInput, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import { Alert } from '@/utils/alert';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';

@@ -119,6 +119,9 @@ import ProCreateHub        from '@/screens/pro/ProCreateHub';
 import ProOffers           from '@/screens/pro/ProOffers';
 import CreateEvent         from '@/screens/pro/CreateEvent';
 import ManageEvent         from '@/screens/pro/ManageEvent';
+import EventAttendees      from '@/screens/pro/EventAttendees';
+import MessageAttendees    from '@/screens/pro/MessageAttendees';
+import EventStats          from '@/screens/pro/EventStats';
 import CreateCourse        from '@/screens/pro/CreateCourse';
 import ManageCommunity     from '@/screens/pro/ManageCommunity';
 
@@ -270,6 +273,9 @@ function HomeStackNav() {
       <HomeStack.Screen name="ProRegistration"     component={ProRegistration} />
       <HomeStack.Screen name="CreateEvent"         component={CreateEvent} />
       <HomeStack.Screen name="ManageEvent"         component={ManageEvent} />
+      <HomeStack.Screen name="EventAttendees"      component={EventAttendees} />
+      <HomeStack.Screen name="MessageAttendees"    component={MessageAttendees} />
+      <HomeStack.Screen name="EventStats"          component={EventStats} />
       <HomeStack.Screen name="CreateCourse"        component={CreateCourse} />
       <HomeStack.Screen name="ManageCommunity"     component={ManageCommunity} />
 
@@ -344,6 +350,7 @@ function VideoStackNav() {
       <VideoStack.Screen name="CreateVideo"   component={CreateVideo} options={{ presentation: 'modal' }} />
       <VideoStack.Screen name="CourseDetail"  component={CourseDetail} />
       <VideoStack.Screen name="EventDetail"   component={EventDetail} />
+      <VideoStack.Screen name="WalletScreen"  component={WalletScreen} />
     </VideoStack.Navigator>
   );
 }
@@ -420,6 +427,9 @@ function ProfileStackNav() {
       <ProfileStack.Screen name="ProConfirmation"    component={ProConfirmation} />
       <ProfileStack.Screen name="CreateEvent"        component={CreateEvent} />
       <ProfileStack.Screen name="ManageEvent"        component={ManageEvent} />
+      <ProfileStack.Screen name="EventAttendees"     component={EventAttendees} />
+      <ProfileStack.Screen name="MessageAttendees"   component={MessageAttendees} />
+      <ProfileStack.Screen name="EventStats"         component={EventStats} />
       <ProfileStack.Screen name="CreateCourse"       component={CreateCourse} />
       <ProfileStack.Screen name="ManageCommunity"    component={ManageCommunity} />
       <ProfileStack.Screen name="OrderMenu"          component={OrderMenu} />
@@ -447,6 +457,8 @@ function DashStackNav() {
       <DashStack.Screen name="ProDashboard"       component={ProDashboard} />
       <DashStack.Screen name="RestaurantMenu"     component={RestaurantMenu} />
       <DashStack.Screen name="RestaurantMenuEdit" component={RestaurantMenuEdit} />
+      <DashStack.Screen name="ProOrders"          component={ProOrders} />
+      <DashStack.Screen name="ProOffers"          component={ProOffers} />
       <DashStack.Screen name="ProRevenues"        component={ProRevenues} />
       <DashStack.Screen name="ProAnalytics"       component={ProAnalytics} />
       <DashStack.Screen name="ProMessages"        component={ProMessages} />
@@ -456,6 +468,9 @@ function DashStackNav() {
       <DashStack.Screen name="ProOrderDetail"     component={ProOrderDetail} />
       <DashStack.Screen name="ManageCommunity"    component={ManageCommunity} />
       <DashStack.Screen name="ManageEvent"        component={ManageEvent} />
+      <DashStack.Screen name="EventAttendees"     component={EventAttendees} />
+      <DashStack.Screen name="MessageAttendees"   component={MessageAttendees} />
+      <DashStack.Screen name="EventStats"         component={EventStats} />
       <DashStack.Screen name="SettingsProActive"  component={SettingsProActive} />
       <DashStack.Screen name="ProCreateHub"       component={ProCreateHub} />
       <DashStack.Screen name="CreatePost"         component={CreatePost} />
@@ -497,6 +512,9 @@ function OffersStackNav() {
       <OffersStack.Screen name="ProFormationsList"  component={ProFormationsList} />
       <OffersStack.Screen name="ProFormationManage" component={ProFormationManage} />
       <OffersStack.Screen name="ManageEvent"        component={ManageEvent} />
+      <OffersStack.Screen name="EventAttendees"     component={EventAttendees} />
+      <OffersStack.Screen name="MessageAttendees"   component={MessageAttendees} />
+      <OffersStack.Screen name="EventStats"         component={EventStats} />
       <OffersStack.Screen name="CreateEvent"        component={CreateEvent} />
       <OffersStack.Screen name="CreateCourse"       component={CreateCourse} />
       <OffersStack.Screen name="ProCreateHub"       component={ProCreateHub} />
@@ -521,6 +539,14 @@ function PageStackNav() {
       <PageStack.Screen name="ChatThread"         component={ChatThread} />
       <PageStack.Screen name="ProMessages"        component={ProMessages} />
       <PageStack.Screen name="ProMessageDetail"   component={ProMessageDetail} />
+      <PageStack.Screen name="CreateEvent"        component={CreateEvent} />
+      <PageStack.Screen name="ManageEvent"        component={ManageEvent} />
+      <PageStack.Screen name="EventAttendees"     component={EventAttendees} />
+      <PageStack.Screen name="MessageAttendees"   component={MessageAttendees} />
+      <PageStack.Screen name="EventStats"         component={EventStats} />
+      <PageStack.Screen name="ProFormationsList"  component={ProFormationsList} />
+      <PageStack.Screen name="ProFormationManage" component={ProFormationManage} />
+      <PageStack.Screen name="CreateCourse"       component={CreateCourse} />
     </PageStack.Navigator>
   );
 }

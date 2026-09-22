@@ -1,6 +1,7 @@
 // src/screens/home/story-stickers/AddToHighlightSheet.tsx
 import React, { useEffect, useState } from 'react';
-import { View, Modal, TouchableOpacity, TextInput, FlatList, ActivityIndicator, Alert, Image } from 'react-native';
+import { View, Modal, TouchableOpacity, TextInput, FlatList, ActivityIndicator, Image } from 'react-native';
+import { Alert } from '@/utils/alert';
 import { Text } from '@/components/ui/ScaledText';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/components/ui/Icon';

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import {
-  View, ScrollView, TouchableOpacity, TextInput, StatusBar, ActivityIndicator, Alert,
-} from 'react-native';
+import { View, ScrollView, TouchableOpacity, TextInput, StatusBar, ActivityIndicator } from 'react-native';
+import { Alert } from '@/utils/alert';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -61,9 +60,23 @@ export default function ProPromos() {
   };
 
   const handleCreate = async () => {
+    if (!restaurantId) {
+      Alert.alert(t('common.error'), t('proPromos.noRestaurantError'));
+      return;
+    }
+    if (!title.trim()) {
+      Alert.alert(t('common.error'), t('proPromos.titleRequiredError'));
+      return;
+    }
     const value = parseInt(discountValue, 10);
-    if (!title.trim() || !value || value <= 0 || !restaurantId) return;
-    if (discountType === 'percent' && value > 100) return;
+    if (!value || value <= 0) {
+      Alert.alert(t('common.error'), t('proPromos.valueRequiredError'));
+      return;
+    }
+    if (discountType === 'percent' && value > 100) {
+      Alert.alert(t('common.error'), t('proPromos.percentRangeError'));
+      return;
+    }
 
     setSubmitting(true);
     try {

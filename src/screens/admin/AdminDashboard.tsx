@@ -42,7 +42,12 @@ export default function AdminDashboard() {
       <StatusBar barStyle="light-content" />
 
       {/* Header */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#1A237E', borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#1A237E', borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
+        {navigation.canGoBack() && (
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
+            <Icon name="ArrowLeft" size={22} color="#fff" />
+          </TouchableOpacity>
+        )}
         <View style={{ flex: 1 }}>
           <Text style={{ color: '#fff', fontSize: 18, fontFamily: 'PlayfairDisplay-Bold' }}>Admin Dashboard</Text>
           <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>

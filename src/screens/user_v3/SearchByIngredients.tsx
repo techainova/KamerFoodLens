@@ -90,7 +90,7 @@ export default function SearchByIngredients() {
 
         {/* Quick filters */}
         <Text style={{ fontSize: 11, fontWeight: '700', color: C.inkMute, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>{t('searchByIngredients.quickFilters')}</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginBottom: 16 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 6, marginBottom: 16, alignItems: 'center' }}>
           {FILTER_KEYS.map((key, i) => (
             <TouchableOpacity
               key={key}

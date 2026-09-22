@@ -40,6 +40,18 @@ export interface CreateEventPayload {
   maxSeats?: number;
 }
 
+export type UpdateEventPayload = Partial<CreateEventPayload>;
+
+export interface EventAttendee {
+  registrationId: string;
+  userId: string;
+  name: string;
+  avatar: string | null;
+  phone: string | null;
+  registeredAt: string;
+  checkedInAt: string | null;
+}
+
 export const eventsService = {
   async create(payload: CreateEventPayload): Promise<KflEvent> {
     const { data } = await apiClient.post<KflEvent>(ENDPOINTS.EVENTS, payload);
@@ -78,6 +90,31 @@ export const eventsService = {
 
   async remove(eventId: string): Promise<{ message: string }> {
     const { data } = await apiClient.delete(`${ENDPOINTS.EVENTS}/${eventId}`);
+    return data;
+  },
+
+  async update(eventId: string, payload: UpdateEventPayload): Promise<KflEvent> {
+    const { data } = await apiClient.patch<KflEvent>(`${ENDPOINTS.EVENTS}/${eventId}`, payload);
+    return data;
+  },
+
+  async uploadImage(imageBase64: string, mimeType?: string): Promise<{ url: string }> {
+    const { data } = await apiClient.post<{ url: string }>(`${ENDPOINTS.EVENTS}/upload-image`, { imageBase64, mimeType });
+    return data;
+  },
+
+  async getAttendees(eventId: string): Promise<EventAttendee[]> {
+    const { data } = await apiClient.get<EventAttendee[]>(`${ENDPOINTS.EVENTS}/${eventId}/attendees`);
+    return data;
+  },
+
+  async notifyAttendees(eventId: string, title: string, body: string): Promise<{ notified: number }> {
+    const { data } = await apiClient.post(`${ENDPOINTS.EVENTS}/${eventId}/notify`, { title, body });
+    return data;
+  },
+
+  async checkInAttendee(eventId: string, registrationId: string): Promise<{ alreadyCheckedIn: boolean; attendeeName: string; checkedInAt: string }> {
+    const { data } = await apiClient.post(`${ENDPOINTS.EVENTS}/${eventId}/checkin/${registrationId}`);
     return data;
   },
 };

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator, Image, Alert,
-} from 'react-native';
+import { View, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator, Image } from 'react-native';
+import { Alert } from '@/utils/alert';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -76,17 +75,44 @@ export default function CourseDetail() {
     });
   };
 
-  const handleEnroll = async () => {
+  const doEnroll = async () => {
     if (!courseId || enrolling) return;
     setEnrolling(true);
     try {
       await enroll(courseId);
       setIsEnrolled(true);
-    } catch {
-      Alert.alert(t('common.error'), t('courses.enrollError'));
+    } catch (err) {
+      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? '';
+      if (message.toLowerCase().includes('insuffisant')) {
+        Alert.alert(
+          t('events.insufficientBalanceTitle'),
+          message,
+          [
+            { text: t('common.cancel'), style: 'cancel' },
+            { text: t('events.topUpWallet'), onPress: () => navigation.navigate('WalletScreen') },
+          ],
+        );
+      } else {
+        Alert.alert(t('common.error'), t('courses.enrollError'));
+      }
     } finally {
       setEnrolling(false);
     }
+  };
+
+  const handleEnroll = () => {
+    if (!course || course.isFree || course.priceXAF <= 0) {
+      void doEnroll();
+      return;
+    }
+    Alert.alert(
+      t('events.confirmPaymentTitle'),
+      t('events.confirmPaymentMsg', { amount: course.priceXAF.toLocaleString() }),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('events.payAndRegister'), onPress: () => void doEnroll() },
+      ],
+    );
   };
 
   if (loading) {

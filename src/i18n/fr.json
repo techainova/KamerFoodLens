@@ -592,7 +592,13 @@
     "availableSeats": "Places disponibles",
     "seatsRemaining": "restantes",
     "confirmedRegistration": "Inscription confirmée",
-    "description": "Description"
+    "description": "Description",
+    "confirmPaymentTitle": "Confirmer le paiement",
+    "confirmPaymentMsg": "Vous allez payer {{amount}} XAF depuis votre portefeuille KFL pour vous inscrire à cet événement.",
+    "payAndRegister": "Payer et s'inscrire",
+    "insufficientBalanceTitle": "Solde insuffisant",
+    "topUpWallet": "Recharger mon portefeuille",
+    "registerError": "L'inscription a échoué. Réessayez plus tard."
   },
   "courses": {
     "title": "Formations",
@@ -1103,7 +1109,10 @@
     "memberRemoved": "Membre retiré de la communauté",
     "memberBlocked": "Membre bloqué",
     "memberUnblocked": "Membre débloqué",
-    "noResults": "Aucun membre trouvé"
+    "noResults": "Aucun membre trouvé",
+    "blockedCount": "Bloqués",
+    "followedSince": "Abonné depuis le {{date}}",
+    "actionError": "L'action a échoué."
   },
   "manageEvent": {
     "title": "Gérer l'événement",
@@ -1121,6 +1130,37 @@
     "cancelConfirmYes": "Oui, annuler",
     "cancelConfirmNo": "Non",
     "eventCancelled": "Événement annulé"
+  },
+  "eventStats": {
+    "fillRate": "Remplissage",
+    "checkedIn": "Présents",
+    "attendanceRate": "Taux d'entrée",
+    "revenue": "Revenu généré",
+    "tickets": "billets",
+    "registrationHistory": "Inscriptions par jour"
+  },
+  "messageAttendees": {
+    "sentTitle": "Message envoyé",
+    "sentBody": "{{count}} inscrit(s) notifié(s).",
+    "sendError": "Impossible d'envoyer le message.",
+    "titleLabel": "Titre",
+    "titlePlaceholder": "Changement de lieu…",
+    "bodyLabel": "Message",
+    "bodyPlaceholder": "Votre message aux inscrits…",
+    "send": "Envoyer à tous les inscrits"
+  },
+  "eventAttendees": {
+    "alreadyCheckedIn": "Déjà enregistré",
+    "checkedIn": "Entrée validée",
+    "checkInError": "Impossible de valider cette entrée.",
+    "confirmCheckIn": "Valider l'entrée ?",
+    "checkIn": "Valider",
+    "cameraDenied": "Accès caméra refusé",
+    "cameraDeniedMsg": "Autorisez l'accès à la caméra pour scanner les billets.",
+    "checkedInLabel": "Entrées validées",
+    "noAttendees": "Aucun inscrit pour le moment.",
+    "in": "Entré",
+    "scanHint": "Visez le QR code du billet de l'inscrit"
   },
   "createEvent": {
     "title": "Créer un événement",
@@ -1203,7 +1243,11 @@
     "searchPlaceholder": "Rechercher un message...",
     "noResults": "Aucun message trouvé",
     "empty": "Votre boîte de réception est vide",
-    "notFound": "Message introuvable"
+    "notFound": "Message introuvable",
+    "replyError": "Impossible d'envoyer la réponse.",
+    "replySent": "Réponse envoyée — retrouvez la conversation dans votre messagerie.",
+    "replyPlaceholder": "Écrire une réponse…",
+    "noReplyPossible": "Ce message système n'a pas d'expéditeur identifiable — impossible d'y répondre directement."
   },
   "proAnalytics": {
     "title": "Analytiques",
@@ -1216,6 +1260,9 @@
     "unitsSold": "vendus",
     "noOrdersPeriod": "Aucune commande sur cette période",
     "noItemsPeriod": "Aucun article vendu sur cette période"
+  },
+  "proCreateHub": {
+    "noRestaurantError": "Aucun restaurant associé à votre compte. Contactez le support."
   },
   "proPromos": {
     "title": "Promotions",
@@ -1237,7 +1284,11 @@
     "status_scheduled": "Programmée",
     "status_active": "Active",
     "status_expired": "Expirée",
-    "createError": "La création de la promo a échoué."
+    "createError": "La création de la promo a échoué.",
+    "noRestaurantError": "Aucun restaurant associé à votre compte. Contactez le support.",
+    "titleRequiredError": "Merci de saisir un titre pour la promotion.",
+    "valueRequiredError": "Merci de saisir une valeur de réduction valide.",
+    "percentRangeError": "Le pourcentage de réduction doit être compris entre 1 et 100."
   },
   "restaurantMenu": {
     "title": "Mon menu",
@@ -1255,6 +1306,12 @@
     "dishCategoryPlaceholder": "ex : Plats principaux",
     "dishPriceXaf": "Prix (XAF)",
     "dishImageUrl": "URL de la photo",
+    "dishPhoto": "Photo du plat",
+    "pickFromGallery": "Galerie",
+    "takePhoto": "Appareil photo",
+    "photoPermissionTitle": "Permission requise",
+    "photoPermissionMsg": "Autorisez l'accès pour ajouter une photo du plat.",
+    "imageUploadError": "L'envoi de la photo a échoué. Réessayez plus tard.",
     "dishDescription": "Description",
     "dishDescriptionPlaceholder": "Décrivez le plat...",
     "deleteDish": "Supprimer ce plat",
@@ -1264,7 +1321,13 @@
     "emptyMenu": "Aucun plat au menu pour le moment",
     "updateError": "La mise à jour du plat a échoué.",
     "deleteError": "La suppression du plat a échoué.",
-    "saveError": "L'enregistrement du plat a échoué."
+    "saveError": "L'enregistrement du plat a échoué.",
+    "availableDaysLabel": "Jours au menu",
+    "everyDay": "Tous les jours",
+    "everyDayHint": "Ce plat est proposé chaque jour de la semaine.",
+    "someDaysHint": "Ce plat n'apparaîtra que les jours sélectionnés.",
+    "filterByDay": "Filtrer par jour",
+    "allDaysFilter": "Tous"
   },
   "pro": {
     "badge": "PRO",

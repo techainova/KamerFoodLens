@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View, ScrollView, TouchableOpacity, StatusBar, Alert, ActivityIndicator,
-} from 'react-native';
+import { View, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator } from 'react-native';
+import { Alert } from '@/utils/alert';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -32,17 +31,12 @@ export default function ManageEvent() {
     return () => { cancelled = true; };
   }, [eventId]);
 
-  // Ces actions demandent des capacités backend qui n'existent pas encore
-  // (liste des inscrits, messagerie de masse, scan de billets, stats dédiées) —
-  // on le dit clairement plutôt que d'afficher un bouton mort sans retour.
-  const notYetAvailable = () => Alert.alert(t('settings.comingSoonTitle', 'Bientôt disponible'), t('settings.comingSoonMsg', 'Cette fonctionnalité arrive dans une prochaine mise à jour.'));
-
   const ACTIONS = [
-    { l: t('manageEvent.attendeesList'),     icon: 'Users'      as const },
-    { l: t('manageEvent.messageAttendees'),  icon: 'Megaphone'  as const },
-    { l: t('manageEvent.editEvent'),         icon: 'Edit'       as const },
-    { l: t('manageEvent.scanTickets'),       icon: 'ScanLine'   as const },
-    { l: t('manageEvent.eventStats'),        icon: 'BarChart2'  as const },
+    { l: t('manageEvent.attendeesList'),     icon: 'Users'      as const, onPress: () => navigation.navigate('EventAttendees', { eventId }) },
+    { l: t('manageEvent.messageAttendees'),  icon: 'Megaphone'  as const, onPress: () => navigation.navigate('MessageAttendees', { eventId }) },
+    { l: t('manageEvent.editEvent'),         icon: 'Edit'       as const, onPress: () => navigation.navigate('CreateEvent', { eventId }) },
+    { l: t('manageEvent.scanTickets'),       icon: 'ScanLine'   as const, onPress: () => navigation.navigate('EventAttendees', { eventId }) },
+    { l: t('manageEvent.eventStats'),        icon: 'BarChart2'  as const, onPress: () => navigation.navigate('EventStats', { eventId }) },
   ];
 
   const handleCancelEvent = () => {
@@ -131,7 +125,7 @@ export default function ManageEvent() {
         {/* Actions */}
         <View style={{ gap: 10 }}>
           {ACTIONS.map((a, i) => (
-            <TouchableOpacity key={i} onPress={notYetAvailable} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
+            <TouchableOpacity key={i} onPress={a.onPress} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, ...SHADOW_SM }}>
               <View style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: C.navySoft, alignItems: 'center', justifyContent: 'center' }}>
                 <Icon name={a.icon} size={16} color={C.navy} />
               </View>

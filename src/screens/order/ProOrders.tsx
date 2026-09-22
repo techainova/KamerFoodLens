@@ -79,12 +79,16 @@ export default function ProOrders() {
         <View style={{ width: 30 }} />
       </View>
 
-      {/* Filter chips */}
+      {/* Filter chips — flexGrow/shrink pinned to 0 and alignItems:'center' on the
+          row are required on web: react-native-web's ScrollView otherwise defaults
+          to flex-growing like its vertical sibling below, splitting the column's
+          height 50/50 and stretching each chip into a tall pill (native doesn't
+          show this because Yoga sizes ScrollView by content there). */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={{ backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border }}
-        contentContainerStyle={{ paddingHorizontal: spacing.md, paddingVertical: spacing.sm, gap: spacing.sm }}
+        style={{ flexGrow: 0, flexShrink: 0, backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border }}
+        contentContainerStyle={{ paddingHorizontal: spacing.md, paddingVertical: spacing.sm, gap: spacing.sm, alignItems: 'center' }}
       >
         {FILTER_TABS.map(tab => {
           const isActive = activeFilter === tab.id;
@@ -112,7 +116,7 @@ export default function ProOrders() {
           <ActivityIndicator color={C.primary} size="large" />
         </View>
       ) : (
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
           <View style={{ paddingTop: spacing.sm }}>
             {orders.length === 0 ? (
               <Text style={{ fontSize: 13, color: C.inkMute, textAlign: 'center', paddingVertical: 40 }}>{t('pro.noRecentOrders')}</Text>

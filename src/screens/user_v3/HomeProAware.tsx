@@ -30,6 +30,11 @@ export default function HomeProAware() {
 
       {/* AppBar */}
       <View style={{ height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
+        {navigation.canGoBack() && (
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
+            <Icon name="ArrowLeft" size={22} color={C.ink} />
+          </TouchableOpacity>
+        )}
         <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>KmerFoodLens</Text>
         <View style={{ flexDirection: 'row', gap: 6 }}>
           <TouchableOpacity onPress={() => navigation.navigate('Notifications')} style={{ width: 36, height: 36, borderWidth: 1, borderColor: C.border, borderRadius: 18, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center' }}>
@@ -71,8 +76,8 @@ export default function HomeProAware() {
           </View>
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingLeft: 16 }}>
-          <View style={{ flexDirection: 'row', gap: 10, paddingRight: 16 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, paddingLeft: 16 }}>
+          <View style={{ flexDirection: 'row', gap: 10, paddingRight: 16, alignItems: 'flex-start' }}>
             {FEATURED_ORGS.map((org, i) => (
               <TouchableOpacity key={i} onPress={() => navigation.navigate('Restaurant')} style={{ width: 160, borderRadius: 14, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, padding: 12, ...SHADOW_MD }}>
                 <View style={{ position: 'relative', alignSelf: 'flex-start' }}>

@@ -169,7 +169,7 @@ export default function ProfilePro() {
             <Text style={{ fontSize: 14, fontWeight: '600', color: C.success }}>{t('profilePro.edit')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => navigation.navigate('ProDashboard')}
+            onPress={() => navigation.navigate('DashTab')}
             style={{ flex: 1.4, height: 48, backgroundColor: C.primary, borderRadius: 24, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 }}
             activeOpacity={0.85}
           >

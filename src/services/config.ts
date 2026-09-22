@@ -139,6 +139,7 @@ export const ENDPOINTS = {
   PRO_RESTAURANTS:  '/pro/restaurants',
   PRO_PAYOUTS:      '/pro/payouts',
   PRO_PAYMENT_METHODS: '/pro/payment-methods',
+  PRO_COMMUNITY_MEMBERS: '/pro/community/members',
 
   // Messagerie (utilisateurs <-> restaurants)
   CONVERSATIONS:       '/messages/conversations',

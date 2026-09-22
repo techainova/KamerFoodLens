@@ -88,7 +88,7 @@ export default function Courses() {
           {inProgress.length > 0 && (
             <View style={{ paddingTop: 16 }}>
               <Text style={{ paddingHorizontal: 16, fontSize: 13, fontWeight: '600', color: C.inkSoft, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('courses.inProgress')}</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 14, paddingBottom: 4 }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 14, paddingBottom: 4, alignItems: 'center' }}>
                 {inProgress.map(course => (
                   <TouchableOpacity
                     key={course.id}
@@ -134,7 +134,7 @@ export default function Courses() {
           )}
 
           {/* Category filter */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 14, gap: 8 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 14, gap: 8, alignItems: 'center' }}>
             {CATEGORIES.map(cat => (
               <TouchableOpacity
                 key={cat.id}

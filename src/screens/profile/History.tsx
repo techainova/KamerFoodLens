@@ -1,7 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  View, ScrollView, TouchableOpacity, TextInput, StatusBar, Alert, ActivityIndicator, Image,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  StatusBar,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
+import { Alert } from '@/utils/alert';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -123,7 +130,7 @@ export default function History() {
       {/* Ribbon "stories" — un cercle par jour de scans, le plus récent en premier */}
       {dayGroups.length > 0 && (
         <View style={{ paddingVertical: 6, paddingBottom: 16 }}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 14 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 14, alignItems: 'center' }}>
             {todayScanGroup && (
               <TouchableOpacity
                 style={{ alignItems: 'center', gap: 6 }}

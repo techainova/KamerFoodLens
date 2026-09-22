@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
 import {
-  View, TextInput, ScrollView, TouchableOpacity, StatusBar, Alert, Image, ActivityIndicator,
+  View,
+  TextInput,
+  ScrollView,
+  TouchableOpacity,
+  StatusBar,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
+import { Alert } from '@/utils/alert';
 import * as ImagePicker from 'expo-image-picker';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';

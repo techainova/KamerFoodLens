@@ -1,7 +1,6 @@
 import React from 'react';
-import {
-  View, ScrollView, TouchableOpacity, Switch, StatusBar, Alert,
-} from 'react-native';
+import { View, ScrollView, TouchableOpacity, Switch, StatusBar } from 'react-native';
+import { Alert } from '@/utils/alert';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -242,7 +241,7 @@ export default function ProfileSettings() {
                 </Text>
                 <View style={{ flexDirection: 'row', gap: 6 }}>
                   <TouchableOpacity
-                    onPress={() => navigation.navigate('ProDashboard')}
+                    onPress={() => navigation.navigate('DashTab')}
                     style={{ flex: 1, backgroundColor: C.gold, paddingHorizontal: 16, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 }}
                     activeOpacity={0.85}
                   >

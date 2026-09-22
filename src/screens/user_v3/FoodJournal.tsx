@@ -90,7 +90,7 @@ export default function FoodJournal() {
       {/* Ribbon "stories" — un cercle par jour ayant des plats logués, le plus récent en premier */}
       {dayGroups.length > 0 && (
         <View style={{ paddingVertical: 14, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 14 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 14, alignItems: 'center' }}>
             <TouchableOpacity
               style={{ alignItems: 'center', gap: 6 }}
               activeOpacity={0.75}

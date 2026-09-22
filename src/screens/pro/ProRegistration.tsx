@@ -1,8 +1,15 @@
 // src/screens/pro/ProRegistration.tsx
 import React, { useEffect, useState } from 'react';
 import {
-  View, TextInput, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator, Alert, BackHandler,
+  View,
+  TextInput,
+  ScrollView,
+  TouchableOpacity,
+  StatusBar,
+  ActivityIndicator,
+  BackHandler,
 } from 'react-native';
+import { Alert } from '@/utils/alert';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';

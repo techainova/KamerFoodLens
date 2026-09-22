@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator,
+  View, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator, Image,
 } from 'react-native';
+import { Alert } from '@/utils/alert';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -67,16 +68,56 @@ export default function EventDetail() {
     }
   }, [storeEvent]);
 
-  const handleToggleRegister = () => {
+  const doRegister = () => {
     if (!eventId) return;
     requireAuth(async () => {
       setRegistering(true);
       try {
         await toggleRegister(eventId);
+      } catch (err) {
+        const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? '';
+        if (message.toLowerCase().includes('insuffisant')) {
+          Alert.alert(
+            t('events.insufficientBalanceTitle'),
+            message,
+            [
+              { text: t('common.cancel'), style: 'cancel' },
+              { text: t('events.topUpWallet'), onPress: () => navigation.navigate('WalletScreen') },
+            ],
+          );
+        } else {
+          Alert.alert(t('common.error'), t('events.registerError'));
+        }
       } finally {
         setRegistering(false);
       }
     });
+  };
+
+  const handleToggleRegister = () => {
+    if (!eventId || !event) return;
+
+    // Déjà inscrit → désinscription directe, pas de paiement en jeu.
+    if (event.isRegistered) {
+      doRegister();
+      return;
+    }
+
+    // Événement payant : confirmation explicite avant de débiter le portefeuille —
+    // l'inscription elle-même (backend) ne débite qu'après cette confirmation.
+    if (event.price > 0) {
+      Alert.alert(
+        t('events.confirmPaymentTitle'),
+        t('events.confirmPaymentMsg', { amount: event.price.toLocaleString() }),
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('events.payAndRegister'), onPress: doRegister },
+        ],
+      );
+      return;
+    }
+
+    doRegister();
   };
 
   if (loading) {
@@ -110,7 +151,13 @@ export default function EventDetail() {
       <StatusBar barStyle="light-content" />
 
       {/* Hero */}
-      <View style={{ height: 220, backgroundColor: '#2C1810', justifyContent: 'flex-end', padding: 20 }}>
+      <View style={{ height: 220, backgroundColor: '#2C1810', justifyContent: 'flex-end', padding: 20, overflow: 'hidden' }}>
+        {event.imageUrl && (
+          <Image source={{ uri: event.imageUrl }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' }} resizeMode="cover" />
+        )}
+        {event.imageUrl && (
+          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.35)' }} />
+        )}
         <View style={{ position: 'absolute', top: 16, left: 0, right: 0, flexDirection: 'row', paddingHorizontal: 16, alignItems: 'center' }}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="ArrowLeft" size={20} color="#fff" />

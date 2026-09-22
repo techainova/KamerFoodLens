@@ -19,11 +19,11 @@ import { onTabBarScroll } from '@/navigation/tabBarScroll';
 
 const FALLBACK_STATS = { revenueXAF: 0, ordersCount: 0, rating: 0, revenueChange: 0, ordersChange: 0, customersCount: 0, avgOrderXAF: 0, activeMenuItems: 0 };
 
-const QUICK_ACTIONS: { icon: Parameters<typeof Icon>[0]['name']; labelKey: string; screen: string; color: (C: ReturnType<typeof useColors>) => string }[] = [
+const QUICK_ACTIONS: { icon: Parameters<typeof Icon>[0]['name']; labelKey: string; screen: string; params?: Record<string, unknown>; color: (C: ReturnType<typeof useColors>) => string }[] = [
   { icon: 'Store', labelKey: 'pro.myMenu', screen: 'RestaurantMenu', color: (C) => C.primary },
   { icon: 'ShoppingBag', labelKey: 'pro.orders', screen: 'ProOrders', color: (C) => C.error },
-  { icon: 'Calendar', labelKey: 'pro.activeEvents', screen: 'ProOffers', color: () => '#6A1B9A' },
-  { icon: 'GraduationCap', labelKey: 'pro.activeCourses', screen: 'ProOffers', color: (C) => C.success },
+  { icon: 'Calendar', labelKey: 'pro.activeEvents', screen: 'ProOffers', params: { tab: 'events' }, color: () => '#6A1B9A' },
+  { icon: 'GraduationCap', labelKey: 'pro.activeCourses', screen: 'ProOffers', params: { tab: 'formations' }, color: (C) => C.success },
   { icon: 'Wallet', labelKey: 'pro.revenues', screen: 'ProRevenues', color: () => '#1565C0' },
   { icon: 'TrendingUp', labelKey: 'proAnalytics.title', screen: 'ProAnalytics', color: (C) => C.gold },
 ];
@@ -123,7 +123,7 @@ export default function ProDashboard() {
           <Text style={{ fontSize: 15, fontWeight: '700', color: C.ink, marginBottom: 10 }}>Gérer</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {QUICK_ACTIONS.map((a) => (
-              <TouchableOpacity key={a.labelKey} onPress={() => navigation.navigate(a.screen)} activeOpacity={0.8} style={{ width: '31%', padding: 13, borderRadius: 14, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', ...SHADOW_SM }}>
+              <TouchableOpacity key={a.labelKey} onPress={() => navigation.navigate(a.screen, a.params)} activeOpacity={0.8} style={{ width: '31%', padding: 13, borderRadius: 14, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, alignItems: 'center', ...SHADOW_SM }}>
                 <Icon name={a.icon} size={22} color={a.color(C)} />
                 <Text style={{ fontSize: 11.5, fontWeight: '600', color: C.inkSoft, marginTop: 6, textAlign: 'center' }}>{t(a.labelKey)}</Text>
               </TouchableOpacity>

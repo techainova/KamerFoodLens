@@ -76,7 +76,7 @@ export default function Feed() {
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
 
         {/* Stories */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 14, gap: 12 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 14, gap: 12, alignItems: 'center' }}>
           <TouchableOpacity onPress={() => requireAuth(() => navigation.navigate('StoryCreatorCamera'))} style={{ alignItems: 'center', gap: 6 }}>
             <View style={{ width: 62, height: 62, borderRadius: 31, padding: 2, borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#E5E0D8' }}>
               <View style={{ flex: 1, borderRadius: 28, backgroundColor: '#F5F0EB', alignItems: 'center', justifyContent: 'center' }}>

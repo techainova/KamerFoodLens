@@ -72,8 +72,8 @@ export default function TransactionHistory() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}
-        style={{ backgroundColor: C.surface, maxHeight: 52, borderBottomWidth: 1, borderColor: C.border }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8, alignItems: 'center' }}
+        style={{ flexGrow: 0, backgroundColor: C.surface, maxHeight: 52, borderBottomWidth: 1, borderColor: C.border }}
       >
         {FILTERS.map(tab => (
           <TouchableOpacity

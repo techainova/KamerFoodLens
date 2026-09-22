@@ -1,12 +1,12 @@
 // Compte Pro — création d'un événement (gratuit ou payant), en 3 étapes :
 // infos, billetterie, aperçu — publie réellement via POST /events.
-import React, { useState } from 'react';
-import {
-  View, TextInput, ScrollView, TouchableOpacity, StatusBar, Alert, ActivityIndicator,
-} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, TextInput, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator, Image } from 'react-native';
+import { Alert } from '@/utils/alert';
+import * as ImagePicker from 'expo-image-picker';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { eventsService } from '@/services/events.service';
@@ -40,8 +40,11 @@ function Input({ value, onChangeText, placeholder, suffix, keyboardType }: { val
 
 export default function CreateEvent() {
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
   const C = useColors();
   const receiveEvent = useEventsStore((s) => s.receiveEvent);
+  const eventId: string | undefined = route.params?.eventId;
+  const isEditMode = !!eventId;
 
   const [step, setStep] = useState(0);
   const [title, setTitle] = useState('');
@@ -54,8 +57,77 @@ export default function CreateEvent() {
   const [isPaid, setIsPaid] = useState(false);
   const [priceXAF, setPriceXAF] = useState('');
   const [maxSeats, setMaxSeats] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [loadingExisting, setLoadingExisting] = useState(isEditMode);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!eventId) return;
+    let cancelled = false;
+    eventsService.getDetail(eventId)
+      .then((e) => {
+        if (cancelled) return;
+        setTitle(e.title);
+        setCategory(e.category || CATEGORIES[0]);
+        setDescription(e.description || '');
+        setDate(e.startAt.slice(0, 10));
+        setTime(e.startAt.slice(11, 16));
+        setLocation(e.location || '');
+        setIsOnline(e.isOnline);
+        setIsPaid(!e.isFree);
+        setPriceXAF(e.isFree ? '' : String(e.price));
+        setMaxSeats(e.maxAttendees ? String(e.maxAttendees) : '');
+        setImageUrl(e.imageUrl ?? '');
+      })
+      .catch(() => { if (!cancelled) setError("Impossible de charger l'événement."); })
+      .finally(() => { if (!cancelled) setLoadingExisting(false); });
+    return () => { cancelled = true; };
+  }, [eventId]);
+
+  const uploadImageFromAsset = async (asset: ImagePicker.ImagePickerAsset) => {
+    if (!asset.base64) return;
+    setUploadingImage(true);
+    try {
+      const { url } = await eventsService.uploadImage(asset.base64, asset.mimeType ?? 'image/jpeg');
+      setImageUrl(url);
+    } catch {
+      Alert.alert('Erreur', "L'envoi de la photo a échoué. Réessayez plus tard.");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handlePickFromLibrary = async () => {
+    if (uploadingImage) return;
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permission requise', "Autorisez l'accès pour ajouter une photo de couverture.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.7,
+      allowsEditing: true,
+      aspect: [16, 9],
+      base64: true,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
+    await uploadImageFromAsset(result.assets[0]);
+  };
+
+  const handlePickFromCamera = async () => {
+    if (uploadingImage) return;
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permission requise', "Autorisez l'accès pour ajouter une photo de couverture.");
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({ quality: 0.7, base64: true, allowsEditing: true, aspect: [16, 9] });
+    if (result.canceled || !result.assets?.[0]) return;
+    await uploadImageFromAsset(result.assets[0]);
+  };
 
   const stepValid = () => {
     if (step === 0) return title.trim().length > 0 && date.trim().length > 0 && time.trim().length > 0;
@@ -79,28 +151,44 @@ export default function CreateEvent() {
     }
     setPublishing(true);
     setError('');
+    const payload = {
+      title: title.trim(),
+      description: description.trim() || undefined,
+      category,
+      location: location.trim() || undefined,
+      isOnline,
+      startAt: dates.startAt,
+      endAt: dates.endAt,
+      priceXAF: isPaid ? Number(priceXAF) : 0,
+      maxSeats: maxSeats ? Number(maxSeats) : undefined,
+      imageUrl: imageUrl || undefined,
+    };
     try {
-      const created = await eventsService.create({
-        title: title.trim(),
-        description: description.trim() || undefined,
-        category,
-        location: location.trim() || undefined,
-        isOnline,
-        startAt: dates.startAt,
-        endAt: dates.endAt,
-        priceXAF: isPaid ? Number(priceXAF) : 0,
-        maxSeats: maxSeats ? Number(maxSeats) : undefined,
-      });
-      receiveEvent(created);
-      Alert.alert('Événement publié', 'Votre événement est en ligne.', [{ text: 'OK', onPress: () => navigation.goBack() }]);
+      if (isEditMode && eventId) {
+        const updated = await eventsService.update(eventId, payload);
+        receiveEvent(updated);
+        Alert.alert('Événement modifié', 'Vos changements ont été enregistrés.', [{ text: 'OK', onPress: () => navigation.goBack() }]);
+      } else {
+        const created = await eventsService.create(payload);
+        receiveEvent(created);
+        Alert.alert('Événement publié', 'Votre événement est en ligne.', [{ text: 'OK', onPress: () => navigation.goBack() }]);
+      }
     } catch {
-      setError("Impossible de publier l'événement. Réessayez.");
+      setError(isEditMode ? "Impossible d'enregistrer les modifications. Réessayez." : "Impossible de publier l'événement. Réessayez.");
     } finally {
       setPublishing(false);
     }
   };
 
   const potentialRevenue = isPaid ? Number(priceXAF || 0) * Number(maxSeats || 0) : 0;
+
+  if (loadingExisting) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: C.cream, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color={C.primary} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
@@ -110,7 +198,7 @@ export default function CreateEvent() {
         <TouchableOpacity onPress={() => (step === 0 ? navigation.goBack() : setStep(step - 1))} style={{ padding: 4 }}>
           <Icon name="ArrowLeft" size={22} color={C.ink} />
         </TouchableOpacity>
-        <Text style={{ flex: 1, fontSize: 17, fontWeight: '700', color: C.ink }}>Nouvel événement</Text>
+        <Text style={{ flex: 1, fontSize: 17, fontWeight: '700', color: C.ink }}>{isEditMode ? "Modifier l'événement" : 'Nouvel événement'}</Text>
       </View>
 
       {/* Étapes */}
@@ -126,6 +214,35 @@ export default function CreateEvent() {
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
         {step === 0 && (
           <>
+            <Field label="Photo de couverture">
+              <View style={{ height: 140, borderRadius: 14, backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: 10 }}>
+                {uploadingImage ? (
+                  <ActivityIndicator color={C.primary} size="large" />
+                ) : imageUrl ? (
+                  <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                ) : (
+                  <Icon name="Image" size={28} color={C.inkMute} />
+                )}
+              </View>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TouchableOpacity
+                  onPress={() => void handlePickFromLibrary()}
+                  disabled={uploadingImage}
+                  style={{ flex: 1, height: 40, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                >
+                  <Icon name="Image" size={15} color={C.inkSoft} />
+                  <Text style={{ fontSize: 12.5, fontWeight: '600', color: C.inkSoft }}>Galerie</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => void handlePickFromCamera()}
+                  disabled={uploadingImage}
+                  style={{ flex: 1, height: 40, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                >
+                  <Icon name="Camera" size={15} color={C.inkSoft} />
+                  <Text style={{ fontSize: 12.5, fontWeight: '600', color: C.inkSoft }}>Appareil photo</Text>
+                </TouchableOpacity>
+              </View>
+            </Field>
             <Field label="Titre de l'événement">
               <Input value={title} onChangeText={setTitle} placeholder="Atelier Ndolé traditionnel" />
             </Field>
@@ -190,13 +307,18 @@ export default function CreateEvent() {
         )}
 
         {step === 2 && (
-          <View style={{ borderRadius: 16, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, padding: 16 }}>
+          <View style={{ borderRadius: 16, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border, overflow: 'hidden' }}>
+            {imageUrl ? (
+              <Image source={{ uri: imageUrl }} style={{ width: '100%', height: 140 }} resizeMode="cover" />
+            ) : null}
+            <View style={{ padding: 16 }}>
             <Text style={{ fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>{title || 'Titre de l\'événement'}</Text>
             <Text style={{ fontSize: 12, color: C.inkMute, marginTop: 4 }}>{category} · {date} {time} · {location || 'Lieu à préciser'}</Text>
             <Text style={{ fontSize: 13, color: C.inkSoft, marginTop: 10, lineHeight: 19 }}>{description || 'Aucune description.'}</Text>
             <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderColor: C.border, flexDirection: 'row', justifyContent: 'space-between' }}>
               <Text style={{ fontSize: 13, fontWeight: '700', color: C.ink }}>{isPaid ? `${Number(priceXAF || 0).toLocaleString()} XAF` : 'Gratuit'}</Text>
               <Text style={{ fontSize: 12, color: C.inkMute }}>{maxSeats || '—'} places</Text>
+            </View>
             </View>
           </View>
         )}
@@ -214,7 +336,7 @@ export default function CreateEvent() {
           style={{ flex: 1.7, height: 46, borderRadius: 23, backgroundColor: stepValid() ? C.primary : C.border, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
         >
           {publishing && <ActivityIndicator color="#fff" size="small" />}
-          <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>{step < 2 ? 'Suivant' : 'Publier'}</Text>
+          <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>{step < 2 ? 'Suivant' : (isEditMode ? 'Enregistrer' : 'Publier')}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

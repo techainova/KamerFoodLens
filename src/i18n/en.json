@@ -592,7 +592,13 @@
     "availableSeats": "Available seats",
     "seatsRemaining": "remaining",
     "confirmedRegistration": "Registration confirmed",
-    "description": "Description"
+    "description": "Description",
+    "confirmPaymentTitle": "Confirm payment",
+    "confirmPaymentMsg": "You're about to pay {{amount}} XAF from your KFL wallet to register for this event.",
+    "payAndRegister": "Pay and register",
+    "insufficientBalanceTitle": "Insufficient balance",
+    "topUpWallet": "Top up my wallet",
+    "registerError": "Registration failed. Try again later."
   },
   "courses": {
     "title": "Courses",
@@ -1103,7 +1109,10 @@
     "memberRemoved": "Member removed from the community",
     "memberBlocked": "Member blocked",
     "memberUnblocked": "Member unblocked",
-    "noResults": "No members found"
+    "noResults": "No members found",
+    "blockedCount": "Blocked",
+    "followedSince": "Following since {{date}}",
+    "actionError": "The action failed."
   },
   "manageEvent": {
     "title": "Manage Event",
@@ -1121,6 +1130,37 @@
     "cancelConfirmYes": "Yes, cancel",
     "cancelConfirmNo": "No",
     "eventCancelled": "Event cancelled"
+  },
+  "eventStats": {
+    "fillRate": "Fill rate",
+    "checkedIn": "Checked in",
+    "attendanceRate": "Attendance rate",
+    "revenue": "Revenue generated",
+    "tickets": "tickets",
+    "registrationHistory": "Registrations per day"
+  },
+  "messageAttendees": {
+    "sentTitle": "Message sent",
+    "sentBody": "{{count}} attendee(s) notified.",
+    "sendError": "Could not send the message.",
+    "titleLabel": "Title",
+    "titlePlaceholder": "Venue change…",
+    "bodyLabel": "Message",
+    "bodyPlaceholder": "Your message to attendees…",
+    "send": "Send to all attendees"
+  },
+  "eventAttendees": {
+    "alreadyCheckedIn": "Already checked in",
+    "checkedIn": "Entry validated",
+    "checkInError": "Could not validate this entry.",
+    "confirmCheckIn": "Validate entry?",
+    "checkIn": "Validate",
+    "cameraDenied": "Camera access denied",
+    "cameraDeniedMsg": "Allow camera access to scan tickets.",
+    "checkedInLabel": "Entries validated",
+    "noAttendees": "No attendees yet.",
+    "in": "In",
+    "scanHint": "Point at the attendee's ticket QR code"
   },
   "createEvent": {
     "title": "Create Event",
@@ -1203,7 +1243,11 @@
     "searchPlaceholder": "Search a message...",
     "noResults": "No message found",
     "empty": "Your inbox is empty",
-    "notFound": "Message not found"
+    "notFound": "Message not found",
+    "replyError": "Could not send the reply.",
+    "replySent": "Reply sent — find the conversation in your messages.",
+    "replyPlaceholder": "Write a reply…",
+    "noReplyPossible": "This system message has no identifiable sender — it can't be replied to directly."
   },
   "proAnalytics": {
     "title": "Analytics",
@@ -1216,6 +1260,9 @@
     "unitsSold": "sold",
     "noOrdersPeriod": "No orders in this period",
     "noItemsPeriod": "No items sold in this period"
+  },
+  "proCreateHub": {
+    "noRestaurantError": "No restaurant is linked to your account. Contact support."
   },
   "proPromos": {
     "title": "Promotions",
@@ -1237,7 +1284,11 @@
     "status_scheduled": "Scheduled",
     "status_active": "Active",
     "status_expired": "Expired",
-    "createError": "Failed to create the promo."
+    "createError": "Failed to create the promo.",
+    "noRestaurantError": "No restaurant is linked to your account. Contact support.",
+    "titleRequiredError": "Please enter a title for the promotion.",
+    "valueRequiredError": "Please enter a valid discount value.",
+    "percentRangeError": "The discount percentage must be between 1 and 100."
   },
   "restaurantMenu": {
     "title": "My menu",
@@ -1255,6 +1306,12 @@
     "dishCategoryPlaceholder": "e.g. Main dishes",
     "dishPriceXaf": "Price (XAF)",
     "dishImageUrl": "Photo URL",
+    "dishPhoto": "Dish photo",
+    "pickFromGallery": "Gallery",
+    "takePhoto": "Camera",
+    "photoPermissionTitle": "Permission required",
+    "photoPermissionMsg": "Allow access to add a photo of the dish.",
+    "imageUploadError": "The photo could not be uploaded. Try again later.",
     "dishDescription": "Description",
     "dishDescriptionPlaceholder": "Describe the dish...",
     "deleteDish": "Delete this dish",
@@ -1264,7 +1321,13 @@
     "emptyMenu": "No dishes on the menu yet",
     "updateError": "Failed to update the dish.",
     "deleteError": "Failed to delete the dish.",
-    "saveError": "Failed to save the dish."
+    "saveError": "Failed to save the dish.",
+    "availableDaysLabel": "Days on the menu",
+    "everyDay": "Every day",
+    "everyDayHint": "This dish is offered every day of the week.",
+    "someDaysHint": "This dish will only appear on the selected days.",
+    "filterByDay": "Filter by day",
+    "allDaysFilter": "All"
   },
   "pro": {
     "badge": "PRO",

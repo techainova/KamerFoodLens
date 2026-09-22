@@ -121,7 +121,7 @@ export default function MapScreen() {
               </TouchableOpacity>
             )}
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8, alignItems: 'center' }}>
             {FILTERS.map((f, i) => (
               <TouchableOpacity
                 key={f.key}
@@ -259,7 +259,7 @@ export default function MapScreen() {
             </TouchableOpacity>
           </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 2 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8, paddingVertical: 2, alignItems: 'center' }}>
             {FILTERS.map((f, i) => (
               <TouchableOpacity
                 key={f.key}
@@ -309,7 +309,7 @@ export default function MapScreen() {
           </TouchableOpacity>
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingHorizontal: 20, paddingBottom: 90, paddingTop: 4 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 12, paddingHorizontal: 20, paddingBottom: 90, paddingTop: 4, alignItems: 'flex-start' }}>
           {filtered.map((r) => (
             <TouchableOpacity
               key={r.id}

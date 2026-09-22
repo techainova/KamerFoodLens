@@ -63,6 +63,7 @@ function MediaCarousel({ media, cardWidth }: { media: FeedPost['media']; cardWid
         showsHorizontalScrollIndicator={false}
         onScroll={onScroll}
         scrollEventThrottle={32}
+        style={{ flexGrow: 0 }}
       >
         {media.map((m, i) => (
           <View key={i} style={{ width: cardWidth, aspectRatio: 1, backgroundColor: '#000' }}>
@@ -273,7 +274,8 @@ export default function HomeV1() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 14, paddingHorizontal: 12, paddingVertical: 11, borderBottomWidth: 0.5, borderColor: C.border }}
+          style={{ flexGrow: 0 }}
+          contentContainerStyle={{ gap: 14, paddingHorizontal: 12, paddingVertical: 11, borderBottomWidth: 0.5, borderColor: C.border, alignItems: 'flex-start' }}
         >
           <TouchableOpacity
             style={{ alignItems: 'center', gap: 5, width: 66 }}

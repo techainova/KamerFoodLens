@@ -5,8 +5,16 @@
 // UI while held), and a loading spinner that holds the timer until the photo is ready.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  View, Image, TouchableOpacity, Animated, StatusBar, Pressable, Alert, Dimensions, ActivityIndicator,
+  View,
+  Image,
+  TouchableOpacity,
+  Animated,
+  StatusBar,
+  Pressable,
+  Dimensions,
+  ActivityIndicator,
 } from 'react-native';
+import { Alert } from '@/utils/alert';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';

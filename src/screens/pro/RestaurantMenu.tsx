@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import {
-  View, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator, Alert, Switch,
-} from 'react-native';
+import { View, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator, Switch } from 'react-native';
+import { Alert } from '@/utils/alert';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -11,7 +10,11 @@ import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { SHADOW_SM } from '@/constants/theme';
 import { proService, type ProRestaurant } from '@/services/pro.service';
-import { restaurantsService, type MenuItem } from '@/services/restaurants.service';
+import { restaurantsService, WEEKDAYS, type MenuItem, type Weekday } from '@/services/restaurants.service';
+
+const DAY_LABELS: Record<Weekday, string> = {
+  monday: 'Lun', tuesday: 'Mar', wednesday: 'Mer', thursday: 'Jeu', friday: 'Ven', saturday: 'Sam', sunday: 'Dim',
+};
 
 export default function RestaurantMenu() {
   const navigation = useNavigation<any>();
@@ -20,6 +23,7 @@ export default function RestaurantMenu() {
   const queryClient = useQueryClient();
 
   const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
+  const [dayFilter, setDayFilter] = useState<Weekday | null>(null);
 
   const { data: restaurants = [], isLoading: loadingRestaurants } = useQuery<ProRestaurant[]>({
     queryKey: ['pro-restaurants'],
@@ -36,7 +40,11 @@ export default function RestaurantMenu() {
     staleTime: 60_000,
   });
 
-  const byCategory = items.reduce<Record<string, MenuItem[]>>((acc, item) => {
+  const visibleItems = dayFilter
+    ? items.filter((item) => item.availableDays.length === 0 || item.availableDays.includes(dayFilter))
+    : items;
+
+  const byCategory = visibleItems.reduce<Record<string, MenuItem[]>>((acc, item) => {
     const key = item.category || t('restaurantMenu.uncategorized');
     (acc[key] ??= []).push(item);
     return acc;
@@ -121,9 +129,39 @@ export default function RestaurantMenu() {
             </View>
           )}
 
+          {items.length > 0 && (
+            <View style={{ marginBottom: 16 }}>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+                {t('restaurantMenu.filterByDay')}
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8, alignItems: 'center' }}>
+                <TouchableOpacity
+                  onPress={() => setDayFilter(null)}
+                  style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 14, backgroundColor: dayFilter === null ? C.ink : C.surface, borderWidth: 1, borderColor: dayFilter === null ? C.ink : C.border }}
+                >
+                  <Text style={{ fontSize: 12.5, fontWeight: '600', color: dayFilter === null ? C.cream : C.inkSoft }}>{t('restaurantMenu.allDaysFilter')}</Text>
+                </TouchableOpacity>
+                {WEEKDAYS.map((day) => (
+                  <TouchableOpacity
+                    key={day}
+                    onPress={() => setDayFilter(day)}
+                    style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 14, backgroundColor: dayFilter === day ? C.ink : C.surface, borderWidth: 1, borderColor: dayFilter === day ? C.ink : C.border }}
+                  >
+                    <Text style={{ fontSize: 12.5, fontWeight: '600', color: dayFilter === day ? C.cream : C.inkSoft }}>{DAY_LABELS[day]}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
           {items.length === 0 ? (
             <View style={{ alignItems: 'center', paddingVertical: 40, gap: 8 }}>
               <Icon name="ChefHat" size={32} color={C.inkMute} />
+              <Text style={{ fontSize: 13, color: C.inkMute }}>{t('restaurantMenu.emptyMenu')}</Text>
+            </View>
+          ) : visibleItems.length === 0 ? (
+            <View style={{ alignItems: 'center', paddingVertical: 40, gap: 8 }}>
+              <Icon name="Calendar" size={32} color={C.inkMute} />
               <Text style={{ fontSize: 13, color: C.inkMute }}>{t('restaurantMenu.emptyMenu')}</Text>
             </View>
           ) : (
@@ -154,6 +192,11 @@ export default function RestaurantMenu() {
                           {item.isAvailable ? t('restaurantMenu.available') : t('restaurantMenu.unavailable')}
                         </Text>
                       </View>
+                      {item.availableDays.length > 0 && (
+                        <Text style={{ fontSize: 10, color: C.gold, fontWeight: '600', marginTop: 3 }}>
+                          {item.availableDays.map((d) => DAY_LABELS[d]).join(' · ')}
+                        </Text>
+                      )}
                     </View>
                     <View style={{ gap: 6 }}>
                       <TouchableOpacity

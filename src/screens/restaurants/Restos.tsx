@@ -91,7 +91,7 @@ export default function Restos() {
         </View>
 
         {/* Filtres */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 14, paddingVertical: 12, gap: 7 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: 14, paddingVertical: 12, gap: 7, alignItems: 'center' }}>
           {FILTERS.map((f, i) => (
             <TouchableOpacity
               key={f}
@@ -111,7 +111,7 @@ export default function Restos() {
         <View style={{ paddingHorizontal: 14, paddingTop: 4 }}>
           <Text style={{ fontSize: 15, fontWeight: '700', color: C.ink, marginBottom: 10 }}>Par catégorie</Text>
         </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 14, gap: 11 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: 14, gap: 11, alignItems: 'center' }}>
           {CATEGORIES.map((c) => (
             <TouchableOpacity key={c} onPress={() => setQuery(c)} style={{ width: 72, alignItems: 'center' }}>
               <View style={{ width: 72, height: 72, borderRadius: 14, backgroundColor: C.surface2, alignItems: 'center', justifyContent: 'center' }}>

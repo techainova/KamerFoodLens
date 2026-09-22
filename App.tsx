@@ -33,6 +33,7 @@ import { useNotificationsStore } from '@/store/notifications.store';
 import i18n from '@/i18n';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { socketService } from '@/services/socket.service';
+import { AlertHost } from '@/utils/alert';
 
 const client = new QueryClient();
 
@@ -102,6 +103,7 @@ export default function App() {
       <SafeAreaProvider initialMetrics={initialWindowMetrics}>
         <QueryClientProvider client={client}>
           <RootNavigator />
+          <AlertHost />
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

@@ -2,8 +2,17 @@
 // Instagram, tags, et détection IA du plat quand on arrive depuis le Scanner.
 import React, { useState } from 'react';
 import {
-  View, TextInput, ScrollView, TouchableOpacity, StatusBar, KeyboardAvoidingView, Platform, Image, Alert, ActivityIndicator,
+  View,
+  TextInput,
+  ScrollView,
+  TouchableOpacity,
+  StatusBar,
+  KeyboardAvoidingView,
+  Platform,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
+import { Alert } from '@/utils/alert';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
@@ -218,7 +227,7 @@ export default function CreatePost() {
               )}
             </View>
 
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 10, alignItems: 'center' }}>
               {media.map((m) => (
                 <View key={m.id} style={{ width: 100, height: 100, borderRadius: 12, overflow: 'hidden', backgroundColor: C.surface2 }}>
                   <Image source={{ uri: m.uri }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
@@ -297,7 +306,7 @@ export default function CreatePost() {
             )}
 
             <Text style={{ fontSize: 12, color: C.inkMute, marginBottom: 8 }}>{t('community.suggestions')} :</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8, alignItems: 'center' }}>
               {SUGGESTED_TAGS.filter(tag => !tags.includes(tag)).map(tag => (
                 <TouchableOpacity key={tag} onPress={() => addTag(tag)} style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, backgroundColor: C.surface2, borderWidth: 1, borderColor: C.border }}>
                   <Text style={{ fontSize: 12, color: C.inkSoft, fontWeight: '500' }}>{tag}</Text>

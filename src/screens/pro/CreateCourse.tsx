@@ -1,9 +1,8 @@
 // Compte Pro — création d'une formation (gratuite ou payante), en 3 étapes :
 // contenu, tarif, publication — publie réellement via POST /courses.
 import React, { useState } from 'react';
-import {
-  View, TextInput, ScrollView, TouchableOpacity, StatusBar, Alert, ActivityIndicator,
-} from 'react-native';
+import { View, TextInput, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator } from 'react-native';
+import { Alert } from '@/utils/alert';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';

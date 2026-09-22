@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View, ScrollView, TouchableOpacity, StatusBar, Alert, ActivityIndicator,
-} from 'react-native';
+import { View, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator } from 'react-native';
+import { Alert } from '@/utils/alert';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -137,7 +136,7 @@ export default function Tombola() {
                   <Text style={{ fontSize: 13, color: C.inkMute, marginTop: 8 }}>{t('games.noTickets')}</Text>
                 </View>
               ) : (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 12, alignItems: 'center' }}>
                   {myTickets.map(ticket => (
                     <View
                       key={ticket.id}

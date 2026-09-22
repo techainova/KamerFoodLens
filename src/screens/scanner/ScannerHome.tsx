@@ -1,9 +1,8 @@
 // KFL Lens — accueil conversationnel du scanner IA, minimaliste façon Claude
 // (pas de barre de menu, très peu de texte, tout tient autour du composer).
 import React, { useState } from 'react';
-import {
-  View, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, Alert, ScrollView,
-} from 'react-native';
+import { View, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { Alert } from '@/utils/alert';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -122,7 +121,7 @@ export default function ScannerHome() {
 
         {/* Bas d'écran — suggestions puis composer, comme un vrai assistant */}
         <View style={{ paddingHorizontal: 14, paddingBottom: 10 }}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 10, paddingHorizontal: 6 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8, paddingBottom: 10, paddingHorizontal: 6, alignItems: 'center' }}>
             {CHIPS.map((c) => (
               <TouchableOpacity
                 key={c.label}

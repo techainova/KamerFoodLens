@@ -2,6 +2,10 @@
 import apiClient from './api.client';
 import { ENDPOINTS } from './config';
 
+export type Weekday = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+
+export const WEEKDAYS: Weekday[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
 export interface Restaurant {
   id: string;
   name: string;
@@ -39,6 +43,8 @@ export interface MenuItem {
   imageUrl?: string;
   isAvailable: boolean;
   allergens?: string[];
+  /** Vide = disponible tous les jours. */
+  availableDays: Weekday[];
 }
 
 export interface RestaurantReview {
@@ -58,6 +64,7 @@ export interface MenuItemPayload {
   imageUrl?: string;
   isAvailable?: boolean;
   allergens?: string[];
+  availableDays?: Weekday[];
 }
 
 export const restaurantsService = {
@@ -73,8 +80,8 @@ export const restaurantsService = {
     return data;
   },
 
-  async getMenu(restaurantId: string): Promise<MenuItem[]> {
-    const { data } = await apiClient.get<MenuItem[]>(`${ENDPOINTS.RESTAURANT_MENU}/${restaurantId}/menu`);
+  async getMenu(restaurantId: string, day?: Weekday): Promise<MenuItem[]> {
+    const { data } = await apiClient.get<MenuItem[]>(`${ENDPOINTS.RESTAURANT_MENU}/${restaurantId}/menu`, { params: { day } });
     return data;
   },
 
@@ -99,6 +106,11 @@ export const restaurantsService = {
 
   async deleteMenuItem(restaurantId: string, itemId: string): Promise<void> {
     await apiClient.delete(`${ENDPOINTS.RESTAURANT_MENU}/${restaurantId}/menu/${itemId}`);
+  },
+
+  async uploadMenuItemImage(restaurantId: string, imageBase64: string, mimeType?: string): Promise<{ url: string }> {
+    const { data } = await apiClient.post<{ url: string }>(`${ENDPOINTS.RESTAURANT_MENU}/${restaurantId}/menu/image`, { imageBase64, mimeType });
+    return data;
   },
 
   async follow(restaurantId: string): Promise<{ followersCount: number; isFollowing: true }> {

@@ -161,7 +161,7 @@ export default function ProfileScreen() {
             <View style={{ paddingHorizontal: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
               <Text style={{ fontSize: 15, fontWeight: '700', color: C.ink }}>{t('profile.followedRestaurants', 'Restaurants suivis')}</Text>
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 14 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 14, alignItems: 'center' }}>
               {followedRestaurants.map((r) => (
                 <TouchableOpacity key={r.id} onPress={() => navigation.navigate('Restaurant', { restaurantId: r.id })} style={{ width: 76, alignItems: 'center' }}>
                   <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>

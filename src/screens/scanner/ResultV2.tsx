@@ -97,8 +97,8 @@ export default function ResultV2() {
         {/* Similar */}
         <View style={{ marginBottom: 16 }}>
           <Text style={{ fontSize: 11, color: C.inkMute, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>{t('scanner.similar').toUpperCase()}</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={{ flexDirection: 'row', gap: 6 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
+            <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
               {SIMILAR.map(s => (
                 <View key={s} style={{ height: 30, paddingHorizontal: 12, borderRadius: 15, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}>
                   <Text style={{ fontSize: 12, color: C.inkSoft, fontWeight: '500' }}>{s}</Text>

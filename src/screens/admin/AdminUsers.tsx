@@ -64,8 +64,8 @@ export default function AdminUsers() {
             style={{ flex: 1, fontSize: 14, color: C.ink }}
           />
         </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={{ flexDirection: 'row', gap: 6 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
+          <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
             {FILTERS.map((f, i) => (
               <TouchableOpacity
                 key={i} onPress={() => setFilter(f.key)}

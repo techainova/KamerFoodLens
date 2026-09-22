@@ -1,7 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  View, ScrollView, TouchableOpacity, StatusBar, TextInput, Alert, Share, ActivityIndicator, Image,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  StatusBar,
+  TextInput,
+  Share,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
+import { Alert } from '@/utils/alert';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';

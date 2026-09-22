@@ -57,7 +57,7 @@ export default function AllRecipes() {
       <Text style={{ fontSize: 11, fontWeight: '600', color: C.inkMute, textTransform: 'uppercase', letterSpacing: 0.6, paddingHorizontal: 16, marginTop: 14, marginBottom: 8 }}>
         {t('home.filterByRegion')}
       </Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 4, gap: 8 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 4, gap: 8, alignItems: 'center' }}>
         {REGIONS.map((r) => {
           const active = r === region;
           return (

@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
 import {
-  View, TextInput, ScrollView, TouchableOpacity, StatusBar, KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
+  View,
+  TextInput,
+  ScrollView,
+  TouchableOpacity,
+  StatusBar,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
 } from 'react-native';
+import { Alert } from '@/utils/alert';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -63,7 +71,7 @@ export default function CreateThread() {
           {/* Category selector */}
           <View style={{ paddingHorizontal: 16, paddingVertical: 12, backgroundColor: C.surface, borderBottomWidth: 1, borderColor: C.border }}>
             <Text style={{ fontSize: 13, fontWeight: '600', color: C.inkSoft, marginBottom: 10 }}>{t('community.selectCategory')}</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8, alignItems: 'center' }}>
               {FORUM_CATEGORIES.map(cat => (
                 <TouchableOpacity
                   key={cat}

@@ -6,9 +6,18 @@
 // du fil éphémère.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  View, Image, TouchableOpacity, Animated, StatusBar, Pressable, Alert, Dimensions,
-  TextInput, KeyboardAvoidingView, Platform,
+  View,
+  Image,
+  TouchableOpacity,
+  Animated,
+  StatusBar,
+  Pressable,
+  Dimensions,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
+import { Alert } from '@/utils/alert';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';

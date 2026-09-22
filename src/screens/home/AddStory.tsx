@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View, TouchableOpacity, TextInput, Image, StatusBar, Alert, ActivityIndicator, type LayoutChangeEvent,
+  View,
+  TouchableOpacity,
+  TextInput,
+  Image,
+  StatusBar,
+  ActivityIndicator,
+  type LayoutChangeEvent,
 } from 'react-native';
+import { Alert } from '@/utils/alert';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';

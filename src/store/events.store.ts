@@ -31,6 +31,7 @@ export interface KflEvent {
   startAt:         string;
   endAt:           string;
   isOnline:        boolean;
+  imageUrl?:       string;
 }
 
 function toStoreEvent(dto: KflEventDto, isRegistered: boolean): KflEvent {
@@ -53,6 +54,7 @@ function toStoreEvent(dto: KflEventDto, isRegistered: boolean): KflEvent {
     startAt: dto.startAt,
     endAt: dto.endAt,
     isOnline: dto.isOnline,
+    imageUrl: dto.imageUrl,
   };
 }
 

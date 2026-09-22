@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View, ScrollView, TextInput, TouchableOpacity, StatusBar, Alert, ActivityIndicator, Image,
+  View,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  StatusBar,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
+import { Alert } from '@/utils/alert';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';

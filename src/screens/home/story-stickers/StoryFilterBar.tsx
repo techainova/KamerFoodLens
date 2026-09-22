@@ -15,7 +15,8 @@ export default function StoryFilterBar({ uri, selected, onSelect }: Props) {
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ gap: 10, paddingHorizontal: 16, paddingVertical: 10 }}
+      style={{ flexGrow: 0 }}
+      contentContainerStyle={{ gap: 10, paddingHorizontal: 16, paddingVertical: 10, alignItems: 'center' }}
     >
       {STORY_FILTERS.map((f) => (
         <TouchableOpacity key={f.key} onPress={() => onSelect(f.key)} style={{ alignItems: 'center', gap: 4 }}>

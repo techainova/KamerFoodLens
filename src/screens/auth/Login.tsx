@@ -1,7 +1,6 @@
 ﻿import React, { useState } from 'react';
-import {
-  View, TouchableOpacity, ScrollView, TextInput, Modal, Alert, ActivityIndicator, Image,
-} from 'react-native';
+import { View, TouchableOpacity, ScrollView, TextInput, Modal, ActivityIndicator, Image } from 'react-native';
+import { Alert } from '@/utils/alert';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, G, ClipPath, Rect, Defs } from 'react-native-svg';

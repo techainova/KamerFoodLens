@@ -1,7 +1,6 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
-import {
-  View, TouchableOpacity, TextInput, Pressable, Alert, ActivityIndicator,
-} from 'react-native';
+import { View, TouchableOpacity, TextInput, Pressable, ActivityIndicator } from 'react-native';
+import { Alert } from '@/utils/alert';
 import { Text } from '@/components/ui/ScaledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';

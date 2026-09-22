@@ -15,6 +15,7 @@ export interface ProStats {
 
 export interface ProMessage {
   id: string;
+  senderId: string | null;
   senderName: string;
   subject: string;
   body: string;
@@ -99,6 +100,15 @@ export interface PaymentMethods {
   acceptsCash: boolean;
   mtnPhone: string | null;
   orangePhone: string | null;
+}
+
+export interface CommunityMember {
+  userId: string;
+  name: string;
+  avatar: string | null;
+  isActive: boolean;
+  isBlocked: boolean;
+  followedAt: string;
 }
 
 export interface UpgradeProPayload {
@@ -201,6 +211,26 @@ export const proService = {
 
   async updatePaymentMethods(payload: Partial<PaymentMethods>): Promise<PaymentMethods> {
     const { data } = await apiClient.patch<PaymentMethods>(ENDPOINTS.PRO_PAYMENT_METHODS, payload);
+    return data;
+  },
+
+  async replyToMessage(messageId: string, text: string): Promise<{ id: string }> {
+    const { data } = await apiClient.post(`${ENDPOINTS.PRO_MESSAGES}/${messageId}/reply`, { text });
+    return data;
+  },
+
+  async getCommunityMembers(): Promise<CommunityMember[]> {
+    const { data } = await apiClient.get<CommunityMember[]>(ENDPOINTS.PRO_COMMUNITY_MEMBERS);
+    return data;
+  },
+
+  async setMemberBlocked(memberId: string, blocked: boolean): Promise<{ message: string }> {
+    const { data } = await apiClient.patch(`${ENDPOINTS.PRO_COMMUNITY_MEMBERS}/${memberId}/block`, { blocked });
+    return data;
+  },
+
+  async removeCommunityMember(memberId: string): Promise<{ message: string }> {
+    const { data } = await apiClient.delete(`${ENDPOINTS.PRO_COMMUNITY_MEMBERS}/${memberId}`);
     return data;
   },
 };
