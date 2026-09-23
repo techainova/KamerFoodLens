@@ -25,6 +25,19 @@ function formatDuration(minutes: number): string {
   return `${h}h ${m}min`;
 }
 
+// Ne modifie que la partie numérique en tête de la quantité (ex. "200" -> "300",
+// "1/2" laissé tel quel, "une pincée de" laissé tel quel) — on ne veut pas
+// deviner un nombre là où la recette ne donne qu'une indication qualitative.
+function scaleQuantity(quantity: string, ratio: number): string {
+  if (ratio === 1) return quantity;
+  const match = quantity.match(/^(\d+(?:[.,]\d+)?)/);
+  if (!match) return quantity;
+  const num = parseFloat(match[1].replace(',', '.'));
+  const scaled = Math.round(num * ratio * 100) / 100;
+  const formatted = Number.isInteger(scaled) ? String(scaled) : String(scaled).replace(/0+$/, '').replace(/\.$/, '');
+  return formatted + quantity.slice(match[1].length);
+}
+
 export default function RecipeV1() {
   const C = useColors();
   const { t } = useTranslation();
@@ -275,7 +288,7 @@ export default function RecipeV1() {
                         <View style={{ width: 24, height: 24, borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: isChecked ? '#2E7D32' : 'transparent', borderWidth: isChecked ? 0 : 1.5, borderColor: C.border, flexShrink: 0 }}>
                           {isChecked && <Icon name="Check" size={14} color="#fff" strokeWidth={2.5} />}
                         </View>
-                        <Text style={{ width: 60, fontSize: 13, fontWeight: '700', color: '#E8591A' }}>{item.quantity}{item.unit ? ` ${item.unit}` : ''}</Text>
+                        <Text style={{ width: 60, fontSize: 13, fontWeight: '700', color: '#E8591A' }}>{scaleQuantity(item.quantity, recipe.servings > 0 ? portions / recipe.servings : 1)}{item.unit ? ` ${item.unit}` : ''}</Text>
                         <View style={{ flex: 1 }}>
                           <Text style={{ fontSize: 14, color: isChecked ? '#8C8278' : '#2C1810', textDecorationLine: isChecked ? 'line-through' : 'none' }}>
                             {item.name}

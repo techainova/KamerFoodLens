@@ -2,7 +2,9 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { createMMKV } from 'react-native-mmkv';
-import { restaurantsService, type Restaurant as RestaurantDto, type MenuItem as MenuItemDto } from '@/services/restaurants.service';
+import { restaurantsService, type Restaurant as RestaurantDto, type MenuItem as MenuItemDto, type Weekday } from '@/services/restaurants.service';
+
+export type { Weekday };
 
 const _mmkv = createMMKV({ id: 'kfl-restaurant-store' });
 const mmkvStorage = {
@@ -19,6 +21,7 @@ export interface MenuItem {
   category: string;
   imageUrl?: string;
   popular?: boolean;
+  availableDays: Weekday[];
 }
 
 export interface Restaurant {
@@ -65,6 +68,7 @@ function toStoreMenuItem(item: MenuItemDto): MenuItem {
     category: item.category,
     imageUrl: item.imageUrl,
     popular: false,
+    availableDays: item.availableDays ?? [],
   };
 }
 

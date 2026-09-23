@@ -12,6 +12,7 @@ import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { SHADOW_SM } from '@/constants/theme';
 import { coursesService, type CreateLessonPayload, type LessonType } from '@/services/courses.service';
+import { guessImageMimeType } from '@/utils/guessImageMimeType';
 import type { CourseLevel } from '@/services/courses.service';
 import { readUriAsBase64 } from '@/utils/readUriAsBase64';
 
@@ -120,7 +121,7 @@ export default function CreateCourse() {
     patchLesson(i, { uploading: true });
     try {
       const base64 = asset.base64 ?? (await readUriAsBase64(asset.uri));
-      const { url } = await coursesService.uploadMedia(base64, asset.mimeType ?? 'image/jpeg');
+      const { url } = await coursesService.uploadMedia(base64, guessImageMimeType(asset.uri, asset.mimeType));
       patchLesson(i, { textImageUrl: url, uploading: false });
     } catch {
       patchLesson(i, { uploading: false });

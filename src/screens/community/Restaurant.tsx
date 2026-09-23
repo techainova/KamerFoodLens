@@ -20,7 +20,7 @@ import { SHADOW_SM } from '@/constants/theme';
 import { useRestaurantStore, type Restaurant as RestaurantData, type MenuItem } from '@/store/restaurant.store';
 import { useFavoritesStore } from '@/store/favorites.store';
 import { useCartStore } from '@/store/cart.store';
-import { restaurantsService, type RestaurantReview } from '@/services/restaurants.service';
+import { restaurantsService, WEEKDAYS, type RestaurantReview, type Weekday } from '@/services/restaurants.service';
 import { useAuthGate } from '@/hooks/useAuthGate';
 import { useMessagesStore } from '@/store/messages.store';
 import { useAuthStore } from '@/store/auth.store';
@@ -32,6 +32,10 @@ const TABS = [
   { key: 'photos',  label: 'Photos' },
 ] as const;
 type TabKey = typeof TABS[number]['key'];
+
+const DAY_LABELS: Record<Weekday, string> = {
+  monday: 'Lun', tuesday: 'Mar', wednesday: 'Mer', thursday: 'Jeu', friday: 'Ven', saturday: 'Sam', sunday: 'Dim',
+};
 
 function Stars({ rating, size = 13 }: { rating: number; size?: number }) {
   const rounded = Math.round(rating);
@@ -86,6 +90,7 @@ export default function Restaurant() {
   const [reviews, setReviews] = useState<RestaurantReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>('menu');
+  const [selectedDay, setSelectedDay] = useState<Weekday | null>(null);
   const [reviewText, setReviewText] = useState('');
   const [myRating, setMyRating] = useState(0);
   const [submittingReview, setSubmittingReview] = useState(false);
@@ -145,7 +150,7 @@ export default function Restaurant() {
   };
 
   const submitReview = async () => {
-    if (!restaurantId || myRating === 0 || reviewText.length <= 5) return;
+    if (!restaurantId || myRating === 0 || reviewText.trim().length === 0) return;
     setSubmittingReview(true);
     try {
       await restaurantsService.createReview(restaurantId, myRating, reviewText);
@@ -183,7 +188,10 @@ export default function Restaurant() {
     );
   }
 
-  const menuSections = groupByCategory(restaurant.menu);
+  const dayFilteredMenu = selectedDay
+    ? restaurant.menu.filter((item) => item.availableDays.length === 0 || item.availableDays.includes(selectedDay))
+    : restaurant.menu;
+  const menuSections = groupByCategory(dayFilteredMenu);
 
   return (
     <View style={{ flex: 1, backgroundColor: C.cream }}>
@@ -309,9 +317,30 @@ export default function Restaurant() {
         {/* ── MENU ── */}
         {activeTab === 'menu' && (
           <View style={{ padding: 20 }}>
+            {restaurant.menu.length > 0 && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, marginBottom: 16 }} contentContainerStyle={{ gap: 8, alignItems: 'center' }}>
+                <TouchableOpacity
+                  onPress={() => setSelectedDay(null)}
+                  style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 16, backgroundColor: selectedDay === null ? C.primary : C.surface, borderWidth: 1, borderColor: selectedDay === null ? C.primary : C.border }}
+                >
+                  <Text style={{ fontSize: 12.5, fontWeight: '600', color: selectedDay === null ? '#fff' : C.inkSoft }}>{t('restaurant.everyDay', 'Tous les jours')}</Text>
+                </TouchableOpacity>
+                {WEEKDAYS.map((day) => (
+                  <TouchableOpacity
+                    key={day}
+                    onPress={() => setSelectedDay(day)}
+                    style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 16, backgroundColor: selectedDay === day ? C.primary : C.surface, borderWidth: 1, borderColor: selectedDay === day ? C.primary : C.border }}
+                  >
+                    <Text style={{ fontSize: 12.5, fontWeight: '600', color: selectedDay === day ? '#fff' : C.inkSoft }}>{DAY_LABELS[day]}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
             {menuSections.length === 0 && (
               <Text style={{ fontSize: 13, color: C.inkMute, textAlign: 'center', marginTop: 20 }}>
-                {t('restaurant.noMenu', 'Menu indisponible pour le moment.')}
+                {restaurant.menu.length > 0
+                  ? t('restaurant.noMenuForDay', 'Aucun plat proposé ce jour-là.')
+                  : t('restaurant.noMenu', 'Menu indisponible pour le moment.')}
               </Text>
             )}
             {menuSections.map((section, si) => (
@@ -384,15 +413,15 @@ export default function Restaurant() {
               />
               <TouchableOpacity
                 onPress={() => requireAuth(submitReview)}
-                style={{ height: 44, borderRadius: 22, backgroundColor: myRating > 0 && reviewText.length > 5 ? '#E8591A' : '#E5E0D8', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
-                disabled={myRating === 0 || reviewText.length <= 5 || submittingReview}
+                style={{ height: 44, borderRadius: 22, backgroundColor: myRating > 0 && reviewText.trim().length > 0 ? '#E8591A' : '#E5E0D8', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
+                disabled={myRating === 0 || reviewText.trim().length === 0 || submittingReview}
               >
                 {submittingReview ? (
                   <ActivityIndicator color="#fff" size="small" />
                 ) : (
                   <>
-                    <Icon name="Send" size={15} color={myRating > 0 && reviewText.length > 5 ? '#fff' : '#8C8278'} />
-                    <Text style={{ fontSize: 13, fontWeight: '700', color: myRating > 0 && reviewText.length > 5 ? '#fff' : '#8C8278' }}>Publier</Text>
+                    <Icon name="Send" size={15} color={myRating > 0 && reviewText.trim().length > 0 ? '#fff' : '#8C8278'} />
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: myRating > 0 && reviewText.trim().length > 0 ? '#fff' : '#8C8278' }}>Publier</Text>
                   </>
                 )}
               </TouchableOpacity>

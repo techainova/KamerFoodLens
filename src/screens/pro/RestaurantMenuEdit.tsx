@@ -19,6 +19,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { restaurantsService, WEEKDAYS, type MenuItem, type Weekday } from '@/services/restaurants.service';
+import { guessImageMimeType } from '@/utils/guessImageMimeType';
 
 const DAY_LABELS: Record<Weekday, string> = {
   monday: 'Lun', tuesday: 'Mar', wednesday: 'Mer', thursday: 'Jeu', friday: 'Ven', saturday: 'Sam', sunday: 'Dim',
@@ -68,7 +69,7 @@ export default function RestaurantMenuEdit() {
     if (!asset.base64) return;
     setUploadingImage(true);
     try {
-      const { url } = await restaurantsService.uploadMenuItemImage(restaurantId, asset.base64, asset.mimeType ?? 'image/jpeg');
+      const { url } = await restaurantsService.uploadMenuItemImage(restaurantId, asset.base64, guessImageMimeType(asset.uri, asset.mimeType));
       setImageUrl(url);
     } catch {
       Alert.alert(t('common.error'), t('restaurantMenu.imageUploadError'));

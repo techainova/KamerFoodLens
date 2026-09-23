@@ -54,6 +54,14 @@ export interface UserStats {
   postsCount: number;
 }
 
+export interface UserSearchResult {
+  id: string;
+  name: string;
+  username: string | null;
+  avatar: string | null;
+  role: string;
+}
+
 export interface MyReview {
   id: string;
   restaurantId: string;
@@ -95,6 +103,11 @@ export const usersService = {
 
   async deleteAccount(): Promise<{ message: string }> {
     const { data } = await apiClient.delete(ENDPOINTS.PROFILE_ME);
+    return data;
+  },
+
+  async searchUsers(query: string): Promise<UserSearchResult[]> {
+    const { data } = await apiClient.get<UserSearchResult[]>('/users/search', { params: { q: query } });
     return data;
   },
 

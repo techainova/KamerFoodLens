@@ -40,6 +40,7 @@ import MapScreen from '@/screens/map/MapScreen';
 
 // ── Messagerie ──────────────────────────────────────────────────────────────
 import ConversationsList from '@/screens/messages/ConversationsList';
+import NewConversation from '@/screens/messages/NewConversation';
 import ChatThread from '@/screens/messages/ChatThread';
 
 // ── Community ───────────────────────────────────────────────────────────────
@@ -194,6 +195,7 @@ function HomeStackNav() {
 
       {/* ── Messagerie ────────────────────────────────────────────── */}
       <HomeStack.Screen name="ConversationsList" component={ConversationsList} />
+      <HomeStack.Screen name="NewConversation"   component={NewConversation} />
       <HomeStack.Screen name="ChatThread"        component={ChatThread} />
 
       {/* ── Recherche (accessible via navigate depuis HomeStack) ────── */}
@@ -378,6 +380,11 @@ function ProfileStackNav() {
       <ProfileStack.Screen name="FoodJournal"        component={FoodJournal} />
       <ProfileStack.Screen name="JournalStats"       component={JournalStats} />
       <ProfileStack.Screen name="JournalStoriesViewer" component={JournalStoriesViewer} />
+      <ProfileStack.Screen name="Camera"              component={Camera} />
+      <ProfileStack.Screen name="Result"              component={ResultV1} />
+      <ProfileStack.Screen name="AudioText"           component={AudioText} />
+      <ProfileStack.Screen name="MapScreen"           component={MapScreen} />
+      <ProfileStack.Screen name="CreatePost"          component={CreatePost} />
 
       {/* ── Wallet & payment reachable from Profile ────────────────── */}
       <ProfileStack.Screen name="WalletScreen"       component={WalletScreen} />
@@ -446,6 +453,7 @@ function ProfileStackNav() {
       <ProfileStack.Screen name="Recipe"             component={RecipeV1} />
       <ProfileStack.Screen name="ChatThread"         component={ChatThread} />
       <ProfileStack.Screen name="ConversationsList"  component={ConversationsList} />
+      <ProfileStack.Screen name="NewConversation"    component={NewConversation} />
       <ProfileStack.Screen name="Forum"              component={Forum} />
       <ProfileStack.Screen name="AllRecipes"         component={AllRecipes} />
     </ProfileStack.Navigator>
@@ -541,6 +549,7 @@ function PageStackNav() {
       <PageStack.Screen name="Payment"             component={Payment} />
       <PageStack.Screen name="TransactionHistory"  component={TransactionHistory} />
       <PageStack.Screen name="ConversationsList"  component={ConversationsList} />
+      <PageStack.Screen name="NewConversation"    component={NewConversation} />
       <PageStack.Screen name="ChatThread"         component={ChatThread} />
       <PageStack.Screen name="ProMessages"        component={ProMessages} />
       <PageStack.Screen name="ProMessageDetail"   component={ProMessageDetail} />

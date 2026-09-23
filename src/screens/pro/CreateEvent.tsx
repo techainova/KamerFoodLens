@@ -10,6 +10,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import Icon from '@/components/ui/Icon';
 import { useColors } from '@/hooks/useAppTheme';
 import { eventsService } from '@/services/events.service';
+import { guessImageMimeType } from '@/utils/guessImageMimeType';
 import { useEventsStore } from '@/store/events.store';
 
 const CATEGORIES = ['Atelier', 'Festival', 'Dégustation', 'Conférence', 'Live'];
@@ -90,7 +91,7 @@ export default function CreateEvent() {
     if (!asset.base64) return;
     setUploadingImage(true);
     try {
-      const { url } = await eventsService.uploadImage(asset.base64, asset.mimeType ?? 'image/jpeg');
+      const { url } = await eventsService.uploadImage(asset.base64, guessImageMimeType(asset.uri, asset.mimeType));
       setImageUrl(url);
     } catch {
       Alert.alert('Erreur', "L'envoi de la photo a échoué. Réessayez plus tard.");

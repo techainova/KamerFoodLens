@@ -23,6 +23,7 @@ import { useColors } from '@/hooks/useAppTheme';
 import { useFeedStore } from '@/store/feed.store';
 import { useAuthStore } from '@/store/auth.store';
 import type { CreatePostPayload, CreatePostMediaPayload } from '@/services/community.service';
+import { guessImageMimeType } from '@/utils/guessImageMimeType';
 import type { HomeStackParamList } from '@/navigation/types';
 import { getDishDescription } from '@/ai/dishDescriptions';
 import { UNKNOWN_CLASS } from '@/ai/interpretResult';
@@ -98,7 +99,7 @@ export default function CreatePost() {
         id: `${Date.now()}-${i}`,
         uri: a.uri,
         base64: a.base64 ?? undefined,
-        mimeType: a.mimeType ?? (a.type === 'video' ? 'video/mp4' : 'image/jpeg'),
+        mimeType: a.mimeType ?? (a.type === 'video' ? 'video/mp4' : guessImageMimeType(a.uri)),
         kind: (a.type === 'video' ? 'video' : 'image') as 'image' | 'video',
       }));
       return [...prev, ...next];

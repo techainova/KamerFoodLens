@@ -19,6 +19,7 @@ import { useColors } from '@/hooks/useAppTheme';
 import { useAuthStore } from '@/store/auth.store';
 import { useUIStore } from '@/store/ui.store';
 import { usersService } from '@/services/users.service';
+import { guessImageMimeType } from '@/utils/guessImageMimeType';
 
 const FOOD_PREFS = ['prefCamerounais', 'prefEpice', 'prefAfricain', 'prefVegetarien', 'prefSansGluten', 'prefHalal', 'prefInternational'] as const;
 const DEFAULT_ACTIVE_PREFS = ['prefCamerounais', 'prefEpice', 'prefAfricain'];
@@ -86,7 +87,7 @@ export default function EditProfile() {
     const asset = pickerResult.assets[0];
     setUploadingAvatar(true);
     try {
-      const updated = await usersService.uploadAvatar(asset.base64!, asset.mimeType ?? 'image/jpeg');
+      const updated = await usersService.uploadAvatar(asset.base64!, guessImageMimeType(asset.uri, asset.mimeType));
       setUser({ ...updated });
     } catch {
       Alert.alert(t('editProfile.photoUploadFailedTitle', 'Échec'), t('editProfile.photoUploadFailedMsg', 'La photo n\'a pas pu être envoyée. Réessayez plus tard.'));

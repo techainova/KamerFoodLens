@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Animated, View, Pressable, Image } from 'react-native';
 import { Text } from '@/components/ui/ScaledText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, shadows } from '@/constants/theme';
+import { shadows } from '@/constants/theme';
 import { useColors } from '@/hooks/useAppTheme';
 import { useFontScale, useBoldText } from '@/hooks/useAccessibility';
 import { tabBarTranslateY, resetTabBarVisibility } from '@/navigation/tabBarScroll';
@@ -118,7 +118,7 @@ export function WFBottomNav({ activeTab, onTabPress, avatarUri }: Props) {
               name={tab.icon}
               size={25}
               color={iconColor}
-              fill={isActive ? colors.ink : 'none'}
+              fill={isActive ? C.ink : 'none'}
               strokeWidth={isActive ? 0 : 1.7}
             />
           </Pressable>

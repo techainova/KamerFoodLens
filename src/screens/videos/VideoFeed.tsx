@@ -23,19 +23,32 @@ function VideoItem({ item, active }: { item: VideoPost; active: boolean }) {
   const liked = !!myId && item.likes.includes(myId);
   const isFocused = useIsFocused();
 
+  const [paused, setPaused] = useState(false);
+  const [muted, setMuted] = useState(false);
+
   const player = useVideoPlayer(item.videoUrl, (p) => {
     p.loop = true;
     p.muted = false;
   });
 
   useEffect(() => {
-    if (active && isFocused) {
+    player.muted = muted;
+  }, [player, muted]);
+
+  useEffect(() => {
+    if (active && isFocused && !paused) {
       player.play();
       registerView(item.id);
     } else {
       player.pause();
     }
-  }, [active, isFocused, player, registerView, item.id]);
+  }, [active, isFocused, paused, player, registerView, item.id]);
+
+  // Repart en lecture automatique la prochaine fois que cette vidéo redevient
+  // active — une pause manuelle ne doit pas "coller" après être revenu dessus.
+  useEffect(() => {
+    if (!active) setPaused(false);
+  }, [active]);
 
   const handleShare = () => {
     const message = `${item.authorName} sur KamerFoodLens : ${item.caption}`.slice(0, 500);
@@ -55,8 +68,25 @@ function VideoItem({ item, active }: { item: VideoPost; active: boolean }) {
 
   return (
     <View style={{ width: SW, height: SH, backgroundColor: '#0C0A09' }}>
-      <VideoView player={player} style={{ width: '100%', height: '100%' }} contentFit="cover" nativeControls={false} />
+      <TouchableOpacity activeOpacity={1} onPress={() => setPaused((p) => !p)} style={{ width: '100%', height: '100%' }}>
+        <VideoView player={player} style={{ width: '100%', height: '100%' }} contentFit="cover" nativeControls={false} />
+      </TouchableOpacity>
       <View pointerEvents="none" style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.15)' }} />
+      {paused && (
+        <View pointerEvents="none" style={{ position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center' }}>
+          <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="Play" size={32} color="#fff" fill="#fff" />
+          </View>
+        </View>
+      )}
+
+      {/* Muet — sous la barre du haut partagée (titre + caméra), coin droit */}
+      <TouchableOpacity
+        onPress={() => setMuted((m) => !m)}
+        style={{ position: 'absolute', top: 96, right: 14, width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' }}
+      >
+        <Icon name={muted ? 'VolumeX' : 'Volume2'} size={18} color="#fff" />
+      </TouchableOpacity>
 
       {/* Colonne d'actions */}
       <View style={{ position: 'absolute', right: 12, bottom: 118, alignItems: 'center', gap: 19 }}>

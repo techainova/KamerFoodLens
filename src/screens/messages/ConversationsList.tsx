@@ -36,6 +36,12 @@ export default function ConversationsList() {
         <Text style={{ flex: 1, fontFamily: 'PlayfairDisplay-Bold', fontSize: 20, color: C.ink }}>
           {t('messages.title')}
         </Text>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('NewConversation')}
+          style={{ width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: C.border, alignItems: 'center', justifyContent: 'center' }}
+        >
+          <Icon name="Edit" size={16} color={C.inkSoft} />
+        </TouchableOpacity>
       </View>
 
       {isLoading && conversations.length === 0 ? (

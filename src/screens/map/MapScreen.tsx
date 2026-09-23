@@ -237,7 +237,14 @@ export default function MapScreen() {
       {/* Search overlay */}
       <SafeAreaView style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
         <View style={{ paddingHorizontal: 16, paddingTop: 10, gap: 8 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderRadius: 16, paddingHorizontal: 14, gap: 10, ...SHADOW_MD, height: 52 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', ...SHADOW_MD }}
+            >
+              <Icon name="ArrowLeft" size={19} color={C.ink} />
+            </TouchableOpacity>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderRadius: 16, paddingHorizontal: 14, gap: 10, ...SHADOW_MD, height: 52 }}>
             <Icon name="MapPin" size={18} color={C.primary} />
             <TextInput
               value={search}
@@ -257,6 +264,7 @@ export default function MapScreen() {
             >
               <Icon name="Grid" size={16} color={C.inkSoft} />
             </TouchableOpacity>
+            </View>
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8, paddingVertical: 2, alignItems: 'center' }}>
